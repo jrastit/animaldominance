@@ -13,6 +13,7 @@ type CardType = {
   id: number
   name: string
   mana: number
+  family: number
   level: Array<CardLevelType>
 }
 

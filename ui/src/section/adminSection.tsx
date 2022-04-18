@@ -58,7 +58,7 @@ const AdminSection = (props: {
   }
 
   if (error) {
-    return <p>error</p>
+    return <p>{error}</p>
   }
 
   if (contract) {

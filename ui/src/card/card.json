@@ -15,6 +15,26 @@
           "life" : 5,
           "attack" : 10,
           "desc" : "So cute! But can still kill a bee"
+        },
+        {
+          "life" : 10,
+          "attack" : 15,
+          "desc" : "Getting better"
+        },
+        {
+          "life" : 12,
+          "attack" : 18,
+          "desc" : "Getting stronger"
+        },
+        {
+          "life" : 15,
+          "attack" : 20,
+          "desc" : "nearly adult"
+        },
+        {
+          "life" : 20,
+          "attack" : 25,
+          "desc" : "Exeptional!"
         }
       ]
     },{
@@ -30,8 +50,28 @@
         },
         {
           "life" : 10,
-          "attack" : 5,
+          "attack" : 10,
           "desc" : "Will defend his chair"
+        },
+        {
+          "life" : 10,
+          "attack" : 15,
+          "desc" : "Will attack at night"
+        },
+        {
+          "life" : 15,
+          "attack" : 20,
+          "desc" : "Will fight other cats"
+        },
+        {
+          "life" : 20,
+          "attack" : 30,
+          "desc" : "Training all day"
+        },
+        {
+          "life" : 30,
+          "attack" : 40,
+          "desc" : "Nija!"
         }
       ]
     }

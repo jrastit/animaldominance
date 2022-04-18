@@ -11,6 +11,8 @@ import {
   loadAllCard
 } from '../game/card'
 
+import CardListWidget from '../game/component/cardListWidget'
+
 
 const CardExplorer = (props: {
   transactionManager : TransactionManager,
@@ -30,15 +32,17 @@ const CardExplorer = (props: {
     }
   }, [setLoading, loading, cardList, props.contract])
 
-  if (loading){
+  if (loading % 2 === 1){
     return (
-      <p>loading...</p>
+      <p>Card explorer loading...</p>
     )
   }
 
   if (cardList){
     return (
-      <p>card : {cardList.length}</p>
+      <CardListWidget
+        cardList={cardList}
+      />
     )
   }
 

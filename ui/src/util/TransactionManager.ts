@@ -38,6 +38,7 @@ export class TransactionManager {
         result,
         log
       })
+      console.log("Success" + log)
       return result
     } catch (e: any) {
       let message
