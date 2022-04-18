@@ -1,0 +1,14 @@
+{
+  "network": [
+    {
+      "name" : "ganache",
+      "url": "http://localhost:8545",
+      "chainId": 1337
+    },
+    {
+      "name" : "oasisParatime",
+      "url": "https://rpc.oasiseth.org:8545",
+      "chainId": 69
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "card" : [
+    {
+      "name" : "Kitten",
+      "mana" : 1,
+      "family" : 1,
+      "starter" : 2,
+      "level" : [
+        {
+          "life" : 1,
+          "attack" : 1,
+          "desc" : "So cute!"
+        },
+        {
+          "life" : 5,
+          "attack" : 10,
+          "desc" : "So cute! But can still kill a bee"
+        }
+      ]
+    },{
+      "name" : "Cat",
+      "mana" : 2,
+      "family" : 1,
+      "starter" : 2,
+      "level" : [
+        {
+          "life" : 1,
+          "attack" : 1,
+          "desc" : "Miaou!"
+        },
+        {
+          "life" : 10,
+          "attack" : 5,
+          "desc" : "Will defend his chair"
+        }
+      ]
+    }
+  ]
+}

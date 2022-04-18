@@ -1,0 +1,9 @@
+{
+  "outputPath": "compiled/",
+  "outputCopyPath": "../ui/src/contract/solidity/compiled",
+  "file": [
+    {
+      "contract": "CardAdmin"
+    }
+  ]
+}
