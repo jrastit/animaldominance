@@ -16,7 +16,7 @@ const cardListWidget = (props : {
 
   const displayCard = (card : CardType) => {
     return (
-      <Row>
+      <Row key={card.id}>
         {card.level.map((_cardLevel, level : number) => displayCardLevel(card, level))}
       </Row>
     )
@@ -24,7 +24,7 @@ const cardListWidget = (props : {
 
   const displayCardLevel = (card : CardType, level : number) => {
     return (
-      <Col xs={2}>
+      <Col xs={2} key={level}>
         <CardWidget
           card={card}
           level={level}

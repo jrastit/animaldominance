@@ -3,7 +3,8 @@
     {
       "name" : "ganache",
       "url": "http://localhost:8545",
-      "chainId": 1337
+      "chainId": 1337,
+      "gameContract": "0x5034F49b27353CeDc562b49eA91C7438Ea351d36"
     },
     {
       "name" : "oasisParatime",

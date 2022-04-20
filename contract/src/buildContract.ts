@@ -179,6 +179,7 @@ const buildContractConfig = (contractConfig: { contract: string, input?: any }) 
         "enabled": true,
         "runs": 10000,
       },
+      "evmVersion": "london",
       outputSelection: {
         '*': {}
       }

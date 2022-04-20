@@ -1,17 +1,53 @@
 import * as ethers from 'ethers'
 
-import { TransactionManager } from '../util/TransactionManager'
+import { TransactionManager, TransactionItem } from '../util/TransactionManager'
 
 import type {
   CardType,
     CardLevelType
 } from '../type/cardType'
 
+const DEF_DELAY = 1000;
+
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms || DEF_DELAY));
+}
+
 export const createAllCard = async (
   contract: ethers.Contract,
-  transactionManager: TransactionManager
+  transactionManager: TransactionManager,
+  setMessage?: (msg: string | undefined) => void,
 ) => {
   let cardFile = require("../card/card.json")
+  for (let i = 0; i < cardFile.card.length; i++) {
+    const card = cardFile.card[i]
+    const tx = await transactionManager.sendTx(await contract.populateTransaction.createCard(
+      card.name,
+      card.mana,
+      card.family,
+      card.starter
+    ), "Create card " + card.name)
+    if (setMessage) setMessage(tx.log)
+    await Promise.all(tx.result.logs.map(async (log) => {
+      const log2 = contract.interface.parseLog(log)
+      if (log2.name === 'CardCreated') {
+        const promise = [] as Array<Promise<TransactionItem>>
+        for (let l = 0; l < card.level.length; l++) {
+          const level = card.level[l]
+          promise.push(transactionManager.sendTx(await contract.populateTransaction.setCardLevel(
+            log2.args.id,
+            level.desc,
+            l,
+            level.life,
+            level.attack,
+          ), "Add level " + card.name + " : " + l + " => " + level.desc))
+          await sleep(200)
+        }
+        await Promise.all(promise)
+      }
+    }))
+  }
+  /*
   await Promise.all(cardFile.card.map(async (card: any) => {
     const tx = await transactionManager.sendTx(await contract.populateTransaction.createCard(
       card.name,
@@ -21,7 +57,6 @@ export const createAllCard = async (
     ), "Create card " + card.name)
     //console.log(tx.logs)
     //console.log(contract.interface.parseLog(tx.logs[0]))
-
     await Promise.all(tx.logs.map(async (log) => {
       const log2 = contract.interface.parseLog(log)
       if (log2.name === 'CardCreated') {
@@ -37,9 +72,13 @@ export const createAllCard = async (
       }
     }))
   }))
+  */
 }
 
-export const loadAllCard = async (contract: ethers.Contract) => {
+export const loadAllCard = async (
+  contract: ethers.Contract,
+  setMessage?: (message: string | undefined) => void
+) => {
   const cardId = (await contract.cardId()).toNumber()
   //console.log(cardId)
   const cardList = [] as Array<CardType>
@@ -55,6 +94,7 @@ export const loadAllCard = async (contract: ethers.Contract) => {
       level: [] as Array<CardLevelType>
     } as CardType
     for (let j = 0; j < 6; j++) {
+      if (setMessage) setMessage("Loading card " + (i * 6 + j + 1) + "/" + ((cardId + 1) * 6) + " " + card.name)
       const levelChain = (await contract.getCardLevel(i, j))
       const level = {
         description: levelChain.description,
@@ -64,7 +104,28 @@ export const loadAllCard = async (contract: ethers.Contract) => {
       card.level.push(level)
     }
     cardList.push(card)
+
     //console.log(card)
   }
   return cardList
+}
+
+export const loadAllCardFromFile = async () => {
+  let cardFile = require("../card/card.json")
+  return cardFile.card.map((card: any, id: number) => {
+    return {
+      id: id,
+      name: card.name,
+      mana: card.mana,
+      family: card.family,
+      starter: card.starter,
+      level: card.level.map((cardLevel: any) => {
+        return {
+          description: cardLevel.description,
+          life: cardLevel.life,
+          attack: cardLevel.attack,
+        } as CardLevelType
+      })
+    } as CardType
+  })
 }

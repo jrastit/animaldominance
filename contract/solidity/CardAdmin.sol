@@ -72,6 +72,18 @@ contract CardAdmin {
       return cardList[_cardId].level[_level];
     }
 
+    function getUserCardList(uint _userId) public view returns (UserCard[] memory){
+      return userIdList[_userId].cardList;
+    }
+
+    function getUserGameDeckLength(uint _userId) public view returns (uint){
+      return userIdList[_userId].deckList.length;
+    }
+
+    function getUserGameDeckCard(uint _userId, uint _deckId) public view returns (uint[20] memory){
+      return userIdList[_userId].deckList[_deckId].userCardList;
+    }
+
     modifier isOwner() {
      require(msg.sender == owner, "Not owner");
         _;
@@ -121,13 +133,13 @@ contract CardAdmin {
     }
 
     function addUserCard(uint _userId, uint _cardId) private {
-        UserCard memory userCard;
-        userCard.cardId = _cardId;
+        UserCard memory userCard = UserCard(_cardId, 0);
         userIdList[_userId].cardList.push(userCard);
     }
 
-    function addUserStarterCard(uint _userId) private {
-        for (uint i = 1; i <= cardId; i++) {  //for loop example
+    function addUserStarterCard(uint _userId) public {
+        require(userIdList[_userId].cardList.length == 0, "Already have card");
+        for (uint i = 1; i <= cardId; i++) {
             int starter = cardList[i].starter;
             while(starter > 0) {
                 addUserCard(_userId, i);
@@ -137,13 +149,13 @@ contract CardAdmin {
     }
 
     function addGameDeck(uint _userId, uint[20] memory _userCardList) private {
-        GameDeck memory gameDeck;
-        gameDeck.userCardList = _userCardList;
-        userIdList[_userId].deckList.push(gameDeck);
+      GameDeck memory gameDeck;
+      gameDeck.userCardList = _userCardList;
+      userIdList[_userId].deckList.push(gameDeck);
     }
 
     function addGameDeckSelf(uint[20] memory _userCardList) public isUser {
-        addGameDeck(userAddressList[msg.sender], _userCardList);
+      addGameDeck(userAddressList[msg.sender], _userCardList);
     }
 
     function getUserCardLevel(uint _userId, uint _userCardId) public view returns(uint){

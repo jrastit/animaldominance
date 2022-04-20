@@ -1,6 +1,6 @@
 import * as ethers from 'ethers'
 
-interface TransactionItem {
+export interface TransactionItem {
   txu: ethers.ethers.PopulatedTransaction | ethers.providers.TransactionRequest,
   tx: ethers.ethers.providers.TransactionResponse
   result: ethers.ethers.providers.TransactionReceipt
@@ -32,14 +32,15 @@ export class TransactionManager {
       txu.nonce = this.nextNonce
       const tx = await this.signer.sendTransaction(txu)
       const result = await tx.wait()
-      this.transactionList.push({
+      const transactionItem = {
         txu,
         tx,
         result,
         log
-      })
-      console.log("Success" + log)
-      return result
+      } as TransactionItem
+      this.transactionList.push(transactionItem)
+      //console.log("Success" + log)
+      return transactionItem
     } catch (e: any) {
       let message
       try {
@@ -61,7 +62,7 @@ export class TransactionManager {
     log: string
   ) {
     const result = await this.sendTx(txu, log)
-    return getContract(result.contractAddress, this.signer)
+    return getContract(result.result.contractAddress, this.signer)
   }
 
   gasInfo(

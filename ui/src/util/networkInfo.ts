@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 
-import { network as networkList } from '../config/network.json'
+//import { network as networkList } from '../config/network.json'
 import { NetworkType } from '../type/networkType'
 import { WalletType } from '../type/walletType'
 import { walletListLoad } from '../util/walletStorage'
@@ -11,8 +11,11 @@ declare global {
   }
 }
 
+
+
 const getNetworkList = async (): Promise<NetworkType[]> => {
-  return networkList.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+  const networkList = require('../config/network.json').network as any
+  return networkList.sort((a: any, b: any) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
 }
 
 const getWalletList = async (password: string): Promise<WalletType[] | undefined> => {
@@ -20,8 +23,9 @@ const getWalletList = async (password: string): Promise<WalletType[] | undefined
 }
 
 const getProvider = async (networkName: string | undefined, setError: (error: string) => void) => {
+  const networkList = require('../config/network.json').network as any
   if (!networkName) return null
-  const network = networkList.filter((network) => network.name === networkName)[0]
+  const network = networkList.filter((network: any) => network.name === networkName)[0]
   try {
     if (network) {
       return new ethers.providers.JsonRpcProvider(network.url)
@@ -43,6 +47,7 @@ const addHooks = () => {
 const getEntityRegistryAddress = (
   networkName: string,
 ) => {
+  const networkList = require('../config/network.json').network as any
   return (networkList as NetworkType[]).filter((_networkItem) => _networkItem.name === networkName).map((_networkItem) => _networkItem.entityRegistryAddress)[0]
 }
 
@@ -59,7 +64,8 @@ const getWallet = (
       let networkName = network.name
       if (networkName === 'unknown') {
         const chainId = network.chainId
-        networkName = networkList.filter((_networkItem) => _networkItem.chainId === chainId).map((_networkItem) => _networkItem.name)[0]
+        const networkList = require('../config/network.json').network as any
+        networkName = networkList.filter((_networkItem: any) => _networkItem.chainId === chainId).map((_networkItem: any) => _networkItem.name)[0]
         if (!networkName) networkName = network.chainId.toString()
       }
       setWallet(networkName, wallet)

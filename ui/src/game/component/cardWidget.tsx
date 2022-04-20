@@ -78,7 +78,7 @@ const cardWidget = (props : {
       paddingLeft:"0.5em",
       paddingRight:"0.5em",
     }}>
-      <Image src={"animal/"+ props.card.name + ".jpg"} style={{
+      <Image src={"animal/"+ props.card.name.split(" ").join("") + ".jpg"} style={{
         marginTop:"1.2em",
         borderRadius:"0.5em",
         width:"9.5em",
@@ -111,7 +111,7 @@ const cardWidget = (props : {
         }}>{props.card.mana}</div>
         </div>
       </div>
-      <Image fluid src={"animal/"+ props.card.name + ".jpg"} style={{
+      <Image fluid src={"animal/"+ props.card.name.split(" ").join("") + ".jpg"} style={{
         marginTop:".2em",
         borderRadius:"0.5em",
         width:"9.5em",

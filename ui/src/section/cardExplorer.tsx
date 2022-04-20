@@ -8,33 +8,42 @@ import type {
 } from '../type/cardType'
 
 import {
-  loadAllCard
+  loadAllCard,
+  loadAllCardFromFile,
 } from '../game/card'
 
 import CardListWidget from '../game/component/cardListWidget'
 
-
 const CardExplorer = (props: {
   transactionManager : TransactionManager,
-  contract : ethers.Contract,
+  contract ?: ethers.Contract,
 })=> {
 
   const [cardList, setCardList] = useState<CardType[]>()
   const [loading, setLoading] = useState(0)
+  const [message, setMessage] = useState<string | undefined>()
 
   useEffect(() => {
     if (!loading && !cardList){
       setLoading(1);
-      loadAllCard(props.contract).then((_cardList) => {
-        setCardList(_cardList)
-        setLoading(2)
-      })
+      if (props.contract){
+        loadAllCard(props.contract, setMessage).then((_cardList) => {
+          setCardList(_cardList)
+          setLoading(2)
+        })
+      } else {
+        loadAllCardFromFile().then((_cardList) => {
+          setCardList(_cardList)
+          setMessage("")
+          setLoading(2)
+        })
+      }
     }
   }, [setLoading, loading, cardList, props.contract])
 
   if (loading % 2 === 1){
     return (
-      <p>Card explorer loading...</p>
+      <div>Card explorer loading...<br/>{message}</div>
     )
   }
 

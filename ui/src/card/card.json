@@ -37,43 +37,6 @@
           "desc" : "Exeptional!"
         }
       ]
-    },{
-      "name" : "Cat",
-      "mana" : 2,
-      "family" : 1,
-      "starter" : 2,
-      "level" : [
-        {
-          "life" : 1,
-          "attack" : 1,
-          "desc" : "Miaou!"
-        },
-        {
-          "life" : 10,
-          "attack" : 10,
-          "desc" : "Will defend his chair"
-        },
-        {
-          "life" : 10,
-          "attack" : 15,
-          "desc" : "Will attack at night"
-        },
-        {
-          "life" : 15,
-          "attack" : 20,
-          "desc" : "Will fight other cats"
-        },
-        {
-          "life" : 20,
-          "attack" : 30,
-          "desc" : "Training all day"
-        },
-        {
-          "life" : 30,
-          "attack" : 40,
-          "desc" : "Nija!"
-        }
-      ]
     }
   ]
 }
