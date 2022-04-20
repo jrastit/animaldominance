@@ -24,7 +24,6 @@ export const getUserId = async (
   if (!address) {
     address = await contract.signer.getAddress()
   }
-  console.log("get user id from " + address)
   const idBG = await contract.userAddressList(address)
   console.log(ethers.BigNumber.from(idBG).toNumber())
 
@@ -36,7 +35,6 @@ export const getUser = async (
   userId: number,
 ) => {
   const userChain = await contract.userIdList(userId)
-  //console.log(userChain)
   return {
     id: userChain.id.toNumber(),
     name: userChain.name,
@@ -50,7 +48,6 @@ export const getUserCardList = async (
   userId: number,
 ) => {
   const cardListChain = await contract.getUserCardList(userId)
-  //console.log(cardListChain)
   return cardListChain.map((userCardChain: any, id: number) => {
     return {
       id: id,
@@ -65,7 +62,6 @@ export const addUserStarterCard = async (
   transactionManager: TransactionManager,
   userId: number,
 ) => {
-  console.log(userId)
   const tx = await transactionManager.sendTx(
     await contract.populateTransaction.addUserStarterCard(
       userId
