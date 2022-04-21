@@ -13,6 +13,10 @@
   }
 }
 
+#user-widget {
+  margin-right: 1em;
+}
+
 #wallet-widget .circle-icon {
   width: 10px;
   margin-right: 8px;

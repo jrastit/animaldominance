@@ -4,12 +4,13 @@
       "name" : "ganache",
       "url": "http://localhost:8545",
       "chainId": 1337,
-      "gameContract": "0x5034F49b27353CeDc562b49eA91C7438Ea351d36"
+      "gameContract": "0xE225D94453B8db81B1de32D487c1F0F77e3309AD"
     },
     {
-      "name" : "oasisParatime",
-      "url": "https://rpc.oasiseth.org:8545",
-      "chainId": 69
+      "name" : "Emerald",
+      "url": "https://testnet.emerald.oasis.dev",
+      "chainId": 42261,
+      "gameContract": "0xc7dEdF4C35358D84A8ED4b0e95A9B4B7A9B9bF19"
     }
   ]
 }

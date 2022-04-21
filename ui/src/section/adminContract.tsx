@@ -3,6 +3,9 @@ import { useState, useEffect } from 'react'
 import { TransactionManager } from '../util/TransactionManager'
 import { getNetworkList } from '../util/networkInfo'
 import AddressWidget from '../component/addressWidget'
+import SpaceWidget from '../component/spaceWidget'
+import BoxWidgetHide from '../component/boxWidgetHide'
+
 
 import Button from 'react-bootstrap/Button'
 
@@ -28,7 +31,6 @@ const AdminContract = (props : {
 
   useEffect(() => {
     if (!loading && !props.contract && props.networkName){
-      console.log("admin section2")
       setLoading(1);
       getNetworkList().then((networkList) => {
         const network = networkList.filter(
@@ -59,36 +61,32 @@ const AdminContract = (props : {
     })
   }
 
-  if (error) {
-    return <p>{error}</p>
-  }
-
-  if (loading % 2 === 1) {
-    return (
-      <div>loading...<br/>{message}</div>
-    )
-  }
-
-  if (props.contract) {
-    return (
-      <div>
-      <div>Contract <AddressWidget
-        address={props.contract.address}
-      /> on {props.networkName}</div>
-      <Button variant="warning" onClick={() => createContract()}>
-        Create new game contract on {props.networkName}
-      </Button>
-      </div>
-    )
-  }
-
   return (
-    <>
-    {loading === 2 &&
-      <Button variant="warning" onClick={() => createContract()}>
-        Create new game contract on {props.networkName}
-      </Button>}
-    </>
+    <SpaceWidget>
+      <BoxWidgetHide title="Contract" hide={false}>
+      { error &&
+        <p>{error}</p>
+      }
+      { loading === 1 &&
+          <div>loading...<br/>{message}</div>
+      }
+      { loading === 3 &&
+          <div>Processing...<br/>{message}</div>
+      }
+      { !!props.contract &&
+        <div>Contract <AddressWidget
+          address={props.contract.address}
+        /> on {props.networkName}</div>
+      }
+      { loading % 2 === 0 &&
+        <SpaceWidget>
+        <Button variant="warning" onClick={() => createContract()}>
+          Create new game contract on {props.networkName}
+        </Button>
+        </SpaceWidget>
+      }
+    </BoxWidgetHide>
+    </SpaceWidget>
   )
 }
 

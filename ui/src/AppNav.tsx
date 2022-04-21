@@ -6,6 +6,9 @@ import Nav from 'react-bootstrap/Nav';
 //import Button from 'react-bootstrap/Button';
 
 import WalletWidget from './component/walletWidget'
+import UserWidget from './game/component/userWidget'
+
+import { useAppSelector } from './hooks'
 
 const AppNav = (props: {
   setIsHome: (number: number) => void,
@@ -13,6 +16,9 @@ const AppNav = (props: {
   error: string | undefined,
   networkName: string | undefined,
 }) => {
+
+  const user = useAppSelector((state) => state.userSlice.user)
+
   return (
     <Navbar bg="light" expand="lg">
       <Navbar.Brand onClick={() => props.setIsHome(1)}>EWallet{props.networkName && <> on {props.networkName}</>}</Navbar.Brand>
@@ -41,6 +47,7 @@ const AppNav = (props: {
         </Nav>
       </Navbar.Collapse>
       <Navbar.Brand>
+        <UserWidget user={user}/>
         <WalletWidget address={props.address} error={props.error} />
       </Navbar.Brand>
       <Navbar.Brand>

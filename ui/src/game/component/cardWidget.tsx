@@ -69,6 +69,8 @@ const cardWidget = (props : {
       marginBottom:"2em",
       color:"white",
       fontWeight:"bolder",
+      marginLeft:"auto",
+      marginRight:"auto",
     }}>
     <div style={{
       borderRadius:"0.5em",

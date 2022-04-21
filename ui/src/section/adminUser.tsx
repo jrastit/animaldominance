@@ -4,10 +4,11 @@ import { useState, useEffect } from 'react'
 import { TransactionManager } from '../util/TransactionManager'
 
 import UserWidget from '../game/component/userWidget'
+import SpaceWidget from '../component/spaceWidget'
+import BoxWidgetHide from '../component/boxWidgetHide'
 
-import type {
-  UserType,
-} from '../type/userType'
+import FormControl from 'react-bootstrap/FormControl'
+import Button from 'react-bootstrap/Button'
 
 import {
   getUserId,
@@ -15,23 +16,27 @@ import {
   registerUser,
 } from '../game/user'
 
+import { setUser } from '../reducer/userSlice'
+import { useAppSelector, useAppDispatch } from '../hooks'
+
 const AdminUser = (props : {
-  user ?: UserType,
   contract : ethers.Contract,
   transactionManager : TransactionManager,
-  setUser : (user : UserType) => void
 }) => {
+
+  const user = useAppSelector((state) => state.userSlice.user)
+  const dispatch = useAppDispatch()
 
   const [loading, setLoading] = useState(0)
   const [name, setName] = useState<string>()
 
   useEffect(() => {
-    if (!loading && !props.user){
+    if (!loading && !user){
       setLoading(1)
       getUserId(props.contract).then((userId) => {
         if (userId){
           getUser(props.contract, userId).then((user) => {
-            props.setUser(user)
+            dispatch(setUser(user))
               setLoading(2);
           }).catch((err) => {
             console.error(err)
@@ -45,39 +50,47 @@ const AdminUser = (props : {
         setLoading(2);
       })
     }
-  }, [setLoading, loading, props.user, props.contract, props.setUser, props])
+  }, [setLoading, loading, user, props.contract, props, dispatch])
 
-  if (props.user) {
-    return <UserWidget
-      user={props.user}
-    />
-  }
-
-  if (loading === 1) {
-    return <div>Loading user</div>
+  const render=() => {
+    if (loading === 1){
+      return (<div>Loading user</div>)
+    }
+    if (loading === 2 && !user){
+      return (
+        <div>
+        <div>User not registered</div>
+        <div>Enter a name to register</div>
+        <div>
+        <FormControl onChange={(e) => {
+          setName(e.target.value)
+        }}></FormControl>
+        </div>
+        <div>
+        { !!name &&
+          <Button onClick={
+            (_e) => {
+              registerUser(props.contract, props.transactionManager, name).then(() => {
+                setLoading(0)
+              })
+            }
+          }>Register</Button>
+        }
+        </div>
+        </div>
+      )
+    }
   }
 
   return (
-    <div>
-    <div>User not registered</div>
-    <div>Enter a name to register</div>
-    <div>
-    <input onChange={(e) => {
-      setName(e.target.value)
-    }}></input>
-    </div>
-    <div>
-    { !!name &&
-      <button onClick={
-        (_e) => {
-          registerUser(props.contract, props.transactionManager, name).then(() => {
-            setLoading(0)
-          })
+    <SpaceWidget>
+      <BoxWidgetHide title="user" hide={false}>
+        {user &&
+          <UserWidget user={user} />
         }
-      }>Register</button>
-    }
-    </div>
-    </div>
+        { render() }
+      </BoxWidgetHide>
+    </SpaceWidget>
   )
 }
 

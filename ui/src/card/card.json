@@ -389,7 +389,7 @@
         {
           "life" : 15,
           "attack" : 25,
-          "desc" : "COuld not fly"
+          "desc" : "Not able to fly"
         },
         {
           "life" : 20,

@@ -17,21 +17,21 @@ export const cardListSlice = createSlice({
   // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: {
+    setCardList: (state, action: PayloadAction<CardType[]>) => {
+      state.cardList = action.payload
+    },
     addCard: (state, action: PayloadAction<CardType>) => {
-      console.log("add...", action.payload)
       if (state.cardList.filter(card => card.id === action.payload.id).length === 0) {
-        console.log("add", action.payload)
         state.cardList.push(action.payload)
       }
     },
     clearCardList: (state) => {
-      console.log("clear")
       state.cardList = []
     }
   },
 })
 
-export const { addCard, clearCardList } = cardListSlice.actions
+export const { addCard, setCardList, clearCardList } = cardListSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type
 export const selectCardList = (state: RootState) => state.cardListSlice.cardList

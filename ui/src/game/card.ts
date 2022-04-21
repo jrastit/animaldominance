@@ -17,6 +17,7 @@ export const createAllCard = async (
   contract: ethers.Contract,
   transactionManager: TransactionManager,
   setMessage?: (msg: string | undefined) => void,
+  speed?: number,
 ) => {
   let cardFile = require("../card/card.json")
   for (let i = 0; i < cardFile.card.length; i++) {
@@ -34,14 +35,21 @@ export const createAllCard = async (
         const promise = [] as Array<Promise<TransactionItem>>
         for (let l = 0; l < card.level.length; l++) {
           const level = card.level[l]
-          promise.push(transactionManager.sendTx(await contract.populateTransaction.setCardLevel(
+          const tx2 = transactionManager.sendTx(await contract.populateTransaction.setCardLevel(
             log2.args.id,
             level.desc,
             l,
             level.life,
             level.attack,
-          ), "Add level " + card.name + " : " + l + " => " + level.desc))
-          await sleep(200)
+          ), "Add level " + card.name + " : " + l + " => " + level.desc)
+          await tx2
+          if (speed) {
+            promise.push(tx2)
+            await sleep(200)
+          } else {
+            if (setMessage) setMessage((await tx2).log)
+          }
+
         }
         await Promise.all(promise)
       }
@@ -77,7 +85,7 @@ export const createAllCard = async (
 
 export const loadAllCard = async (
   contract: ethers.Contract,
-  setMessage?: (message: string | undefined) => void
+  setMessage?: (message: string | undefined) => void,
 ) => {
   const cardId = (await contract.cardId()).toNumber()
   //console.log(cardId)
@@ -110,7 +118,7 @@ export const loadAllCard = async (
   return cardList
 }
 
-export const loadAllCardFromFile = async () => {
+export const loadAllCardFromFile = () => {
   let cardFile = require("../card/card.json")
   return cardFile.card.map((card: any, id: number) => {
     return {

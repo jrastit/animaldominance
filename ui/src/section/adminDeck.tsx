@@ -9,19 +9,20 @@ import SpaceWidget from '../component/spaceWidget'
 import BoxWidgetHide from '../component/boxWidgetHide'
 
 import {
-  getUserCardList,
-  addUserStarterCard,
+  getUserDeckList,
+  addUserDefaultDeck,
 } from '../game/user'
 
-import { setUserCardList } from '../reducer/userSlice'
+import { setUserDeckList } from '../reducer/userSlice'
 import { useAppSelector, useAppDispatch } from '../hooks'
 
-const AdminUserCard = (props : {
+const AdminDeck = (props : {
   contract : ethers.Contract,
   transactionManager : TransactionManager,
 }) => {
 
   const user = useAppSelector((state) => state.userSlice.user)
+  const userDeckList = useAppSelector((state) => state.userSlice.userDeckList)
   const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const dispatch = useAppDispatch()
 
@@ -32,8 +33,8 @@ const AdminUserCard = (props : {
   useEffect(() => {
     if (!loading && user){
       setLoading(1)
-      getUserCardList(props.contract, user.id).then((_userCardList) => {
-        dispatch(setUserCardList(_userCardList))
+      getUserDeckList(props.contract, user.id).then((_userDeckList) => {
+        dispatch(setUserDeckList(_userDeckList))
         setLoading(2);
       }).catch((err) => {
         console.error(err)
@@ -46,33 +47,33 @@ const AdminUserCard = (props : {
     if (loading === 1) {
        return (<div>Loading cards</div>)
     } else if (loading === 2) {
-      if (userCardList && userCardList.length > 0){
-        return (<div>{userCardList.length} Cards</div>)
-      } else if (user){
+      if (userDeckList && userDeckList.length > 0){
+        return (<div>{userDeckList.length} {userDeckList.length > 1?"Decks":"Deck"}</div>)
+      } else if (user && userCardList){
         return (
           <Button variant="primary" onClick={() => {
-            addUserStarterCard(
+            addUserDefaultDeck(
               props.contract,
               props.transactionManager,
-              user.id
+              userCardList,
             ).then(() => {
               setLoading(0)
             })
           }}>
-            Get card to play
+            Get default deck
           </Button>
         )
       } else {
         return (<div>error user not set</div>)
       }
     } else {
-      return (<div>Admin user card</div>)
+      return (<div>Admin deck</div>)
     }
   }
 
   return (
     <SpaceWidget>
-      <BoxWidgetHide title='My cards' hide={false}>
+      <BoxWidgetHide title='Decks' hide={false}>
         { render() }
       </BoxWidgetHide>
     </SpaceWidget>
@@ -81,4 +82,4 @@ const AdminUserCard = (props : {
 
 }
 
-export default AdminUserCard
+export default AdminDeck

@@ -5,6 +5,11 @@ export type UserType = {
   rank: number
 }
 
+export type UserDeckType = {
+  id: number,
+  userCardIdList: number[]
+}
+
 export type UserCardType = {
   id: number,
   cardId: number,

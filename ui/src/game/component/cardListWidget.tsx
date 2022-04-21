@@ -8,8 +8,6 @@ import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Container from 'react-bootstrap/Container'
 
-
-
 const cardListWidget = (props : {
   cardList : Array<CardType>
 }) => {
@@ -34,7 +32,7 @@ const cardListWidget = (props : {
   }
 
   return (
-    <Container>
+    <Container fluid>
       {props.cardList.map(displayCard)}
     </Container>
 
