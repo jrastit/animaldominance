@@ -64,11 +64,11 @@ export const getUserDeckList = async (
   userId: number,
 ) => {
   const deckLength = ethers.BigNumber.from(
-    await contract.getUserGameDeckLength(userId)
+    await contract.getUserDeckLength(userId)
   ).toNumber()
   const userDeckList = [] as UserDeckType[]
   for (let i = 0; i < deckLength; i++) {
-    const gameDeckCardChain = await contract.getUserGameDeckCard(userId, i) as ethers.BigNumber[]
+    const gameDeckCardChain = await contract.getUserDeckCard(userId, i) as ethers.BigNumber[]
     userDeckList.push({
       id: i,
       userCardIdList: gameDeckCardChain.map(nb => nb.toNumber()),

@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 
 import { TransactionManager } from '../util/TransactionManager'
 
@@ -9,86 +9,72 @@ import BoxWidgetHide from '../component/boxWidgetHide'
 
 import FormControl from 'react-bootstrap/FormControl'
 import Button from 'react-bootstrap/Button'
+import StepMessageWidget from '../component/stepMessageWidget'
+
 
 import {
-  getUserId,
-  getUser,
   registerUser,
 } from '../game/user'
 
-import { setUser } from '../reducer/userSlice'
 import { useAppSelector, useAppDispatch } from '../hooks'
+
+import {
+  updateStep,
+  setError,
+  clearError,
+  StepId,
+  Step,
+  isStep,
+  getStep,
+} from '../reducer/contractSlice'
 
 const AdminUser = (props : {
   contract : ethers.Contract,
   transactionManager : TransactionManager,
 }) => {
-
+  const stepId = StepId.User
   const user = useAppSelector((state) => state.userSlice.user)
+  const step = useAppSelector((state) => state.contractSlice.step)
   const dispatch = useAppDispatch()
 
-  const [loading, setLoading] = useState(0)
   const [name, setName] = useState<string>()
 
-  useEffect(() => {
-    if (!loading && !user){
-      setLoading(1)
-      getUserId(props.contract).then((userId) => {
-        if (userId){
-          getUser(props.contract, userId).then((user) => {
-            dispatch(setUser(user))
-              setLoading(2);
-          }).catch((err) => {
-            console.error(err)
-            setLoading(2);
-          })
-        } else {
-          setLoading(2);
-        }
+  const _registerUser = () => {
+    if (name){
+      dispatch(updateStep({id : stepId, step : Step.Loading}))
+      registerUser(props.contract, props.transactionManager, name).then(() => {
+        dispatch(clearError(stepId))
       }).catch((err) => {
-        console.error(err)
-        setLoading(2);
+        dispatch(setError({id : stepId, catchError : err}))
       })
-    }
-  }, [setLoading, loading, user, props.contract, props, dispatch])
-
-  const render=() => {
-    if (loading === 1){
-      return (<div>Loading user</div>)
-    }
-    if (loading === 2 && !user){
-      return (
-        <div>
-        <div>User not registered</div>
-        <div>Enter a name to register</div>
-        <div>
-        <FormControl onChange={(e) => {
-          setName(e.target.value)
-        }}></FormControl>
-        </div>
-        <div>
-        { !!name &&
-          <Button onClick={
-            (_e) => {
-              registerUser(props.contract, props.transactionManager, name).then(() => {
-                setLoading(0)
-              })
-            }
-          }>Register</Button>
-        }
-        </div>
-        </div>
-      )
     }
   }
 
   return (
     <SpaceWidget>
       <BoxWidgetHide title="user" hide={false}>
+        <StepMessageWidget
+          step = {getStep(stepId, step)}
+        />
         {user &&
           <UserWidget user={user} />
         }
-        { render() }
+        { isStep(stepId, Step.NotSet, step) &&
+          <div>
+          <div>User not registered</div>
+          <div>Enter a name to register</div>
+          <div>
+          <FormControl onChange={(e) => {
+            setName(e.target.value)
+          }}></FormControl>
+          </div>
+          <div>
+          { !!name &&
+            <Button onClick={_registerUser}>Register</Button>
+          }
+          </div>
+          </div>
+        }
       </BoxWidgetHide>
     </SpaceWidget>
   )

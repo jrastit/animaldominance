@@ -49,13 +49,17 @@ struct GameCard {
 struct Game {
     uint userId1;
     uint userId2;
-    GameCard[20] cardList1;
-    GameCard[20] cardList2;
+    GameCard[] cardList1;
+    GameCard[] cardList2;
 }
 
 contract CardAdmin {
 
     event CardCreated(uint id);
+
+    event GameCreated(uint id, uint userId);
+
+    event GameFill(uint id, uint userId);
 
     address private owner;
 
@@ -76,12 +80,17 @@ contract CardAdmin {
       return userIdList[_userId].cardList;
     }
 
-    function getUserGameDeckLength(uint _userId) public view returns (uint){
+    function getUserDeckLength(uint _userId) public view returns (uint){
       return userIdList[_userId].deckList.length;
     }
 
-    function getUserGameDeckCard(uint _userId, uint _deckId) public view returns (uint[20] memory){
+    function getUserDeckCard(uint _userId, uint _deckId) public view returns (uint[20] memory){
       return userIdList[_userId].deckList[_deckId].userCardList;
+    }
+
+    function getGameCard(uint _gameId, bool _pos) public view returns (GameCard[] memory){
+      if (_pos) return gameList[_gameId].cardList1;
+      return gameList[_gameId].cardList2;
     }
 
     modifier isOwner() {
@@ -180,12 +189,7 @@ contract CardAdmin {
         GameDeck memory gameDeck = userIdList[_userId].deckList[_gameDeckId];
 
         for (uint i = 0; i < 20; i++){
-            GameCard storage gameCard;
-            if (_pos){
-                gameCard = game.cardList1[i];
-            } else {
-                gameCard = game.cardList2[i];
-            }
+            GameCard memory gameCard;
             gameCard.userId = _userId;
             gameCard.userCardId = gameDeck.userCardList[i];
             gameCard.cardId = userIdList[_userId].cardList[gameCard.userCardId].cardId;
@@ -194,12 +198,19 @@ contract CardAdmin {
             gameCard.mana = card.mana;
             gameCard.life = card.level[level].life;
             gameCard.attack = card.level[level].attack;
+            if (_pos){
+                game.cardList1.push(gameCard);
+            } else {
+                game.cardList2.push(gameCard);
+            }
+
         }
     }
 
     function createGame(uint _userId, uint _gameDeckId) private {
         gameId = gameId + 1;
         joinGamePos(gameId, _userId, _gameDeckId, true);
+        emit GameCreated(gameId, _userId);
     }
 
     function createGameSelf(uint _gameDeckId) public isUser {
@@ -209,6 +220,7 @@ contract CardAdmin {
     function joinGame(uint _gameId, uint _userId, uint _gameDeckId) private {
         require(gameList[_gameId].userId2 == 0, "Game is full");
         joinGamePos(_gameId, _userId, _gameDeckId, false);
+        emit GameFill(gameId, _userId);
     }
 
     function joinGameSelf(uint _gameId, uint _gameDeckId) public isUser {

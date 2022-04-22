@@ -1,11 +1,9 @@
 import * as ethers from 'ethers'
-import { useState, useEffect } from 'react'
 import { TransactionManager } from '../util/TransactionManager'
-import { getNetworkList } from '../util/networkInfo'
 import AddressWidget from '../component/addressWidget'
 import SpaceWidget from '../component/spaceWidget'
 import BoxWidgetHide from '../component/boxWidgetHide'
-
+import StepMessageWidget from '../component/stepMessageWidget'
 
 import Button from 'react-bootstrap/Button'
 
@@ -15,76 +13,89 @@ import {
 
 import {
   createWithManagerContractCardAdmin,
-  getContractCardAdmin,
 } from '../contract/solidity/compiled/contractAutoFactory'
+
+import {
+  updateStep,
+  setMessage,
+  setError,
+  getStep,
+  StepId,
+  Step,
+  isStep,
+  resetAllStep,
+  resetAllSubStep,
+} from '../reducer/contractSlice'
+
+import { useAppSelector, useAppDispatch } from '../hooks'
 
 const AdminContract = (props : {
   transactionManager : TransactionManager,
   contract ?: ethers.Contract,
-  setContract : (contract : ethers.Contract) => void,
+  setContract : (contract : ethers.Contract | undefined) => void,
   networkName : string,
 }) => {
+  const stepId = StepId.Contract
+  const step = useAppSelector((state) => state.contractSlice.step)
+  const dispatch = useAppDispatch()
 
-  const [loading, setLoading] = useState(0)
-  const [error, setError] = useState<string | undefined>()
-  const [message, setMessage] = useState<string | undefined>()
+  const _setMessage = (message : string | undefined) => {
+    dispatch(setMessage({id : stepId, message : message}))
+  }
 
-  useEffect(() => {
-    if (!loading && !props.contract && props.networkName){
-      setLoading(1);
-      getNetworkList().then((networkList) => {
-        const network = networkList.filter(
-          (network) => network.name === props.networkName
-        )[0]
-        if (network.gameContract){
-          props.setContract(
-            getContractCardAdmin(
-              network.gameContract,
-              props.transactionManager.signer
-            )
-          )
-        }
-        setLoading(2);
-      })
-    }
-  }, [setLoading,loading, props])
+  const fillContract = (contract : ethers.Contract) => {
+    dispatch(updateStep({id: stepId, step: Step.Creating}))
+    createAllCard(contract, props.transactionManager, _setMessage).then(() => {
+      dispatch(updateStep({id: stepId, step: Step.Ok}))
+    }).catch((err) => {
+      dispatch(setError({id : stepId, catchError : err}))
+    })
+  }
 
   const createContract = () => {
-    setLoading(3);
+    dispatch(updateStep({id: stepId, step: Step.Creating}))
     createWithManagerContractCardAdmin(props.transactionManager).then(async (contract) => {
-      await createAllCard(contract, props.transactionManager, setMessage)
       props.setContract(contract)
-      setLoading(2)
-    }).catch((_error) => {
-      console.error(_error)
-      setError(_error.toString())
+      dispatch(resetAllSubStep())
+      fillContract(contract)
+    }).catch((err) => {
+      dispatch(setError({id : stepId, catchError : err}))
     })
   }
 
   return (
     <SpaceWidget>
       <BoxWidgetHide title="Contract" hide={false}>
-      { error &&
-        <p>{error}</p>
-      }
-      { loading === 1 &&
-          <div>loading...<br/>{message}</div>
-      }
-      { loading === 3 &&
-          <div>Processing...<br/>{message}</div>
-      }
       { !!props.contract &&
-        <div>Contract <AddressWidget
+        <SpaceWidget>Contract <AddressWidget
           address={props.contract.address}
-        /> on {props.networkName}</div>
+        /> on {props.networkName}</SpaceWidget>
       }
-      { loading % 2 === 0 &&
+      <StepMessageWidget
+        step = {getStep(stepId, step)}
+      />
+      { (isStep(stepId, Step.NotSet, step) || isStep(stepId, Step.Ok, step)) &&
         <SpaceWidget>
-        <Button variant="warning" onClick={() => createContract()}>
+        <Button variant="warning" onClick={() => {props.contract && createContract()}}>
           Create new game contract on {props.networkName}
         </Button>
         </SpaceWidget>
       }
+      { isStep(stepId, Step.Empty, step) &&
+        <SpaceWidget>
+        <Button variant="warning" onClick={() => {props.contract && fillContract(props.contract)}}>
+          Fill new game contract on {props.networkName}
+        </Button>
+        </SpaceWidget>
+      }
+      <SpaceWidget>
+      <Button variant="warning" onClick={() => {
+        props.setContract(undefined)
+        dispatch(resetAllStep())
+      }}>
+        Reload all
+      </Button>
+      </SpaceWidget>
     </BoxWidgetHide>
     </SpaceWidget>
   )
