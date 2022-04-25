@@ -14,7 +14,7 @@ export enum StepId {
   UserCardList,
   UserDeckList,
   GameList,
-  Game
+  Game,
 }
 
 export enum Step {

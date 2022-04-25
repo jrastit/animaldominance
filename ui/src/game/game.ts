@@ -3,7 +3,7 @@ import * as ethers from 'ethers'
 import { TransactionManager } from '../util/TransactionManager'
 
 import {
-  GameType,
+  GameListItemType,
   GameCardType,
 } from '../type/gameType'
 
@@ -22,7 +22,9 @@ export const getGame = async (
     id: gameId,
     userId1: gameChain.userId1.toNumber(),
     userId2: gameChain.userId2.toNumber(),
-  } as GameType
+    userDeck1: gameChain.userDeck1.toNumber(),
+    userDeck2: gameChain.userDeck2.toNumber(),
+  } as GameListItemType
 }
 
 export const getGameCardList = async (
@@ -43,6 +45,7 @@ export const getGameCardList = async (
   }) as GameCardType[]
 }
 
+/*
 export const getGameFull = async (
   contract: ethers.Contract,
   gameId: number
@@ -56,16 +59,17 @@ export const getGameFull = async (
   }
   return game
 }
+*/
 
 export const getGameList = async (
   contract: ethers.Contract,
 ) => {
   const id = await getGameId(contract)
-  const game = [] as GameType[]
+  const gameList = [] as GameListItemType[]
   for (let i = 1; i <= id; i++) {
-    game.push(await getGame(contract, i))
+    gameList.push(await getGame(contract, i))
   }
-  return game
+  return gameList
 }
 
 export const createGame = async (

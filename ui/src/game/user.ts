@@ -86,10 +86,10 @@ export const addUserDefaultDeck = async (
     throw new Error("Not enought card")
   }
   const deckCardList = userCardList.slice(0, 20).map(userCard => userCard.id)
-  const tx = await transactionManager.sendTx(await contract.populateTransaction.addGameDeckSelf(
+  await transactionManager.sendTx(await contract.populateTransaction.addGameDeckSelf(
     deckCardList,
   ), "Add default deck")
-  return tx
+  return 0
 }
 
 export const addUserStarterCard = async (

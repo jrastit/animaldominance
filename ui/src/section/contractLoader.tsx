@@ -26,7 +26,11 @@ import {
   getUserDeckList,
 } from '../game/user'
 
-import { setUser, setUserCardList, setUserDeckList } from '../reducer/userSlice'
+import {
+  setUser,
+  setUserCardList,
+  setUserDeckList
+} from '../reducer/userSlice'
 
 import {
   getCardId,
@@ -38,7 +42,11 @@ import {
 } from '../game/game'
 
 import { setCardList } from '../reducer/cardListSlice'
-import { setGameList } from '../reducer/gameSlice'
+import {
+  addGameList,
+  fillGameList,
+  setGameList
+} from '../reducer/gameSlice'
 
 
 const ContractLoader = (props : {
@@ -112,7 +120,7 @@ const ContractLoader = (props : {
     }
   }
 
-  const loadCartList = () => {
+  const loadCardList = () => {
     const stepId = StepId.CardList
     if (props.contract){
       dispatch(updateStep({id : stepId, step: Step.Loading}))
@@ -133,12 +141,42 @@ const ContractLoader = (props : {
     const stepId = StepId.GameList
     if (props.contract){
       dispatch(updateStep({id : stepId, step: Step.Loading}))
+      try {
+        addGameListener()
+      } catch (err : any) {
+        dispatch(setError({id : stepId, catchError: err}))
+        return
+      }
       getGameList(props.contract).then((_gameList) => {
         dispatch(setGameList(_gameList))
         dispatch(updateStep({id : stepId, step: Step.Ok}))
       }).catch((err) => {
         dispatch(setError({id : stepId, catchError: err}))
       })
+    }
+  }
+
+  const addGameListener = () => {
+    if (props.contract){
+      if (props.contract.listenerCount("GameCreated") === 0) {
+        props.contract.on("GameCreated", (id, userId) => {
+          dispatch(addGameList({
+            id : id.toNumber(),
+            userId1 : userId.toNumber(),
+            userId2 : 0,
+            userDeck1 : 0,
+            userDeck2 : 0
+          }))
+        })
+      }
+      if (props.contract.listenerCount("GameFill") === 0) {
+        props.contract.on("GameFill", (id, userId) => {
+          dispatch(fillGameList({
+            id : id.toNumber(),
+            userId : userId.toNumber(),
+          }))
+        })
+      }
     }
   }
 
@@ -164,7 +202,7 @@ const ContractLoader = (props : {
           }
         }
         catch(err : any) {
-          dispatch(setError({id : stepId, catchError: err}))
+          dispatch(setError({id : stepId, error: "Contract error"}))
         }
       } else {
         //no game contract set
@@ -180,7 +218,7 @@ const ContractLoader = (props : {
       loadContract(props.networkName)
     }
     if (isOk(StepId.Contract, step) && isInit(StepId.CardList, step)){
-      loadCartList()
+      loadCardList()
     }
     if (isOk(StepId.Contract, step) && isInit(StepId.User, step)){
       loadUser()
@@ -194,7 +232,12 @@ const ContractLoader = (props : {
     if (isOk(StepId.Contract, step) && isInit(StepId.GameList, step)){
       loadGameList()
     }
-  }, [updateStep, step, version, props, props.networkName])
+  }, [
+    step,
+    version,
+    props,
+    props.networkName,
+  ])
 
   return (
     <>

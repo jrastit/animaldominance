@@ -13,10 +13,9 @@ import AdminSection from './section/adminSection'
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 function App() {
+
   const [isHome, setIsHome] = useState(1);
-
   const [walletInfo, setWalletInfo] = useState<WalletInfo>({})
-
   const [password, setPassword] = useState<string | null>()
 
   return (

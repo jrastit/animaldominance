@@ -45,6 +45,7 @@ export const userSlice = createSlice({
 
 export const {
   setUserDeckList,
+  clearUserDeckList,
   setUserCardList,
   clearUserCardList,
   setUser,

@@ -9,6 +9,7 @@ import { clearGame } from '../reducer/gameSlice'
 import {
   StepId,
   getStep,
+  clearError,
 } from '../reducer/contractSlice'
 import { useAppSelector, useAppDispatch } from '../hooks'
 
@@ -27,6 +28,7 @@ const AdminGame = () => {
       <BoxWidgetHide title='Games' hide={false}>
       <StepMessageWidget
         step = {getStep(stepId, step)}
+        resetStep = {() => {dispatch(clearError(stepId))}}
       />
       {!!game &&
         <Button onClick={_leaveGame}>Leave {game.id}</Button>

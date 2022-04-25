@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
-
 pragma solidity ^0.8.0;
+
+import { PlayGame } from "./PlayGame.sol";
+import { PlayGameFactory } from "./PlayGameFactory.sol";
 
 struct User {
     uint id;
@@ -36,21 +38,13 @@ struct GameDeck {
     uint[20] userCardList;
 }
 
-struct GameCard {
-    uint userId;
-    uint userCardId;
-    uint cardId;
-    int life;
-    int attack;
-    int mana;
-    int position;
-}
-
 struct Game {
     uint userId1;
     uint userId2;
-    GameCard[] cardList1;
-    GameCard[] cardList2;
+    uint userDeck1;
+    uint userDeck2;
+    uint state;
+    PlayGame playGame;
 }
 
 contract CardAdmin {
@@ -61,7 +55,11 @@ contract CardAdmin {
 
     event GameFill(uint id, uint userId);
 
+    event GameEnd(uint id);
+
     address private owner;
+
+    PlayGameFactory playGameFactory;
 
     uint public userId;
     uint public cardId;
@@ -76,6 +74,10 @@ contract CardAdmin {
       return cardList[_cardId].level[_level];
     }
 
+    function getCard(uint _cardId) public view returns (Card memory) {
+        return cardList[_cardId];
+    }
+
     function getUserCardList(uint _userId) public view returns (UserCard[] memory){
       return userIdList[_userId].cardList;
     }
@@ -88,11 +90,6 @@ contract CardAdmin {
       return userIdList[_userId].deckList[_deckId].userCardList;
     }
 
-    function getGameCard(uint _gameId, bool _pos) public view returns (GameCard[] memory){
-      if (_pos) return gameList[_gameId].cardList1;
-      return gameList[_gameId].cardList2;
-    }
-
     modifier isOwner() {
      require(msg.sender == owner, "Not owner");
         _;
@@ -103,8 +100,18 @@ contract CardAdmin {
         _;
     }
 
-    constructor() {
+    constructor(PlayGameFactory _playGameFactory) {
+        _updatePlayGameFactory(_playGameFactory);
         owner = msg.sender;
+    }
+
+    function _updatePlayGameFactory(PlayGameFactory _playGameFactory) private {
+        require(address(_playGameFactory) != address(0), "playGameFactory is null");
+        playGameFactory = _playGameFactory;
+    }
+
+    function updatePlayGameFactory(PlayGameFactory _playGameFactory) public isOwner {
+        _updatePlayGameFactory(_playGameFactory);
     }
 
     function registerUser(address _userAddress, string memory _name) private {
@@ -182,34 +189,17 @@ contract CardAdmin {
         Game storage game = gameList[_gameId];
         if (_pos){
             game.userId1 = _userId;
+            game.userDeck1 = _gameDeckId;
         } else {
             game.userId2 = _userId;
-        }
-
-        GameDeck memory gameDeck = userIdList[_userId].deckList[_gameDeckId];
-
-        for (uint i = 0; i < 20; i++){
-            GameCard memory gameCard;
-            gameCard.userId = _userId;
-            gameCard.userCardId = gameDeck.userCardList[i];
-            gameCard.cardId = userIdList[_userId].cardList[gameCard.userCardId].cardId;
-            uint level = getUserCardLevel(_userId, gameCard.userCardId);
-            Card memory card = cardList[gameCard.cardId];
-            gameCard.mana = card.mana;
-            gameCard.life = card.level[level].life;
-            gameCard.attack = card.level[level].attack;
-            if (_pos){
-                game.cardList1.push(gameCard);
-            } else {
-                game.cardList2.push(gameCard);
-            }
-
+            game.userDeck2 = _gameDeckId;
         }
     }
 
     function createGame(uint _userId, uint _gameDeckId) private {
         gameId = gameId + 1;
         joinGamePos(gameId, _userId, _gameDeckId, true);
+        gameList[gameId].state = 1;
         emit GameCreated(gameId, _userId);
     }
 
@@ -220,11 +210,28 @@ contract CardAdmin {
     function joinGame(uint _gameId, uint _userId, uint _gameDeckId) private {
         require(gameList[_gameId].userId2 == 0, "Game is full");
         joinGamePos(_gameId, _userId, _gameDeckId, false);
+        Game storage game = gameList[_gameId];
+        game.state = 2;
+        game.playGame = playGameFactory.newGame(
+            this,
+            game.userId1,
+            game.userDeck1,
+            game.userId2,
+            game.userDeck2,
+            gameId
+        );
         emit GameFill(gameId, _userId);
     }
 
     function joinGameSelf(uint _gameId, uint _gameDeckId) public isUser {
         joinGame(_gameId, userAddressList[msg.sender], _gameDeckId);
+    }
+
+    function endGame(uint _gameId) public {
+        require(gameList[_gameId].state == 2);
+        require(gameList[_gameId].playGame.getWinner() != 0);
+        gameList[_gameId].state = 3;
+        emit GameEnd(_gameId);
     }
 
 }

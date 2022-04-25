@@ -12,7 +12,6 @@ import SelectWidget from '../component/selectWidget'
 import {
   joinGame,
   createGame,
-  getGameFull,
 } from '../game/game'
 
 import {
@@ -60,12 +59,15 @@ const GameJoin = (props : {
         gameId,
         deck.id
       ).then(() => {
+        dispatch(updateStep({id : stepId, step: Step.Ready}))
+        /*
         getGameFull(props.contract, gameId).then((_game) => {
           dispatch(updateStep({id : stepId, step: Step.Ready}))
           dispatch(setGame(_game))
         }).catch((err) => {
           dispatch(setError({id : stepId, catchError: err}))
         })
+        */
       }).catch((err) => {
         dispatch(setError({id : stepId, catchError: err}))
       })
@@ -74,6 +76,7 @@ const GameJoin = (props : {
 
   const _createGame = async () => {
     if (deck){
+      dispatch(updateStep({id : stepId, step: Step.Joining}))
       createGame(
         props.contract,
         props.transactionManager,

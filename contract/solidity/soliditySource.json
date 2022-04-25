@@ -3,7 +3,16 @@
   "outputCopyPath": "../ui/src/contract/solidity/compiled",
   "file": [
     {
-      "contract": "CardAdmin"
+      "contract": "CardAdmin",
+      "arg": [
+        {
+          "name": "_playGameFactory",
+          "type": "ethers.Contract"
+        }
+      ]
+    },
+    {
+      "contract": "PlayGameFactory"
     }
   ]
 }

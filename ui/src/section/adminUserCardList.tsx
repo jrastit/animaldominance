@@ -54,11 +54,12 @@ const AdminUserCardList = (props : {
       <BoxWidgetHide title='My cards' hide={false}>
         <StepMessageWidget
           step = {getStep(stepId, step)}
+          resetStep = {() => {dispatch(clearError(stepId))}}
         />
         { isStep(stepId, Step.Ok, step) && userCardList &&
           <div>{userCardList.length} Cards</div>
         }
-        {isStep(stepId, Step.Empty, step) && userCardList &&
+        {isStep(stepId, Step.Empty, step) &&
           <Button variant="primary" onClick={_addUserStarterDeck}>
             Get card to play
           </Button>

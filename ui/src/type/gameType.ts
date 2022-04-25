@@ -12,6 +12,13 @@ export type GameType = {
   id: number
   userId1: number
   userId2: number
-  cardList1: GameCardType[]
-  cardList2: GameCardType[]
+
+}
+
+export type GameListItemType = {
+  id: number
+  userId1: number
+  userId2: number
+  userDeck1: number
+  userDeck2: number
 }

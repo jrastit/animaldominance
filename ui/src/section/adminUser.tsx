@@ -55,6 +55,7 @@ const AdminUser = (props : {
       <BoxWidgetHide title="user" hide={false}>
         <StepMessageWidget
           step = {getStep(stepId, step)}
+          resetStep = {() => {dispatch(clearError(stepId))}}
         />
         {user &&
           <UserWidget user={user} />

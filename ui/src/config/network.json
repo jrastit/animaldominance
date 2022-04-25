@@ -4,13 +4,13 @@
       "name" : "ganache",
       "url": "http://localhost:8545",
       "chainId": 1337,
-      "gameContract": "0x8CdaF0CD259887258Bc13a92C0a6dA92698644C0"
+      "gameContract": "0xfa21E79cA2dfB3ab15469796069622903919159c"
     },
     {
       "name" : "Emerald",
       "url": "https://testnet.emerald.oasis.dev",
       "chainId": 42261,
-      "gameContract": "0xc7dEdF4C35358D84A8ED4b0e95A9B4B7A9B9bF19"
+      "gameContract": "0x29f44B1e8746b7aFBd9276b160b1e4CC8Ac5C741"
     }
   ]
 }

@@ -19,7 +19,12 @@ import {
   Step,
   isStep,
   getStep,
+  clearError,
 } from '../reducer/contractSlice'
+
+import {
+  setUserDeckList,
+} from '../reducer/userSlice'
 
 import { useAppSelector, useAppDispatch } from '../hooks'
 
@@ -40,7 +45,11 @@ const AdminUserDeckList = (props : {
         props.contract,
         props.transactionManager,
         userCardList,
-      ).then(() => {
+      ).then((deckId) => {
+        dispatch(setUserDeckList([{
+          id : deckId,
+          userCardIdList : userCardList.map(userCard => userCard.id),
+        }]))
         dispatch(updateStep({id: stepId, step: Step.Ok}))
       }).catch((err) => {
         dispatch(setError({id : stepId, catchError : err}))
@@ -53,6 +62,7 @@ const AdminUserDeckList = (props : {
       <BoxWidgetHide title='Decks' hide={false}>
         <StepMessageWidget
           step = {getStep(stepId, step)}
+          resetStep = {() => {dispatch(clearError(stepId))}}
         />
         { isStep(stepId, Step.Ok, step) && userDeckList &&
           <div>{userDeckList.length} {userDeckList.length > 1?"Decks":"Deck"}</div>

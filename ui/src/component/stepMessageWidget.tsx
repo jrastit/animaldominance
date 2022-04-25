@@ -1,4 +1,5 @@
 import Alert from 'react-bootstrap/Alert'
+import Button from 'react-bootstrap/Button'
 
 import {
   StepType,
@@ -8,6 +9,7 @@ import {
 
 const StepMessageWidget = (props : {
   step : StepType
+  resetStep : () => void
 }) => {
 
   let stepCaption
@@ -36,7 +38,12 @@ const StepMessageWidget = (props : {
       <Alert variant='primary'>{stepCaption}</Alert>
     }
   { !!props.step.error &&
-    <Alert variant='error'>{props.step.error}</Alert>
+    <>
+    <Alert variant='danger'>{props.step.error}</Alert>
+    {props.resetStep &&
+      <Button variant='danger' onClick={props.resetStep}>Ok</Button>
+    }
+    </>
   }
   </>)
 }

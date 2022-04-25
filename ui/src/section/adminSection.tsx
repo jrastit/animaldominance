@@ -11,18 +11,25 @@ import AdminGameList from '../section/adminGameList'
 import AdminGame from '../section/adminGame'
 import ContractLoader from '../section/contractLoader'
 import GameJoin from '../section/gameJoin'
+import PlayGame from './playGame'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 
 import { useAppSelector } from '../hooks'
 
+import {
+  isStep,
+  StepId,
+  Step,
+} from '../reducer/contractSlice'
+
 const AdminSection = (props: {
   transactionManager : TransactionManager,
   networkName : string,
 })=> {
   const [contract, setContract] = useState<ethers.Contract>()
-
+  const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)
   const game = useAppSelector((state) => state.gameSlice.game)
 
@@ -38,49 +45,58 @@ const AdminSection = (props: {
         />
       </Col>
     </Row>
-    <Row>
-      <Col>
-        <AdminContract
+    { isStep(StepId.Game, Step.Init, step) &&
+      <Row>
+        <Col>
+          <AdminContract
+            contract={contract}
+            transactionManager={props.transactionManager}
+            setContract={setContract}
+            networkName={props.networkName}
+          />
+          {!!contract &&
+            <>
+            <AdminCard />
+            <AdminGameList/>
+            <AdminUser
+              contract={contract}
+              transactionManager={props.transactionManager}
+            />
+            </>
+          }
+          {!!contract && !!user &&
+            <>
+            <AdminUserCardList
+              contract={contract}
+              transactionManager={props.transactionManager}
+            />
+            <AdminUserDeckList
+              contract={contract}
+              transactionManager={props.transactionManager}
+            />
+            </>
+          }
+          { !!contract && !!game &&
+            <AdminGame />
+          }
+        </Col>
+        { !!contract && !!user &&
+        <Col>
+          <GameJoin
           contract={contract}
           transactionManager={props.transactionManager}
-          setContract={setContract}
-          networkName={props.networkName}
-        />
-        {!!contract &&
-          <>
-          <AdminCard />
-          <AdminGameList/>
-          <AdminUser
-            contract={contract}
-            transactionManager={props.transactionManager}
           />
-          </>
+        </Col>
         }
-        {!!contract && !!user &&
-          <>
-          <AdminUserCardList
-            contract={contract}
-            transactionManager={props.transactionManager}
-          />
-          <AdminUserDeckList
-            contract={contract}
-            transactionManager={props.transactionManager}
-          />
-          </>
-        }
-        { !!contract && !!game &&
-          <AdminGame />
-        }
-      </Col>
-      { !!contract && !!user &&
-      <Col>
-        <GameJoin
-        contract={contract}
-        transactionManager={props.transactionManager}
-        />
-      </Col>
-      }
-    </Row>
+      </Row>
+    }
+    {
+      !isStep(StepId.Game, Step.Init, step) &&
+      <PlayGame
+      contract={contract}
+      transactionManager={props.transactionManager}
+      />
+    }
     </>
   )
 

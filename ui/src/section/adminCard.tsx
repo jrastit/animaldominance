@@ -14,6 +14,7 @@ import StepMessageWidget from '../component/stepMessageWidget'
 import {
   getStep,
   StepId,
+  clearError,
 } from '../reducer/contractSlice'
 
 const AdminCard = ()=> {
@@ -33,6 +34,7 @@ const AdminCard = ()=> {
       <BoxWidgetHide title='Game Card' hide={false}>
         <StepMessageWidget
           step = {getStep(stepId, step)}
+          resetStep = {() => {dispatch(clearError(stepId))}}
         />
         {cardList.length > 0 &&
           <>
