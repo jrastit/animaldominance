@@ -21,7 +21,11 @@ export enum Step {
   Init,
   Loading,
   Creating,
+  Waiting,
   Joining,
+  Running,
+  Update,
+  Ended,
   Ready,
   NotSet,
   Empty,
@@ -99,6 +103,7 @@ export const contractSlice = createSlice({
       if (action.payload.catchError) {
         error = action.payload.catchError.message
       }
+      console.error(error)
       state.step.forEach((step) => {
         if (step.id === action.payload.id) {
           step.step = Step.Error

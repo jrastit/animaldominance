@@ -7,11 +7,11 @@ import { CardAdmin } from "./CardAdmin.sol";
 contract PlayGameFactory {
     function newGame(
         CardAdmin _cardAdmin,
-        uint _userId1,
-        uint _gameDeckId1,
-        uint _userId2,
-        uint _gameDeckId2,
-        uint _gameId
+        uint64 _userId1,
+        uint16 _gameDeckId1,
+        uint64 _userId2,
+        uint16 _gameDeckId2,
+        uint64 _gameId
     ) public returns(PlayGame){
         return new PlayGame(
             _cardAdmin,

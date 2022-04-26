@@ -12,6 +12,9 @@
       ]
     },
     {
+      "contract": "PlayGame"
+    },
+    {
       "contract": "PlayGameFactory"
     }
   ]

@@ -39,9 +39,10 @@ export class TransactionManager {
         log
       } as TransactionItem
       this.transactionList.push(transactionItem)
-      //console.log("Success" + log)
+      console.log("Success" + log)
       return transactionItem
     } catch (e: any) {
+      console.error(e)
       let message
       try {
         message = JSON.parse(e.error.body).error.message

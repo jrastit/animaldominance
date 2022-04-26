@@ -31,6 +31,7 @@ const AdminSection = (props: {
   const [contract, setContract] = useState<ethers.Contract>()
   const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)
+  const deckList = useAppSelector((state) => state.userSlice.userDeckList)
   const game = useAppSelector((state) => state.gameSlice.game)
 
   return (
@@ -80,7 +81,7 @@ const AdminSection = (props: {
             <AdminGame />
           }
         </Col>
-        { !!contract && !!user &&
+        { !!contract && !!user && deckList && (deckList.length > 0) &&
         <Col>
           <GameJoin
           contract={contract}
@@ -91,7 +92,7 @@ const AdminSection = (props: {
       </Row>
     }
     {
-      !isStep(StepId.Game, Step.Init, step) &&
+      !isStep(StepId.Game, Step.Init, step) && !!contract &&
       <PlayGame
       contract={contract}
       transactionManager={props.transactionManager}

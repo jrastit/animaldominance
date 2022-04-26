@@ -18,7 +18,7 @@ import {
   UserDeckType
 } from '../type/userType'
 
-import { setGame } from '../reducer/gameSlice'
+import { setGameId } from '../reducer/gameSlice'
 import {
   Step,
   StepId,
@@ -37,7 +37,9 @@ const GameJoin = (props : {
   const userDeckList = useAppSelector((state) => state.userSlice.userDeckList)
   const dispatch = useAppDispatch()
 
-  const [deck, setDeck] = useState<UserDeckType>()
+  const [deck, setDeck] = useState<UserDeckType | undefined>(
+    userDeckList ? userDeckList[0] : undefined
+  )
 
 
   const onChangeDeck = (event : {target : {name : string, value : string}}) => {
@@ -59,31 +61,44 @@ const GameJoin = (props : {
         gameId,
         deck.id
       ).then(() => {
+        dispatch(setGameId(gameId))
         dispatch(updateStep({id : stepId, step: Step.Ready}))
-        /*
-        getGameFull(props.contract, gameId).then((_game) => {
-          dispatch(updateStep({id : stepId, step: Step.Ready}))
-          dispatch(setGame(_game))
-        }).catch((err) => {
-          dispatch(setError({id : stepId, catchError: err}))
-        })
-        */
       }).catch((err) => {
         dispatch(setError({id : stepId, catchError: err}))
       })
+    } else {
+      dispatch(setError({id : stepId, error: 'No deck set'}))
     }
   }
 
   const _createGame = async () => {
     if (deck){
-      dispatch(updateStep({id : stepId, step: Step.Joining}))
+      dispatch(updateStep({id : stepId, step: Step.Creating}))
       createGame(
         props.contract,
         props.transactionManager,
         deck.id
       ).then((gameId) => {
-        dispatch(setGame(gameId))
+        dispatch(setGameId(gameId))
+        dispatch(updateStep({id : stepId, step: Step.Waiting}))
+      }).catch((err) => {
+        dispatch(setError({id : stepId, catchError: err}))
       })
+    }
+
+  }
+
+  const userGame = gameList.filter((_game) => {
+    return !_game.winner && user && (_game.userId1 === user.id || _game.userId2 === user.id)
+  })
+
+  if (userGame && userGame.length > 0){
+    console.log("here!!!", userGame[0])
+    dispatch(setGameId(userGame[0].id))
+    if (userGame[0].userId2){
+      dispatch(updateStep({id : stepId, step: Step.Ready}))
+    } else {
+      dispatch(updateStep({id : stepId, step: Step.Waiting}))
     }
 
   }

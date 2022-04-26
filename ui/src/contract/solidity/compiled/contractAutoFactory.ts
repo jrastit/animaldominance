@@ -2,6 +2,7 @@ import { ethers } from 'ethers'
 import { TransactionManager } from '../../../util/TransactionManager'
 
 import jsonCardAdmin from './CardAdmin.json'
+import jsonPlayGame from './PlayGame.json'
 import jsonPlayGameFactory from './PlayGameFactory.json'
 
 export const createContractCardAdmin = async (
@@ -15,6 +16,20 @@ export const createContractCardAdmin = async (
 	)
 	const contract = await factory.deploy(
 		_playGameFactory.address,
+	)
+	await contract.deployed()
+	return contract
+}
+
+export const createContractPlayGame = async (
+	signer: ethers.Signer
+) => {
+	const factory = new ethers.ContractFactory(
+		jsonPlayGame.abi,
+		jsonPlayGame.bytecode,
+		signer
+	)
+	const contract = await factory.deploy(
 	)
 	await contract.deployed()
 	return contract
@@ -53,6 +68,22 @@ export const createWithManagerContractCardAdmin = async (
 	)
 }
 
+export const createWithManagerContractPlayGame = async (
+	transactionManager: TransactionManager
+) => {
+	const factory = new ethers.ContractFactory(
+		jsonPlayGame.abi,
+		jsonPlayGame.bytecode,
+	)
+	const utx = factory.getDeployTransaction(
+	)
+	return await transactionManager.sendContractTx(
+		utx,
+		getContractPlayGame,
+		 'Create contract PlayGame',
+	)
+}
+
 export const createWithManagerContractPlayGameFactory = async (
 	transactionManager: TransactionManager
 ) => {
@@ -77,6 +108,17 @@ export const getContractCardAdmin = (
 	return new ethers.Contract(
 		contractAddress,
 		jsonCardAdmin.abi,
+		signer,
+	)
+}
+
+export const getContractPlayGame = (
+	contractAddress: string,
+	signer: ethers.Signer,
+) => {
+	return new ethers.Contract(
+		contractAddress,
+		jsonPlayGame.abi,
 		signer,
 	)
 }

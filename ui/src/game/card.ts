@@ -86,7 +86,7 @@ export const createAllCard = async (
 export const getCardId = async (
   contract: ethers.Contract,
 ) => {
-  return (await contract.cardId()).toNumber()
+  return (await contract.cardId())
 }
 
 export const loadAllCard = async (
@@ -100,11 +100,11 @@ export const loadAllCard = async (
     const cardChain = (await contract.cardList(i))
     //console.log(cardChain)
     const card = {
-      id: cardChain.id.toNumber(),
+      id: cardChain.id,
       name: cardChain.name,
-      mana: cardChain.mana.toNumber(),
-      family: cardChain.family.toNumber(),
-      starter: cardChain.starter.toNumber(),
+      mana: cardChain.mana,
+      family: cardChain.family,
+      starter: cardChain.starter,
       level: [] as Array<CardLevelType>
     } as CardType
     for (let j = 0; j < 6; j++) {
@@ -112,8 +112,8 @@ export const loadAllCard = async (
       const levelChain = (await contract.getCardLevel(i, j))
       const level = {
         description: levelChain.description,
-        life: levelChain.life.toNumber(),
-        attack: levelChain.attack.toNumber(),
+        life: levelChain.life,
+        attack: levelChain.attack,
       } as CardLevelType
       card.level.push(level)
     }
@@ -142,4 +142,13 @@ export const loadAllCardFromFile = () => {
       })
     } as CardType
   })
+}
+
+export const getLevel = (exp: number) => {
+  if (exp > 100000) return 5
+  if (exp > 10000) return 4
+  if (exp > 1000) return 3
+  if (exp > 100) return 2
+  if (exp > 10) return 1
+  return 0
 }

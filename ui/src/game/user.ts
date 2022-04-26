@@ -40,7 +40,7 @@ export const getUser = async (
   return {
     id: userChain.id.toNumber(),
     name: userChain.name,
-    totem: userChain.totem.toNumber(),
+    totem: userChain.totem,
     rank: userChain.rank.toNumber(),
   } as UserType
 }
@@ -53,7 +53,7 @@ export const getUserCardList = async (
   return cardListChain.map((userCardChain: any, id: number) => {
     return {
       id: id,
-      cardId: userCardChain.cardId.toNumber(),
+      cardId: userCardChain.cardId,
       exp: userCardChain.exp.toNumber(),
     }
   })
@@ -63,15 +63,13 @@ export const getUserDeckList = async (
   contract: ethers.Contract,
   userId: number,
 ) => {
-  const deckLength = ethers.BigNumber.from(
-    await contract.getUserDeckLength(userId)
-  ).toNumber()
+  const deckLength = await contract.getUserDeckLength(userId)
   const userDeckList = [] as UserDeckType[]
   for (let i = 0; i < deckLength; i++) {
-    const gameDeckCardChain = await contract.getUserDeckCard(userId, i) as ethers.BigNumber[]
+    const gameDeckCardChain = await contract.getUserDeckCard(userId, i)
     userDeckList.push({
       id: i,
-      userCardIdList: gameDeckCardChain.map(nb => nb.toNumber()),
+      userCardIdList: gameDeckCardChain,
     })
   }
   return userDeckList

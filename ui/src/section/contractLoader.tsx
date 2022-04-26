@@ -45,6 +45,7 @@ import { setCardList } from '../reducer/cardListSlice'
 import {
   addGameList,
   fillGameList,
+  endGameList,
   setGameList
 } from '../reducer/gameSlice'
 
@@ -71,8 +72,8 @@ const ContractLoader = (props : {
       dispatch(updateStep({id : stepId, step: Step.Loading}))
       getUserId(props.contract).then((userId) => {
         if (userId && props.contract){
-          getUser(props.contract, userId).then((user) => {
-            dispatch(setUser(user))
+          getUser(props.contract, userId).then((_user) => {
+            dispatch(setUser(_user))
               dispatch(updateStep({id : stepId, step: Step.Ok}))
           }).catch((err) => {
             dispatch(setError({id : stepId, catchError: err}))
@@ -160,20 +161,36 @@ const ContractLoader = (props : {
     if (props.contract){
       if (props.contract.listenerCount("GameCreated") === 0) {
         props.contract.on("GameCreated", (id, userId) => {
+          console.log("game created event")
           dispatch(addGameList({
             id : id.toNumber(),
             userId1 : userId.toNumber(),
             userId2 : 0,
             userDeck1 : 0,
-            userDeck2 : 0
+            userDeck2 : 0,
+            winner : 0,
           }))
         })
       }
       if (props.contract.listenerCount("GameFill") === 0) {
         props.contract.on("GameFill", (id, userId) => {
+          console.log("game join event")
+          const _gameId = id.toNumber()
+          const _userId = userId.toNumber()
           dispatch(fillGameList({
-            id : id.toNumber(),
-            userId : userId.toNumber(),
+            id : _gameId,
+            userId : _userId,
+          }))
+        })
+      }
+      if (props.contract.listenerCount("GameEnd") === 0) {
+        props.contract.on("GameEnd", (id, winner) => {
+          const _gameId = id.toNumber()
+          const _winner = winner.toNumber()
+          console.log("game end event", id, winner)
+          dispatch(endGameList({
+            id : _gameId,
+            winner : _winner,
           }))
         })
       }

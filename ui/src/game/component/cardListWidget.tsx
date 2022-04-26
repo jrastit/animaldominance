@@ -24,8 +24,13 @@ const cardListWidget = (props : {
     return (
       <Col xs={2} key={level}>
         <CardWidget
-          card={card}
+          family={card.family}
+          mana={card.mana}
+          name={card.name}
           level={level}
+          attack={card.level[level].attack}
+          life={card.level[level].life}
+          description={card.level[level].description}
         />
       </Col>
     )

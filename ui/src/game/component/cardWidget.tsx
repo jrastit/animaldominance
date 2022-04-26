@@ -1,16 +1,17 @@
-import type {
-  CardType
-} from '../../type/cardType'
-
 import Image from 'react-bootstrap/Image'
 
 const cardWidget = (props : {
-  card : CardType,
+  family : number
+  name : string
+  mana : number
   level : number
+  attack : number
+  life : number
+  description : string
 }) => {
 
   let familyColor="black"
-  switch (props.card.family){
+  switch (props.family){
     case 1:
       familyColor="#3D550C"
     break
@@ -80,7 +81,7 @@ const cardWidget = (props : {
       paddingLeft:"0.5em",
       paddingRight:"0.5em",
     }}>
-      <Image src={"animal/"+ props.card.name.split(" ").join("") + ".jpg"} style={{
+      <Image src={"animal/"+ props.name.split(" ").join("") + ".jpg"} style={{
         marginTop:"1.2em",
         borderRadius:"0.5em",
         width:"9.5em",
@@ -95,7 +96,7 @@ const cardWidget = (props : {
           border:"thin solid #303437",
           borderRadius:"0.5em",
           backgroundColor:"rgba(0, 0, 0, 0.50)"
-        }}>{props.card.name}</div>
+        }}>{props.name}</div>
         <div style={{
           marginTop:"-1em",
           marginBottom:"-1em",
@@ -110,10 +111,10 @@ const cardWidget = (props : {
           borderRadius:"1em",
           display:"inline-block",
           backgroundColor:"#341948"
-        }}>{props.card.mana}</div>
+        }}>{props.mana}</div>
         </div>
       </div>
-      <Image fluid src={"animal/"+ props.card.name.split(" ").join("") + ".jpg"} style={{
+      <Image fluid src={"animal/"+ props.name.split(" ").join("") + ".jpg"} style={{
         marginTop:".2em",
         borderRadius:"0.5em",
         width:"9.5em",
@@ -138,7 +139,7 @@ const cardWidget = (props : {
         borderRadius:"1em",
         flexBasis:"2em",
         backgroundColor:"#DF362D"
-      }}>{props.card.level[props.level].attack}</div>
+      }}>{props.attack}</div>
       <div style={{
         flexGrow:"1",
 
@@ -153,7 +154,7 @@ const cardWidget = (props : {
         borderRadius:"1em",
         flexBasis:"2em",
         backgroundColor:"#4c5270"
-      }}>{props.card.level[props.level].life}</div>
+      }}>{props.life}</div>
       </div>
       <div style={{
         height:"7.5em",
@@ -165,7 +166,7 @@ const cardWidget = (props : {
           backgroundColor:familyColor,
           fontWeight:"normal",
         }}>
-          {props.card.level[props.level].description}
+          {props.description}
         </div>
       </div>
       <div style={{

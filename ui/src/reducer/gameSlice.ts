@@ -4,14 +4,18 @@ import type { GameListItemType, GameType } from '../type/gameType'
 
 // Define a type for the slice state
 interface GameState {
+  gameId: number
   game: GameType | undefined
   gameList: GameListItemType[]
+  gameVersion: number
 }
 
 // Define the initial state using that type
 const initialState: GameState = {
+  gameId: 0,
   game: undefined,
   gameList: [],
+  gameVersion: 0
 }
 
 export const _fillGame = (
@@ -21,6 +25,18 @@ export const _fillGame = (
   state.gameList = state.gameList.map(_game => {
     if (_game.id === gameJoin.id) {
       _game.userId2 = gameJoin.userId
+    }
+    return _game
+  })
+}
+
+export const _endGame = (
+  state: GameState,
+  gameEnd: { id: number, winner: number }
+) => {
+  state.gameList = state.gameList.map(_game => {
+    if (_game.id === gameEnd.id) {
+      _game.winner = gameEnd.winner
     }
     return _game
   })
@@ -55,17 +71,28 @@ export const gameSlice = createSlice({
     fillGameList: (state, action: PayloadAction<{ id: number, userId: number }>) => {
       _fillGame(state, action.payload)
     },
+    endGameList: (state, action: PayloadAction<{ id: number, winner: number }>) => {
+      _endGame(state, action.payload)
+    },
     setGameList: (state, action: PayloadAction<GameListItemType[]>) => {
       action.payload.forEach(game => _addGame(state, game))
     },
     clearGameList: (state) => {
       state.gameList = []
     },
+    setGameId: (state, action: PayloadAction<number>) => {
+      state.gameId = action.payload
+    },
+    setGameVersion: (state, action: PayloadAction<number>) => {
+      state.gameVersion = action.payload
+    },
     setGame: (state, action: PayloadAction<GameType>) => {
       state.game = action.payload
     },
     clearGame: (state) => {
       state.game = undefined
+      state.gameId = 0
+      state.gameVersion = 0
     }
   },
 })
@@ -73,9 +100,12 @@ export const gameSlice = createSlice({
 export const {
   addGameList,
   fillGameList,
+  endGameList,
   setGameList,
   clearGameList,
   setGame,
+  setGameId,
+  setGameVersion,
   clearGame
 } = gameSlice.actions
 

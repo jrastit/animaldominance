@@ -5,88 +5,88 @@ import { PlayGame } from "./PlayGame.sol";
 import { PlayGameFactory } from "./PlayGameFactory.sol";
 
 struct User {
-    uint id;
+    uint64 id;
     string name;
-    int totem;
-    int rank;
+    uint16 totem;
+    uint64 rank;
     UserCard[] cardList;
     GameDeck[] deckList;
 }
 
 struct Card {
-    uint id;
+    uint32 id;
     string name;
-    int mana;
-    int family;
-    int starter;
+    uint8 mana;
+    uint8 family;
+    uint8 starter;
     CardLevel[6] level;
 }
 
 struct CardLevel {
-    uint level;
+    uint8 level;
     string description;
-    int life;
-    int attack;
+    uint16 life;
+    uint16 attack;
 }
 
 struct UserCard {
-    uint cardId;
-    int exp;
+    uint32 cardId;
+    uint64 exp;
 }
 
 struct GameDeck {
-    uint[20] userCardList;
+    uint32[20] userCardList;
 }
 
 struct Game {
-    uint userId1;
-    uint userId2;
-    uint userDeck1;
-    uint userDeck2;
-    uint state;
+    uint64 userId1;
+    uint64 userId2;
+    uint16 userDeck1;
+    uint16 userDeck2;
+    uint64 winner;
     PlayGame playGame;
 }
 
 contract CardAdmin {
 
-    event CardCreated(uint id);
+    event CardCreated(uint32 id);
 
-    event GameCreated(uint id, uint userId);
+    event GameCreated(uint64 id, uint64 userId);
 
-    event GameFill(uint id, uint userId);
+    event GameFill(uint64 id, uint64 userId);
 
-    event GameEnd(uint id);
+    event GameEnd(uint64 id, uint64 winner);
 
     address private owner;
 
     PlayGameFactory playGameFactory;
 
-    uint public userId;
-    uint public cardId;
-    uint public gameId;
-    mapping(uint => User) public userIdList;
-    mapping(address => uint) public userAddressList;
-    mapping(string => uint) public userNameList;
-    mapping(uint => Card) public cardList;
-    mapping(uint => Game) public gameList;
+    uint64 public userId;
+    uint32 public cardId;
+    uint64 public gameId;
+    mapping(uint64 => User) public userIdList;
+    mapping(address => uint64) public userAddressList;
+    mapping(string => uint64) public userNameList;
+    mapping(uint32 => Card) public cardList;
+    mapping(uint64 => Game) public gameList;
 
-    function getCardLevel(uint _cardId, uint _level) public view returns (CardLevel memory) {
+    function getCardLevel(uint32 _cardId, uint8 _level) public view returns (CardLevel memory) {
       return cardList[_cardId].level[_level];
     }
 
-    function getCard(uint _cardId) public view returns (Card memory) {
+    function getCard(uint32 _cardId) public view returns (Card memory) {
         return cardList[_cardId];
     }
 
-    function getUserCardList(uint _userId) public view returns (UserCard[] memory){
+    function getUserCardList(uint64 _userId) public view returns (UserCard[] memory){
       return userIdList[_userId].cardList;
     }
 
-    function getUserDeckLength(uint _userId) public view returns (uint){
-      return userIdList[_userId].deckList.length;
+    function getUserDeckLength(uint64 _userId) public view returns (uint16){
+      return uint16(userIdList[_userId].deckList.length);
     }
 
-    function getUserDeckCard(uint _userId, uint _deckId) public view returns (uint[20] memory){
+    function getUserDeckCard(uint64 _userId, uint16 _deckId) public view returns (uint32[20] memory){
       return userIdList[_userId].deckList[_deckId].userCardList;
     }
 
@@ -128,13 +128,13 @@ contract CardAdmin {
         registerUser(msg.sender, _name);
     }
 
-    function createCard(string memory _name, int _mana, int _family, int _starter) public isOwner {
+    function createCard(string memory _name, uint8 _mana, uint8 _family, uint8 _starter) public isOwner {
         cardId = cardId + 1;
         cardList[cardId].id = cardId;
         updateCard(cardId, _name, _mana, _family, _starter);
     }
 
-    function updateCard(uint _cardId, string memory _name, int _mana, int _family, int _starter) public isOwner {
+    function updateCard(uint32 _cardId, string memory _name, uint8 _mana, uint8 _family, uint8 _starter) public isOwner {
         cardList[_cardId].name = _name;
         cardList[_cardId].mana = _mana;
         cardList[_cardId].family = _family;
@@ -142,21 +142,21 @@ contract CardAdmin {
         emit CardCreated(_cardId);
     }
 
-    function setCardLevel(uint _cardId, string memory _description, uint _level, int _life, int _attack) public isOwner {
+    function setCardLevel(uint32 _cardId, string memory _description, uint8 _level, uint16 _life, uint16 _attack) public isOwner {
         cardList[_cardId].level[_level].description = _description;
         cardList[_cardId].level[_level].life = _life;
         cardList[_cardId].level[_level].attack = _attack;
     }
 
-    function addUserCard(uint _userId, uint _cardId) private {
+    function addUserCard(uint64 _userId, uint32 _cardId) private {
         UserCard memory userCard = UserCard(_cardId, 0);
         userIdList[_userId].cardList.push(userCard);
     }
 
-    function addUserStarterCard(uint _userId) public {
+    function addUserStarterCard(uint64 _userId) public {
         require(userIdList[_userId].cardList.length == 0, "Already have card");
-        for (uint i = 1; i <= cardId; i++) {
-            int starter = cardList[i].starter;
+        for (uint32 i = 1; i <= cardId; i++) {
+            uint8 starter = cardList[i].starter;
             while(starter > 0) {
                 addUserCard(_userId, i);
                 starter = starter - 1;
@@ -164,18 +164,18 @@ contract CardAdmin {
         }
     }
 
-    function addGameDeck(uint _userId, uint[20] memory _userCardList) private {
+    function addGameDeck(uint64 _userId, uint32[20] memory _userCardList) private {
       GameDeck memory gameDeck;
       gameDeck.userCardList = _userCardList;
       userIdList[_userId].deckList.push(gameDeck);
     }
 
-    function addGameDeckSelf(uint[20] memory _userCardList) public isUser {
+    function addGameDeckSelf(uint32[20] memory _userCardList) public isUser {
       addGameDeck(userAddressList[msg.sender], _userCardList);
     }
 
-    function getUserCardLevel(uint _userId, uint _userCardId) public view returns(uint){
-        int exp = userIdList[_userId].cardList[_userCardId].exp;
+    function getUserCardLevel(uint64 _userId, uint32 _userCardId) public view returns(uint8){
+        uint64 exp = userIdList[_userId].cardList[_userCardId].exp;
         if (exp < 10) return 0;
         if (exp < 100) return 1;
         if (exp < 1000) return 2;
@@ -185,7 +185,7 @@ contract CardAdmin {
     }
 
     //Game creation
-    function joinGamePos(uint _gameId, uint _userId, uint _gameDeckId, bool _pos) private {
+    function joinGamePos(uint64 _gameId, uint64 _userId, uint16 _gameDeckId, bool _pos) private {
         Game storage game = gameList[_gameId];
         if (_pos){
             game.userId1 = _userId;
@@ -196,22 +196,20 @@ contract CardAdmin {
         }
     }
 
-    function createGame(uint _userId, uint _gameDeckId) private {
+    function createGame(uint64 _userId, uint16 _gameDeckId) private {
         gameId = gameId + 1;
         joinGamePos(gameId, _userId, _gameDeckId, true);
-        gameList[gameId].state = 1;
         emit GameCreated(gameId, _userId);
     }
 
-    function createGameSelf(uint _gameDeckId) public isUser {
+    function createGameSelf(uint16 _gameDeckId) public isUser {
         createGame(userAddressList[msg.sender], _gameDeckId);
     }
 
-    function joinGame(uint _gameId, uint _userId, uint _gameDeckId) private {
+    function joinGame(uint64 _gameId, uint64 _userId, uint16 _gameDeckId) private {
         require(gameList[_gameId].userId2 == 0, "Game is full");
         joinGamePos(_gameId, _userId, _gameDeckId, false);
         Game storage game = gameList[_gameId];
-        game.state = 2;
         game.playGame = playGameFactory.newGame(
             this,
             game.userId1,
@@ -223,15 +221,16 @@ contract CardAdmin {
         emit GameFill(gameId, _userId);
     }
 
-    function joinGameSelf(uint _gameId, uint _gameDeckId) public isUser {
+    function joinGameSelf(uint64 _gameId, uint16 _gameDeckId) public isUser {
         joinGame(_gameId, userAddressList[msg.sender], _gameDeckId);
     }
 
-    function endGame(uint _gameId) public {
-        require(gameList[_gameId].state == 2);
-        require(gameList[_gameId].playGame.getWinner() != 0);
-        gameList[_gameId].state = 3;
-        emit GameEnd(_gameId);
+    function endGame(uint64 _gameId) public {
+        require(gameList[_gameId].winner == 0);
+        uint64 winner = gameList[_gameId].playGame.getWinner();
+        require(winner != 0);
+        gameList[_gameId].winner = winner;
+        emit GameEnd(_gameId, winner);
     }
 
 }

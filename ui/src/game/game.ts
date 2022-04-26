@@ -5,13 +5,32 @@ import { TransactionManager } from '../util/TransactionManager'
 import {
   GameListItemType,
   GameCardType,
+  GameType
 } from '../type/gameType'
+
+import {
+  getContractPlayGame
+} from '../contract/solidity/compiled/contractAutoFactory'
 
 export const getGameId = async (
   contract: ethers.Contract,
 ) => {
   return ethers.BigNumber.from(await contract.gameId()).toNumber()
 }
+
+export const getGameContract = async (
+  contract: ethers.Contract,
+  transactionManager: TransactionManager,
+  gameId: number
+) => {
+  const gameChain = await contract.gameList(gameId)
+  const contractAddress = gameChain.playGame
+  if (!contractAddress) {
+    throw Error("Game contract not found")
+  }
+  return getContractPlayGame(contractAddress, transactionManager.signer)
+}
+
 
 export const getGame = async (
   contract: ethers.Contract,
@@ -22,44 +41,66 @@ export const getGame = async (
     id: gameId,
     userId1: gameChain.userId1.toNumber(),
     userId2: gameChain.userId2.toNumber(),
-    userDeck1: gameChain.userDeck1.toNumber(),
-    userDeck2: gameChain.userDeck2.toNumber(),
+    userDeck1: gameChain.userDeck1,
+    userDeck2: gameChain.userDeck2,
+    winner: gameChain.winner.toNumber(),
   } as GameListItemType
 }
 
 export const getGameCardList = async (
-  contract: ethers.Contract,
-  gameId: number,
+  gameContract: ethers.Contract,
   pos: boolean
 ) => {
-  return (await contract.getGameCard(gameId, pos)).map((gameCardListChain: any) => {
+  return (await gameContract.getGameCardList(pos)).map((gameCardListChain: any) => {
     return {
       userId: gameCardListChain.userId.toNumber(),
-      userCardId: gameCardListChain.userCardId.toNumber(),
-      cardId: gameCardListChain.cardId.toNumber(),
-      life: gameCardListChain.life.toNumber(),
-      attack: gameCardListChain.attack.toNumber(),
-      mana: gameCardListChain.mana.toNumber(),
-      position: gameCardListChain.position.toNumber(),
+      userCardId: gameCardListChain.userCardId,
+      cardId: gameCardListChain.cardId,
+      life: gameCardListChain.life,
+      attack: gameCardListChain.attack,
+      mana: gameCardListChain.mana,
+      position: gameCardListChain.position,
     }
   }) as GameCardType[]
 }
 
-/*
+
 export const getGameFull = async (
-  contract: ethers.Contract,
-  gameId: number
+  gameContract: ethers.Contract,
+  setMessage: (massage: string) => void
 ) => {
-  const game = await getGame(contract, gameId)
-  if (game.userId1) {
-    game.cardList1 = await getGameCardList(contract, gameId, true)
-  }
-  if (game.userId1) {
-    game.cardList2 = await getGameCardList(contract, gameId, false)
-  }
+  setMessage('Load id ')
+  const id = ethers.BigNumber.from(await gameContract.gameId()).toNumber()
+  setMessage('Load user1 id ')
+  const userId1 = ethers.BigNumber.from(await gameContract.userId1()).toNumber()
+  setMessage('Load user2 id ')
+  const userId2 = ethers.BigNumber.from(await gameContract.userId2()).toNumber()
+  setMessage('Load user1 card ')
+  const cardList1 = await getGameCardList(gameContract, true)
+  setMessage('Load user2 card ')
+  const cardList2 = await getGameCardList(gameContract, false)
+  setMessage('Load latest time ')
+  const latestTime = ethers.BigNumber.from(await gameContract.latestTime()).toNumber()
+  setMessage('Load version ')
+  const version = await gameContract.version()
+  setMessage('Load turn ')
+  const turn = await gameContract.turn()
+  setMessage('Load winner ')
+  const winner = ethers.BigNumber.from(await gameContract.winner()).toNumber()
+  const game = {
+    id,
+    userId1,
+    userId2,
+    cardList1,
+    cardList2,
+    latestTime,
+    version,
+    turn,
+    winner,
+  } as GameType
   return game
 }
-*/
+
 
 export const getGameList = async (
   contract: ethers.Contract,
@@ -99,7 +140,19 @@ export const joinGame = async (
     await contract.populateTransaction.joinGameSelf(
       gameId,
       userDeckId,
-    ), "Create game"
+    ), "Join game"
+  )
+  return tx
+}
+
+export const leaveGame = async (
+  gameContract: ethers.Contract,
+  transactionManager: TransactionManager,
+) => {
+  const tx = await transactionManager.sendTx(
+    await gameContract.populateTransaction.leaveGame(
+
+    ), "Leave game"
   )
   return tx
 }
