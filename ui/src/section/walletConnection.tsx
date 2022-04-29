@@ -141,7 +141,9 @@ const WalletConnection = (props: {
               broswerWallet.pkey,
               provider
             ))
-            transactionManager.signer.getBalance().then(setBalance).catch(setError)
+            transactionManager.signer.getBalance().then(setBalance).catch(
+              (err)=>{setError(err.toString())}
+            )
           }
         }
         name = broswerWallet.name

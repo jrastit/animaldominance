@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
 import type { GameListItemType, GameType } from '../type/gameType'
+import type { UserType } from '../type/userType'
 
 // Define a type for the slice state
 interface GameState {
@@ -8,6 +9,7 @@ interface GameState {
   game: GameType | undefined
   gameList: GameListItemType[]
   gameVersion: number
+  oponent: UserType | undefined
 }
 
 // Define the initial state using that type
@@ -15,7 +17,8 @@ const initialState: GameState = {
   gameId: 0,
   game: undefined,
   gameList: [],
-  gameVersion: 0
+  gameVersion: 0,
+  oponent: undefined,
 }
 
 export const _fillGame = (
@@ -86,6 +89,9 @@ export const gameSlice = createSlice({
     setGameVersion: (state, action: PayloadAction<number>) => {
       state.gameVersion = action.payload
     },
+    setOponent: (state, action: PayloadAction<UserType>) => {
+      state.oponent = action.payload
+    },
     setGame: (state, action: PayloadAction<GameType>) => {
       state.game = action.payload
     },
@@ -93,6 +99,7 @@ export const gameSlice = createSlice({
       state.game = undefined
       state.gameId = 0
       state.gameVersion = 0
+      state.oponent = undefined
     }
   },
 })
@@ -104,6 +111,7 @@ export const {
   setGameList,
   clearGameList,
   setGame,
+  setOponent,
   setGameId,
   setGameVersion,
   clearGame

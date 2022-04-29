@@ -1,4 +1,5 @@
 export type GameCardType = {
+  id: number
   userId: number
   userCardId: number
   cardId: number

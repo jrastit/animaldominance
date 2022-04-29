@@ -22,7 +22,7 @@ export class TransactionManager {
 
   async sendTx(txu: ethers.ethers.PopulatedTransaction | ethers.providers.TransactionRequest, log: string) {
     try {
-      txu.gasLimit = await this.signer.estimateGas(txu)
+      txu.gasLimit = (await this.signer.estimateGas(txu)).mul(2)
       txu.gasPrice = await this.signer.getGasPrice()
       if (this.nextNonce === -1) {
         this.nextNonce = await this.signer.getTransactionCount()

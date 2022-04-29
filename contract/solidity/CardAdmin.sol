@@ -206,6 +206,14 @@ contract CardAdmin {
         createGame(userAddressList[msg.sender], _gameDeckId);
     }
 
+    function cancelGame(uint64 _gameId) public isUser {
+        uint64 _userId = userAddressList[msg.sender];
+        require(gameList[_gameId].userId1 == _userId, "Not owner");
+        require(gameList[_gameId].userId2 == 0, "Player has join");
+        gameList[_gameId].winner = _userId;
+        emit GameEnd(_gameId, _userId);
+    }
+
     function joinGame(uint64 _gameId, uint64 _userId, uint16 _gameDeckId) private {
         require(gameList[_gameId].userId2 == 0, "Game is full");
         joinGamePos(_gameId, _userId, _gameDeckId, false);

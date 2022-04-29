@@ -4,7 +4,7 @@
       "name" : "ganache",
       "url": "http://localhost:8545",
       "chainId": 1337,
-      "gameContract": "0x78f417302dE7D49046688e4E39807e6ADdc47877"
+      "gameContract": "0xF12b5dd4EAD5F743C6BaA640B0216200e89B60Da"
     },
     {
       "name" : "Emerald",

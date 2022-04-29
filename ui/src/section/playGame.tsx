@@ -24,7 +24,12 @@ import {
 
 import { useAppSelector, useAppDispatch } from '../hooks'
 
-import { leaveGame } from '../game/game'
+import {
+  playTurn,
+  leaveGame,
+  endGameByTime,
+  cancelGame,
+} from '../game/game'
 
 import StepMessageWidget from '../component/stepMessageWidget'
 
@@ -40,9 +45,12 @@ const PlayGame = (props:{
   const user = useAppSelector((state) => state.userSlice.user)
   const gameId = useAppSelector((state) => state.gameSlice.gameId)
   const game = useAppSelector((state) => state.gameSlice.game)
+  const oponent = useAppSelector((state) => state.gameSlice.oponent)
   const gameList = useAppSelector((state) => state.gameSlice.gameList)
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
   const dispatch = useAppDispatch()
+
+  console.log("oponent... ", oponent)
 
   const gameInfo = () => {
     if (game)
@@ -64,21 +72,13 @@ const PlayGame = (props:{
 
   if (isStep(stepId, Step.Waiting, step)) {
     const gameItem = gameList.filter(_gameItem => _gameItem.id === gameId)[0]
-    if (gameItem && gameItem.userId2 !== 0){
-      setTimeout(() => {dispatch(updateStep({id : stepId, step : Step.Ready}))}, 100)
-    }
-  }
-
-  const myTurn = () => {
-    if (user && game){
-      if (game.turn % 2 === 0 && game.userId1 === user.id){
-        return 1
-      }
-      if (game.turn % 2 === 1 && game.userId2 === user.id){
-        return 1
+    if (gameItem) {
+      if (gameItem.winner !== 0){
+        setTimeout(() => {dispatch(updateStep({id : stepId, step : Step.Ended}))}, 100)
+      } else if (gameItem.userId2 !== 0){
+        setTimeout(() => {dispatch(updateStep({id : stepId, step : Step.Ready}))}, 100)
       }
     }
-    return 0
   }
 
   const isWinner = () => {
@@ -95,6 +95,15 @@ const PlayGame = (props:{
     dispatch(clearError(stepId))
   }
 
+  const _playTurn = (playActionList : number[][]) => {
+    if (gameContract){
+      console.log(playActionList)
+      playTurn(gameContract, props.transactionManager, playActionList).then(() => {
+
+      }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
+    }
+  }
+
   const _leaveGame = () => {
     if (gameContract){
       leaveGame(gameContract, props.transactionManager).then(() => {
@@ -102,6 +111,18 @@ const PlayGame = (props:{
       }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
     }
 
+  }
+
+  const _endGameByTime = () => {
+    if (gameContract){
+      endGameByTime(gameContract, props.transactionManager).then(() => {
+      }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
+    }
+  }
+
+  const _cancelGame = () => {
+    cancelGame(props.contract, props.transactionManager, gameId).then(() => {
+    }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
   }
 
   return (
@@ -121,7 +142,12 @@ const PlayGame = (props:{
       </Col>
     </Row>
     {isStep(stepId, Step.Waiting, step) &&
-      <Row><Col>Waiting for opponent {gameList.length}</Col></Row>
+      <Row>
+        <Col>Waiting for opponent for game {gameId}<br/>
+          <Button variant='danger' onClick={_cancelGame}>Cancel</Button>
+        </Col>
+      </Row>
+
     }
     {isStep(stepId, Step.Loading, step) &&
       <Row><Col>Loading</Col></Row>
@@ -129,18 +155,19 @@ const PlayGame = (props:{
     {
       isStep(stepId, Step.Running, step) &&
       <>
-      <Row>
-        <Col>
-          {!!myTurn() && <div>My turn</div>}
-          {gameInfo()}
-          <Button onClick={_leaveGame}>Leave game</Button>
-        </Col>
-      </Row>
-      { game &&
+      { game && user && oponent &&
         <GameBoard
+          user={user}
+          oponent={oponent}
           game={game}
           cardList={cardList}
-        />
+          endGameByTime={_endGameByTime}
+          playTurn={_playTurn}
+        ><Button onClick={_leaveGame}>Leave game</Button>
+        </GameBoard>
+      }
+      { !oponent &&
+        <>Oponent not set</>
       }
       </>
     }

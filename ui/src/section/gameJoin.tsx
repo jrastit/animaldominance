@@ -105,7 +105,7 @@ const GameJoin = (props : {
 
   const render = () => {
     if (gameList && gameList.length > 0){
-      const openGame = gameList.filter(game  => !game.userId2)
+      const openGame = gameList.filter(game  => !game.userId2 && !game.winner)
       const myOpenGame = openGame.filter(game  => user && game.userId1 === user.id)
       const gameToJoin = openGame.filter(game  => user && game.userId1 !== user.id)
 

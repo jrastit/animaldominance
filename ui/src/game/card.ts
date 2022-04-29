@@ -128,7 +128,7 @@ export const loadAllCardFromFile = () => {
   let cardFile = require("../card/card.json")
   return cardFile.card.map((card: any, id: number) => {
     return {
-      id: id,
+      id: id + 1,
       name: card.name,
       mana: card.mana,
       family: card.family,

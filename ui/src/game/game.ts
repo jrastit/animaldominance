@@ -51,8 +51,9 @@ export const getGameCardList = async (
   gameContract: ethers.Contract,
   pos: boolean
 ) => {
-  return (await gameContract.getGameCardList(pos)).map((gameCardListChain: any) => {
+  return (await gameContract.getGameCardList(pos)).map((gameCardListChain: any, id: number) => {
     return {
+      id,
       userId: gameCardListChain.userId.toNumber(),
       userCardId: gameCardListChain.userCardId,
       cardId: gameCardListChain.cardId,
@@ -141,6 +142,44 @@ export const joinGame = async (
       gameId,
       userDeckId,
     ), "Join game"
+  )
+  return tx
+}
+
+export const cancelGame = async (
+  contract: ethers.Contract,
+  transactionManager: TransactionManager,
+  gameId: number,
+) => {
+  const tx = await transactionManager.sendTx(
+    await contract.populateTransaction.cancelGame(
+      gameId,
+    ), "Cancel game"
+  )
+  return tx
+}
+
+export const playTurn = async (
+  gameContract: ethers.Contract,
+  transactionManager: TransactionManager,
+  playActionList: number[][],
+) => {
+  const tx = await transactionManager.sendTx(
+    await gameContract.populateTransaction.playTurn(
+      playActionList,
+    ), "Play turn"
+  )
+  return tx
+}
+
+export const endGameByTime = async (
+  gameContract: ethers.Contract,
+  transactionManager: TransactionManager,
+) => {
+  const tx = await transactionManager.sendTx(
+    await gameContract.populateTransaction.endGameByTime(
+
+    ), "End game by time"
   )
   return tx
 }
