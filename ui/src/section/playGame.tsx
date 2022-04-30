@@ -50,8 +50,7 @@ const PlayGame = (props:{
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
   const dispatch = useAppDispatch()
 
-  console.log("oponent... ", oponent)
-
+  /*
   const gameInfo = () => {
     if (game)
     return (
@@ -69,6 +68,7 @@ const PlayGame = (props:{
     )
     return (<>Game not set</>)
   }
+  */
 
   if (isStep(stepId, Step.Waiting, step)) {
     const gameItem = gameList.filter(_gameItem => _gameItem.id === gameId)[0]
@@ -97,7 +97,6 @@ const PlayGame = (props:{
 
   const _playTurn = (playActionList : number[][]) => {
     if (gameContract){
-      console.log(playActionList)
       playTurn(gameContract, props.transactionManager, playActionList).then(() => {
 
       }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
@@ -125,6 +124,66 @@ const PlayGame = (props:{
     }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
   }
 
+  const render = () => {
+    if (isStep(stepId, Step.Waiting, step)){
+      return (
+        <Row>
+          <Col>Waiting for opponent for game {gameId}<br/>
+            <Button variant='danger' onClick={_cancelGame}>Cancel</Button>
+          </Col>
+        </Row>
+      )
+    } else if (isStep(stepId, Step.Loading, step)) {
+      return (
+        <Row><Col>Loading</Col></Row>
+      )
+    } else if (isStep(stepId, Step.Running, step)){
+      if (game && user && oponent){
+        return (
+          <GameBoard
+            user={user}
+            oponent={oponent}
+            game={game}
+            cardList={cardList}
+            endGameByTime={_endGameByTime}
+            playTurn={_playTurn}
+          ><Button onClick={_leaveGame}>Leave game</Button>
+          </GameBoard>
+        )
+      } else {
+        if (!game) {
+          return (
+            <Row><Col>Error game not set</Col></Row>
+          )
+        }
+        if (!user) {
+          return (
+            <Row><Col>Error user not set</Col></Row>
+          )
+        }
+        if (!oponent) {
+          return (
+            <Row><Col>Error oponent not set</Col></Row>
+          )
+        }
+      }
+    } else if (isStep(stepId, Step.Ended, step)){
+      return (
+        <Row>
+          <Col>
+            {!!isWinner() && <div>You Win!!!</div>}
+            {!isWinner() && <div>You Lose!!!</div>}
+            <Button onClick={_exitGame}>Ok</Button>
+          </Col>
+        </Row>
+      )
+    } else {
+      return (
+        <Row><Col>Unknow step</Col></Row>
+      )
+    }
+  }
+
   return (
     <>
     <StepMessageWidget
@@ -141,51 +200,7 @@ const PlayGame = (props:{
         />
       </Col>
     </Row>
-    {isStep(stepId, Step.Waiting, step) &&
-      <Row>
-        <Col>Waiting for opponent for game {gameId}<br/>
-          <Button variant='danger' onClick={_cancelGame}>Cancel</Button>
-        </Col>
-      </Row>
-
-    }
-    {isStep(stepId, Step.Loading, step) &&
-      <Row><Col>Loading</Col></Row>
-    }
-    {
-      isStep(stepId, Step.Running, step) &&
-      <>
-      { game && user && oponent &&
-        <GameBoard
-          user={user}
-          oponent={oponent}
-          game={game}
-          cardList={cardList}
-          endGameByTime={_endGameByTime}
-          playTurn={_playTurn}
-        ><Button onClick={_leaveGame}>Leave game</Button>
-        </GameBoard>
-      }
-      { !oponent &&
-        <>Oponent not set</>
-      }
-      </>
-    }
-    {
-      isStep(stepId, Step.Ended, step) &&
-      <Row>
-        <Col>
-          {!!isWinner() && <div>You Win!!!</div>}
-          {!isWinner() && <div>You Lose!!!</div>}
-          {gameInfo()}
-          <Button onClick={_exitGame}>Ok</Button>
-        </Col>
-      </Row>
-    }
-    <Row>
-      <Col>
-      </Col>
-    </Row>
+    {render()}
     </>
   )
 

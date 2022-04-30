@@ -56,12 +56,13 @@ const GameBoard = (props : {
   const myTurn = _myTurn(turn, props.game.userId1, props.user.id)
 
   useEffect(() => {
-    setTurnData({
+    const newTurnData = {
       mana : Math.floor(turn / 2) + 1,
       playActionList : [],
       cardList1 : props.user.id === props.game.userId1? props.game.cardList1 : props.game.cardList2,
       cardList2 : props.user.id === props.game.userId1? props.game.cardList2 : props.game.cardList1,
-    })
+    }
+    setTurnData(newTurnData)
   }, [turn, props.user.id, props.game.userId1, props.game.cardList1, props.game.cardList2])
 
   useEffect(() => {
@@ -74,11 +75,50 @@ const GameBoard = (props : {
 
   const playCardTo3 = (gameCard : GameCardType, cardList1 : GameCardType[]) => {
     gameCard.position = 3
+    gameCard.play = 1
     const newTurnData = {
       playActionList : turnData.playActionList.concat([[gameCard.id, 3]]),
       mana : turnData.mana - gameCard.mana,
       cardList1 : cardList1,
       cardList2 : turnData.cardList2.concat([]),
+    }
+    setTurnData(newTurnData)
+  }
+
+
+
+  const playAttack = (
+    gameCard : GameCardType,
+    cardList1 : GameCardType[],
+    gameCard2 : GameCardType,
+    cardList2 : GameCardType[]
+  ) => {
+    gameCard.play = 1
+    if (gameCard2.life > gameCard.attack){
+      gameCard.exp += gameCard.attack * 5
+      gameCard2.exp += gameCard.attack
+      gameCard2.life = gameCard2.life - gameCard.attack
+    } else {
+      gameCard.exp += gameCard2.life * 10
+      gameCard2.exp += gameCard2.life
+      gameCard2.life = 0
+      gameCard2.position = 4
+    }
+    if (gameCard.life > gameCard2.attack){
+      gameCard2.exp += gameCard2.attack * 2
+      gameCard.exp += gameCard2.attack
+      gameCard.life = gameCard.life - gameCard2.attack
+    } else {
+      gameCard2.exp += gameCard.life * 4
+      gameCard.exp += gameCard.life
+      gameCard.life = 0
+      gameCard.position = 4
+    }
+    const newTurnData = {
+      playActionList : turnData.playActionList.concat([[gameCard.id, gameCard2.id]]),
+      mana : turnData.mana,
+      cardList1 : cardList1,
+      cardList2 : cardList2,
     }
     setTurnData(newTurnData)
   }
@@ -89,15 +129,35 @@ const GameBoard = (props : {
         ..._gameCard
       } as GameCardType
     })
-    for (let i = 0; i < cardList1.length; i++){
-      const gameCard = cardList1[i]
-      if (gameCard.position === 1 && gameCard.mana <= turnData.mana){
-        if (turnData.playActionList.filter(_action => _action[0] === gameCard.id).length === 0){
+    if (cardList1.filter(card => card.position === 3).length < 8){
+      for (let i = 0; i < cardList1.length; i++){
+        const gameCard = cardList1[i]
+        if (gameCard.position === 1 && gameCard.mana <= turnData.mana && gameCard.play === 0){
+          console.log("play " + gameCard.id)
           playCardTo3(gameCard, cardList1)
-          return
+          return 1
         }
       }
     }
+    const cardList2 = turnData.cardList2.map((_gameCard : GameCardType) => {
+      return {
+        ..._gameCard
+      } as GameCardType
+    })
+    for (let i = 0; i < cardList1.length; i++){
+      const gameCard = cardList1[i]
+      if (gameCard.position === 3 && gameCard.play === 0){
+        for (let j = 0; j < cardList2.length; j++){
+          const gameCard2 = cardList2[j]
+          if (gameCard2.position === 3){
+            console.log("attack ", gameCard.id, gameCard2.id)
+            playAttack(gameCard, cardList1, gameCard2, cardList2)
+            return 1
+          }
+        }
+      }
+    }
+    return 0
   }
 
   const displayGameCard = (gameCard : GameCardType) => {
@@ -112,6 +172,7 @@ const GameBoard = (props : {
         attack={gameCard.attack}
         life={gameCard.life}
         description={card.level[level].description}
+        exp={gameCard.exp + gameCard.expWin}
       />
     )
   }
@@ -158,8 +219,8 @@ const GameBoard = (props : {
     remaining_sec
 
   return (
-    <>
-    <Row style={{height : "7em", overflow : "hidden"}}>
+    <div style={{fontSize : "11px"}}>
+    <Row style={{height : "20em", overflow : "hidden", backgroundColor:"grey", padding:"1em"}}>
       <Col xs={6}>
         {displayGameCardList(
           turnData.cardList2.filter(
@@ -167,7 +228,7 @@ const GameBoard = (props : {
           )
         )}
       </Col>
-      <Col xs={2}>
+      <Col xs={2} style={{backgroundColor:"gold"}}>
       {displayUser(props.oponent)}
       </Col>
       <Col xs={4}>
@@ -178,31 +239,31 @@ const GameBoard = (props : {
         )}
       </Col>
     </Row>
-    <Row  style={{height : "17em"}}>
+    <Row  style={{height : "20em", backgroundColor:"black", padding:"1em"}}>
     {displayGameCardList(
       turnData.cardList2.filter(
         _gameCard => _gameCard.position === 3
       )
     )}
     </Row>
-    <Row>
-    <Col>
+    <div>
+
     {(remainingTime > 0 || !!myTurn) &&
       <ProgressBar now={(remainingTime) * 100 / 180} label={remaining_label}/>
     }
     {remainingTime === 0 && !myTurn &&
-      <Button onClick={props.endGameByTime}>Win game by time</Button>
+      <div style={{textAlign : 'center'}}><Button onClick={props.endGameByTime}>Win game by time</Button></div>
     }
-    </Col>
-    </Row>
-    <Row  style={{height : "17em"}}>
+
+    </div>
+    <Row  style={{height : "20em", backgroundColor:"black", padding:"1em"}}>
     {displayGameCardList(
       turnData.cardList1.filter(
         _gameCard => _gameCard.position === 3
       )
     )}
     </Row>
-    <Row  style={{height : "17em"}}>
+    <Row  style={{height : "20em", backgroundColor:"grey", padding:"1em"}}>
       <Col xs={6}>
       {displayGameCardList(
         turnData.cardList1.filter(
@@ -210,7 +271,7 @@ const GameBoard = (props : {
         )
       )}
       </Col>
-      <Col xs={2}>
+      <Col xs={2} style={{backgroundColor:"gold"}}>
       {displayUser(props.user)}
       </Col>
       <Col xs={3}>
@@ -232,7 +293,7 @@ const GameBoard = (props : {
       <div>Turn : {turn}</div>
       </Col>
     </Row>
-    </>
+    </div>
   )
 }
 

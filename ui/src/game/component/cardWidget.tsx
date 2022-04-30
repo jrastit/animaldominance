@@ -8,6 +8,7 @@ const cardWidget = (props : {
   attack : number
   life : number
   description : string
+  exp: number
 }) => {
 
   let familyColor="black"
@@ -185,7 +186,7 @@ const cardWidget = (props : {
         marginBottom:"-.2em",
         fontWeight:"normal",
         }}>
-      {levelDisplay}
+      {props.exp}
       </div>
       </div>
 

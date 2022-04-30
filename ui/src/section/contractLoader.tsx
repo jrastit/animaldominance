@@ -33,7 +33,7 @@ import {
 } from '../reducer/userSlice'
 
 import {
-  getCardId,
+  getCardLastId,
   loadAllCard,
 } from '../game/card'
 
@@ -211,7 +211,7 @@ const ContractLoader = (props : {
         )
         try {
           //check if contract is working
-          if (await getCardId(_contract) > 0){
+          if (await getCardLastId(_contract) > 0){
             props.setContract(_contract)
             dispatch(updateStep({id : stepId, step: Step.Ok}))
           } else {

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import { PlayGame } from "./PlayGame.sol";
+import { PlayGame, GameCard } from "./PlayGame.sol";
 import { PlayGameFactory } from "./PlayGameFactory.sol";
 
 struct User {
@@ -61,9 +61,9 @@ contract CardAdmin {
 
     PlayGameFactory playGameFactory;
 
-    uint64 public userId;
-    uint32 public cardId;
-    uint64 public gameId;
+    uint64 public userLastId;
+    uint32 public cardLastId;
+    uint64 public gameLastId;
     mapping(uint64 => User) public userIdList;
     mapping(address => uint64) public userAddressList;
     mapping(string => uint64) public userNameList;
@@ -117,11 +117,11 @@ contract CardAdmin {
     function registerUser(address _userAddress, string memory _name) private {
         require(userAddressList[_userAddress] == 0, "already registered");
         require(userNameList[_name] == 0, "name exist");
-        userId = userId + 1;
-        userAddressList[_userAddress] = userId;
-        userNameList[_name] = userId;
-        userIdList[userId].id = userId;
-        userIdList[userId].name = _name;
+        userLastId = userLastId + 1;
+        userAddressList[_userAddress] = userLastId;
+        userNameList[_name] = userLastId;
+        userIdList[userLastId].id = userLastId;
+        userIdList[userLastId].name = _name;
     }
 
     function registerUserSelf(string memory _name) public {
@@ -129,9 +129,27 @@ contract CardAdmin {
     }
 
     function createCard(string memory _name, uint8 _mana, uint8 _family, uint8 _starter) public isOwner {
-        cardId = cardId + 1;
-        cardList[cardId].id = cardId;
-        updateCard(cardId, _name, _mana, _family, _starter);
+        cardLastId = cardLastId + 1;
+        cardList[cardLastId].id = cardLastId;
+        updateCard(cardLastId, _name, _mana, _family, _starter);
+    }
+
+    function createCardFull(
+        string memory _name,
+        uint8 _mana,
+        uint8 _family,
+        uint8 _starter,
+        string[] memory _description,
+        uint16[] memory _life,
+        uint16[] memory _attack
+    ) public isOwner {
+        cardLastId = cardLastId + 1;
+        cardList[cardLastId].id = cardLastId;
+        updateCard(cardLastId, _name, _mana, _family, _starter);
+        require(_description.length == _life.length && _description.length == _attack.length, 'Wrong level');
+        for (uint8 i = 0; i < _description.length; i++){
+            setCardLevel(cardLastId, _description[i], i, _life[i], _attack[i]);
+        }
     }
 
     function updateCard(uint32 _cardId, string memory _name, uint8 _mana, uint8 _family, uint8 _starter) public isOwner {
@@ -155,7 +173,7 @@ contract CardAdmin {
 
     function addUserStarterCard(uint64 _userId) public {
         require(userIdList[_userId].cardList.length == 0, "Already have card");
-        for (uint32 i = 1; i <= cardId; i++) {
+        for (uint32 i = 1; i <= cardLastId; i++) {
             uint8 starter = cardList[i].starter;
             while(starter > 0) {
                 addUserCard(_userId, i);
@@ -197,9 +215,9 @@ contract CardAdmin {
     }
 
     function createGame(uint64 _userId, uint16 _gameDeckId) private {
-        gameId = gameId + 1;
-        joinGamePos(gameId, _userId, _gameDeckId, true);
-        emit GameCreated(gameId, _userId);
+        gameLastId = gameLastId + 1;
+        joinGamePos(gameLastId, _userId, _gameDeckId, true);
+        emit GameCreated(gameLastId, _userId);
     }
 
     function createGameSelf(uint16 _gameDeckId) public isUser {
@@ -224,13 +242,21 @@ contract CardAdmin {
             game.userDeck1,
             game.userId2,
             game.userDeck2,
-            gameId
+            gameLastId
         );
-        emit GameFill(gameId, _userId);
+        emit GameFill(gameLastId, _userId);
     }
 
     function joinGameSelf(uint64 _gameId, uint16 _gameDeckId) public isUser {
         joinGame(_gameId, userAddressList[msg.sender], _gameDeckId);
+    }
+
+    function addCardExp(uint64 _userId, uint16 _userDeckId, PlayGame _playGame) private {
+        uint32[20] memory gameDeckCard = getUserDeckCard(_userId, _userDeckId);
+        uint8 pos = _playGame.getUserPos(_userId);
+        for (uint8 i = 0; i < 20; i++){
+            userIdList[_userId].cardList[gameDeckCard[i]].exp += _playGame.getUserCardExp(pos, gameDeckCard[i]);
+        }
     }
 
     function endGame(uint64 _gameId) public {
@@ -238,6 +264,8 @@ contract CardAdmin {
         uint64 winner = gameList[_gameId].playGame.getWinner();
         require(winner != 0);
         gameList[_gameId].winner = winner;
+        addCardExp(gameList[_gameId].userId1, gameList[_gameId].userDeck1, gameList[_gameId].playGame);
+        addCardExp(gameList[_gameId].userId2, gameList[_gameId].userDeck2, gameList[_gameId].playGame);
         emit GameEnd(_gameId, winner);
     }
 

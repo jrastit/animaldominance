@@ -8,6 +8,8 @@ export type GameCardType = {
   mana: number
   position: number
   exp: number
+  expWin: number
+  play: number
 }
 
 export type GameType = {

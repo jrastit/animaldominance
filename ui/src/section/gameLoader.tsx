@@ -100,6 +100,11 @@ const GameLoader = (props : {
           dispatch(setGameVersion(_gameVersion))
         })
       }
+      if (_gameContract.listenerCount("PlayAction") === 0) {
+        _gameContract.on("PlayAction", (id : number, gameCard : number, dest : number, result : number) => {
+          console.log("Play action event " + id + ', ' + gameCard + ', ' + dest + ', ' + result)
+        })
+      }
     }
   }
 

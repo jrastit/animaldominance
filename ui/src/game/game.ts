@@ -12,10 +12,10 @@ import {
   getContractPlayGame
 } from '../contract/solidity/compiled/contractAutoFactory'
 
-export const getGameId = async (
+export const getGameLastId = async (
   contract: ethers.Contract,
 ) => {
-  return ethers.BigNumber.from(await contract.gameId()).toNumber()
+  return ethers.BigNumber.from(await contract.gameLastId()).toNumber()
 }
 
 export const getGameContract = async (
@@ -49,7 +49,7 @@ export const getGame = async (
 
 export const getGameCardList = async (
   gameContract: ethers.Contract,
-  pos: boolean
+  pos: number
 ) => {
   return (await gameContract.getGameCardList(pos)).map((gameCardListChain: any, id: number) => {
     return {
@@ -61,6 +61,9 @@ export const getGameCardList = async (
       attack: gameCardListChain.attack,
       mana: gameCardListChain.mana,
       position: gameCardListChain.position,
+      exp: gameCardListChain.exp.toNumber(),
+      expWin: gameCardListChain.expWin.toNumber(),
+      play: 0,
     }
   }) as GameCardType[]
 }
@@ -73,13 +76,13 @@ export const getGameFull = async (
   setMessage('Load id ')
   const id = ethers.BigNumber.from(await gameContract.gameId()).toNumber()
   setMessage('Load user1 id ')
-  const userId1 = ethers.BigNumber.from(await gameContract.userId1()).toNumber()
+  const userId1 = ethers.BigNumber.from((await gameContract.gameUser(0))).toNumber()
   setMessage('Load user2 id ')
-  const userId2 = ethers.BigNumber.from(await gameContract.userId2()).toNumber()
+  const userId2 = ethers.BigNumber.from((await gameContract.gameUser(1))).toNumber()
   setMessage('Load user1 card ')
-  const cardList1 = await getGameCardList(gameContract, true)
+  const cardList1 = await getGameCardList(gameContract, 0)
   setMessage('Load user2 card ')
-  const cardList2 = await getGameCardList(gameContract, false)
+  const cardList2 = await getGameCardList(gameContract, 1)
   setMessage('Load latest time ')
   const latestTime = ethers.BigNumber.from(await gameContract.latestTime()).toNumber()
   setMessage('Load version ')
@@ -106,9 +109,9 @@ export const getGameFull = async (
 export const getGameList = async (
   contract: ethers.Contract,
 ) => {
-  const id = await getGameId(contract)
+  const lastId = await getGameLastId(contract)
   const gameList = [] as GameListItemType[]
-  for (let i = 1; i <= id; i++) {
+  for (let i = 1; i <= lastId; i++) {
     gameList.push(await getGame(contract, i))
   }
   return gameList
