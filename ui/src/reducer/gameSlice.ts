@@ -95,6 +95,11 @@ export const gameSlice = createSlice({
     setGame: (state, action: PayloadAction<GameType>) => {
       state.game = action.payload
     },
+    cleanGame: (state) => {
+      state.game = undefined
+      state.gameVersion = 0
+      state.oponent = undefined
+    },
     clearGame: (state) => {
       state.game = undefined
       state.gameId = 0
@@ -114,7 +119,8 @@ export const {
   setOponent,
   setGameId,
   setGameVersion,
-  clearGame
+  clearGame,
+  cleanGame,
 } = gameSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

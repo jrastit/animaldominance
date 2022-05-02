@@ -93,7 +93,6 @@ const GameJoin = (props : {
   })
 
   if (userGame && userGame.length > 0){
-    console.log("here!!!", userGame[0])
     dispatch(setGameId(userGame[0].id))
     if (userGame[0].userId2){
       dispatch(updateStep({id : stepId, step: Step.Ready}))

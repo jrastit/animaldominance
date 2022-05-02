@@ -24,7 +24,7 @@ import {
 import {
   setGame,
   setOponent,
-  clearGame,
+  cleanGame,
   setGameVersion,
 } from '../reducer/gameSlice'
 
@@ -82,8 +82,13 @@ const GameLoader = (props : {
 
   }
 
+  const _cleanGame = () => {
+    dispatch(updateStep({id : stepId, step: Step.Loading}))
+    dispatch(cleanGame())
+    setTimeout(() => dispatch(updateStep({id : stepId, step: Step.Clean})), 100)
+  }
+
   const loadGameFromId = () => {
-    dispatch(clearGame())
     dispatch(updateStep({id : stepId, step: Step.Loading}))
     getGameContract(props.contract, props.transactionManager, gameId).then((_gameContract) => {
       addGameListener(_gameContract)
@@ -117,6 +122,9 @@ const GameLoader = (props : {
 
   useEffect(() => {
     if (isOk(StepId.Contract, step) && isStep(stepId, Step.Ready, step)){
+      _cleanGame()
+    }
+    if (isOk(StepId.Contract, step) && isStep(stepId, Step.Clean, step)){
       loadGameFromId()
     }
     if (isOk(StepId.Contract, step) && isStep(stepId, Step.Running, step)){

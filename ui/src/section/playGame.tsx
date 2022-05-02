@@ -25,7 +25,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 import {
-  playTurn,
+  endTurn,
   leaveGame,
   endGameByTime,
   cancelGame,
@@ -97,7 +97,7 @@ const PlayGame = (props:{
 
   const _playTurn = (playActionList : number[][]) => {
     if (gameContract){
-      playTurn(gameContract, props.transactionManager, playActionList).then(() => {
+      endTurn(gameContract, props.transactionManager, playActionList).then(() => {
 
       }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
     }
@@ -137,6 +137,18 @@ const PlayGame = (props:{
       return (
         <Row><Col>Loading</Col></Row>
       )
+    } else if (isStep(stepId, Step.Creating, step)) {
+      return (
+        <Row><Col>Creating game</Col></Row>
+      )
+    } else if (isStep(stepId, Step.Joining, step)) {
+      return (
+        <Row><Col>Joining game</Col></Row>
+      )
+    } else if (isStep(stepId, Step.Error, step)) {
+      return (
+        <Row><Col>Error!!!</Col></Row>
+      )
     } else if (isStep(stepId, Step.Running, step)){
       if (game && user && oponent){
         return (
@@ -146,7 +158,7 @@ const PlayGame = (props:{
             game={game}
             cardList={cardList}
             endGameByTime={_endGameByTime}
-            playTurn={_playTurn}
+            endTurn={_playTurn}
           ><Button onClick={_leaveGame}>Leave game</Button>
           </GameBoard>
         )

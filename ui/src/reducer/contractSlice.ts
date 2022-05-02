@@ -27,6 +27,7 @@ export enum Step {
   Update,
   Ended,
   Ready,
+  Clean,
   NotSet,
   Empty,
   Ok,

@@ -86,7 +86,10 @@ const AdminContract = (props : {
         async (contractFactory) => {
           if (props.contract){
             try {
-              props.contract.updatePlayGameFactory(contractFactory.address)
+              await props.transactionManager.sendTx(
+                await props.contract.populateTransaction.updatePlayGameFactory(
+                  contractFactory.address
+                ), "Update play game contract")
               dispatch(updateStep({id: stepId, step: Step.Ok}))
             } catch (err : any) {
               dispatch(setError({id : stepId, catchError : err}))

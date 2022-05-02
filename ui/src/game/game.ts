@@ -76,9 +76,13 @@ export const getGameFull = async (
   setMessage('Load id ')
   const id = ethers.BigNumber.from(await gameContract.gameId()).toNumber()
   setMessage('Load user1 id ')
-  const userId1 = ethers.BigNumber.from((await gameContract.gameUser(0))).toNumber()
+  const gameUser1 = await gameContract.gameUser(0)
+  const userId1 = ethers.BigNumber.from(gameUser1.userId).toNumber()
+  const life1 = ethers.BigNumber.from(gameUser1.life).toNumber()
   setMessage('Load user2 id ')
-  const userId2 = ethers.BigNumber.from((await gameContract.gameUser(1))).toNumber()
+  const gameUser2 = await gameContract.gameUser(1)
+  const userId2 = ethers.BigNumber.from(gameUser2.userId).toNumber()
+  const life2 = ethers.BigNumber.from(gameUser2.life).toNumber()
   setMessage('Load user1 card ')
   const cardList1 = await getGameCardList(gameContract, 0)
   setMessage('Load user2 card ')
@@ -95,6 +99,8 @@ export const getGameFull = async (
     id,
     userId1,
     userId2,
+    life1,
+    life2,
     cardList1,
     cardList2,
     latestTime,
@@ -162,13 +168,13 @@ export const cancelGame = async (
   return tx
 }
 
-export const playTurn = async (
+export const endTurn = async (
   gameContract: ethers.Contract,
   transactionManager: TransactionManager,
   playActionList: number[][],
 ) => {
   const tx = await transactionManager.sendTx(
-    await gameContract.populateTransaction.playTurn(
+    await gameContract.populateTransaction.endTurn(
       playActionList,
     ), "Play turn"
   )

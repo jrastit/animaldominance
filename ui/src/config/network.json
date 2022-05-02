@@ -10,7 +10,7 @@
       "name" : "Emerald",
       "url": "https://testnet.emerald.oasis.dev",
       "chainId": 42261,
-      "gameContract": "0xFa2F6aB9Ed6E2e2C11Bc077E38717eB54780d94a"
+      "gameContract": "0x3fA06B3191b4646cdFaBb94C727D08c8a4822a4a"
     }
   ]
 }

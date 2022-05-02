@@ -17,6 +17,7 @@ struct GameCard {
 
 struct GameUser {
     uint64 userId;
+    uint16 life;
     uint32[] cardIdList;
     GameCard[] cardList;
     mapping(uint32 => uint64) expWin;
@@ -71,19 +72,22 @@ contract PlayGame {
     }
 
     function _loadCard(uint64 _userId, uint16 _gameDeckId, uint8 _pos) private {
-        gameUser[_pos].userId = _userId;
+        GameUser storage user = gameUser[_pos];
+        user.userId = _userId;
+        user.life = 20;
 
         uint32[20] memory gameDeckCard = cardAdmin.getUserDeckCard(_userId, _gameDeckId);
 
         require(gameDeckCard.length == 20, "not enought card");
 
         for (uint8 i = 0; i < 20; i++){
-            gameUser[_pos].cardIdList.push(gameDeckCard[i]);
+            user.cardIdList.push(gameDeckCard[i]);
         }
     }
 
     function _drawRandomCard(uint8 _pos) private {
-        uint32[] storage cardIdList = gameUser[_pos].cardIdList ;
+        uint32[] storage cardIdList = gameUser[_pos].cardIdList;
+        if (cardIdList.length == 0) return;
         uint8 index = random8(uint8(cardIdList.length));
         uint32 userCardId = cardIdList[index];
         cardIdList[index] = cardIdList[cardIdList.length - 1];
@@ -121,6 +125,7 @@ contract PlayGame {
     }
 
     function _playAction(uint8 _pos, uint8 _i, uint8 _mana, uint8 _gameCardId, uint8 _dest) private returns (uint8) {
+        require(_gameCardId < gameUser[_pos].cardList.length, "card out of bound");
         GameCard storage gameCard = gameUser[_pos].cardList[_gameCardId];
         if (gameCard.position == 1) {
             if (gameCard.mana <= _mana) {
@@ -129,7 +134,7 @@ contract PlayGame {
                     uint8 j = _getCardNumber(_pos, 2);
                     if (j < 3){
                       gameCard.position = 2;
-                      _mana = _mana - gameCard.mana;
+                      _mana -= gameCard.mana;
                       emit PlayAction(_i, _gameCardId, _dest, 1);
                     } else {
                       emit PlayAction(_i, _gameCardId, _dest, 0);
@@ -139,7 +144,7 @@ contract PlayGame {
                     uint8 j = _getCardNumber(_pos, 3);
                     if (j < 8){
                         gameCard.position = 3;
-                        _mana = _mana - gameCard.mana;
+                        _mana -= gameCard.mana;
                         emit PlayAction(_i, _gameCardId, _dest, 1);
                     } else {
                         emit PlayAction(_i, _gameCardId, _dest, 0);
@@ -153,29 +158,39 @@ contract PlayGame {
         } else if (gameCard.position == 2) {
             revert("2:not implemented");
         } else if (gameCard.position == 3) {
-            if (_dest == 257){
+            if (_dest == 255){
+                uint16 life = gameUser[1 - _pos].life;
+                if (gameCard.attack < life){
+                    gameCard.expWin += (gameCard.attack * 5);
+                    gameUser[1 - _pos].life = life - gameCard.attack;
+                } else {
+                    gameCard.expWin += (life * 10);
+                    gameUser[1 - _pos].life = 0;
+                    _endGame(gameUser[_pos].userId);
+                }
                 emit PlayAction(_i, _gameCardId, _dest, gameCard.attack);
             } else {
+                require(_dest < gameUser[1 - _pos].cardList.length, "dest out of bound");
                 GameCard storage gameCard2 = gameUser[1 - _pos].cardList[_dest];
                 if (gameCard2.position == 3){
                     if (gameCard.attack < gameCard2.life){
-                        gameCard.expWin = gameCard.expWin + (gameCard.attack * 5);
-                        gameCard2.expWin = gameCard2.expWin + gameCard.attack;
-                        gameCard2.life = gameCard2.life - gameCard.attack;
+                        gameCard.expWin += (gameCard.attack * 5);
+                        gameCard2.expWin += gameCard.attack;
+                        gameCard2.life -= gameCard.attack;
                     } else {
-                        gameCard.expWin = gameCard.expWin + (gameCard2.life * 10);
-                        gameCard2.expWin = gameCard2.expWin + gameCard2.life;
+                        gameCard.expWin += (gameCard2.life * 10);
+                        gameCard2.expWin += gameCard2.life;
                         gameCard2.life = 0;
                         gameCard2.position = 4;
 
                     }
                     if (gameCard2.attack < gameCard.life){
-                        gameCard2.expWin = gameCard.expWin + (gameCard2.attack * 2);
-                         gameCard.expWin = gameCard.expWin + gameCard2.attack;
-                         gameCard.life = gameCard.life - gameCard2.attack;
+                        gameCard2.expWin += (gameCard2.attack * 2);
+                        gameCard.expWin += gameCard2.attack;
+                        gameCard.life -= gameCard2.attack;
                     } else {
-                        gameCard2.expWin = gameCard2.expWin + (gameCard.life * 4);
-                        gameCard.expWin = gameCard.expWin + gameCard.life;
+                        gameCard2.expWin += (gameCard.life * 4);
+                        gameCard.expWin += gameCard.life;
                         gameCard.life = 0;
                         gameCard.position = 4;
                     }
@@ -194,12 +209,13 @@ contract PlayGame {
         return _mana;
     }
 
-    function playTurn(uint8[2][] memory _action) public {
+    function endTurn(uint8[2][] memory _action) public {
+      require(winner == 0, 'Already ended');
       uint64 userId = cardAdmin.userAddressList(msg.sender);
       uint8 pos = turn % 2;
       require(userId == gameUser[pos].userId, 'Wrong user');
       uint8 mana = (turn / 2) + 1;
-      for (uint8 i = 0; i < _action.length; i++){
+      for (uint8 i = 0; i < _action.length && winner == 0; i++){
         mana = _playAction(pos, i, mana, _action[i][0], _action[i][1]);
       }
       turn = turn + 1;
@@ -219,14 +235,15 @@ contract PlayGame {
     }
 
     function _endGame(uint64 _winner) private {
+        require(winner == 0, 'Already ended');
         winner = _winner;
-        _updateVersion();
         cardAdmin.endGame(gameId);
     }
 
     function endGameByTime() public {
         require(block.timestamp > latestTime + 180, 'Time not ok');
         _endGame(gameUser[1 - (turn % 2)].userId);
+        _updateVersion();
     }
 
     function getUserCardExp(uint8 _pos, uint32 userCardId) public view returns(uint64){
@@ -247,5 +264,6 @@ contract PlayGame {
         } else if (userId == gameUser[1].userId){
             _endGame(gameUser[0].userId);
         }
+        _updateVersion();
     }
 }

@@ -20,16 +20,20 @@ export class TransactionManager {
     this.nextNonce = -1
   }
 
+  async getNonce() {
+    if (this.nextNonce === -1) {
+      this.nextNonce = await this.signer.getTransactionCount()
+    } else {
+      this.nextNonce = this.nextNonce + 1
+    }
+    return this.nextNonce
+  }
+
   async sendTx(txu: ethers.ethers.PopulatedTransaction | ethers.providers.TransactionRequest, log: string) {
     try {
-      txu.gasLimit = (await this.signer.estimateGas(txu)).mul(2)
+      txu.gasLimit = (await this.signer.estimateGas(txu)).mul(200).div(100)
       txu.gasPrice = await this.signer.getGasPrice()
-      if (this.nextNonce === -1) {
-        this.nextNonce = await this.signer.getTransactionCount()
-      } else {
-        this.nextNonce = this.nextNonce + 1
-      }
-      txu.nonce = this.nextNonce
+      txu.nonce = await this.getNonce()
       const tx = await this.signer.sendTransaction(txu)
       const result = await tx.wait()
       const transactionItem = {
@@ -39,9 +43,10 @@ export class TransactionManager {
         log
       } as TransactionItem
       this.transactionList.push(transactionItem)
-      console.log("Success" + log)
+      console.log("Success" + log + ":" + txu.nonce)
       return transactionItem
     } catch (e: any) {
+      this.nextNonce = -1
       console.error(e)
       let message
       try {
