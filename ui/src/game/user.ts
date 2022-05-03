@@ -55,7 +55,7 @@ export const getUserCardList = async (
       id: id,
       cardId: userCardChain.cardId,
       exp: userCardChain.exp.toNumber(),
-    }
+    } as UserCardType
   })
 }
 
@@ -65,7 +65,7 @@ export const getUserDeckList = async (
 ) => {
   const deckLength = await contract.getUserDeckLength(userId)
   const userDeckList = [] as UserDeckType[]
-  for (let i = 0; i < deckLength; i++) {
+  for (let i = 1; i <= deckLength; i++) {
     const gameDeckCardChain = await contract.getUserDeckCard(userId, i)
     userDeckList.push({
       id: i,

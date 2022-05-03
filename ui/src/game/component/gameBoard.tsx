@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { GameType, GameCardType } from '../../type/gameType'
+import { GameType, GameCardType, TurnDataType } from '../../type/gameType'
 import { CardType } from '../../type/cardType'
 import { UserType } from '../../type/userType'
 
@@ -15,15 +15,11 @@ import {
   getLevel
 } from '../../game/card'
 
-const _myTurn = (turn : number, userId1 : number, userId : number) => {
-  if (turn % 2 === 0 && userId1 === userId){
-    return 1
-  }
-  if (turn % 2 === 1 && userId1 !== userId){
-    return 1
-  }
-  return 0
-}
+import {
+  isMyTurn,
+  getTurnData,
+  playRandomly,
+} from '../../game/playGame'
 
 const GameBoard = (props : {
   user : UserType,
@@ -32,7 +28,7 @@ const GameBoard = (props : {
   cardList : CardType[],
   children: any,
   endGameByTime: () => void,
-  endTurn:(action : number[][]) => void
+  endTurn:(action : number[][], turn : number) => void
 }) => {
 
   const getTimestamp = () => {
@@ -40,14 +36,7 @@ const GameBoard = (props : {
   }
 
   const [timestamp, setTimestamp] = useState<number>(getTimestamp())
-  const [turnData, setTurnData] = useState<{
-    mana : number,
-    playActionList : number[][],
-    cardList1: GameCardType[],
-    cardList2: GameCardType[],
-    life1: number,
-    life2: number,
-  }>({
+  const [turnData, setTurnData] = useState<TurnDataType>({
     mana : 0,
     playActionList : [],
     cardList1: [],
@@ -57,19 +46,11 @@ const GameBoard = (props : {
   })
 
   const turn = props.game.turn
-  const myTurn = _myTurn(turn, props.game.userId1, props.user.id)
+  const myTurn = isMyTurn(turn, props.game.userId1, props.user.id)
 
   useEffect(() => {
-    const newTurnData = {
-      mana : Math.floor(turn / 2) + 1,
-      playActionList : [],
-      cardList1 : props.user.id === props.game.userId1? props.game.cardList1 : props.game.cardList2,
-      cardList2 : props.user.id === props.game.userId1? props.game.cardList2 : props.game.cardList1,
-      life1 : props.user.id === props.game.userId1? props.game.life1 : props.game.life2,
-      life2 : props.user.id === props.game.userId1? props.game.life2 : props.game.life1,
-    }
-    setTurnData(newTurnData)
-  }, [turn, props.user.id, props.game.userId1, props.game.cardList1, props.game.cardList2, props.game.life1, props.game.life2])
+    setTurnData(getTurnData(props.game, props.user.id))
+  }, [turn, props.user.id, props.game])
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -79,133 +60,7 @@ const GameBoard = (props : {
     return () => clearTimeout(timer)
   })
 
-  const playCardTo3 = (gameCard : GameCardType, cardList1 : GameCardType[]) => {
-    gameCard.position = 3
-    gameCard.play = 1
-    const newTurnData = {
-      playActionList : turnData.playActionList.concat([[gameCard.id, 3]]),
-      mana : turnData.mana - gameCard.mana,
-      cardList1 : cardList1,
-      cardList2 : turnData.cardList2.concat([]),
-      life1 : turnData.life1,
-      life2 : turnData.life2,
-    }
-    setTurnData(newTurnData)
-  }
 
-
-
-  const playAttack = (
-    gameCard : GameCardType,
-    cardList1 : GameCardType[],
-    gameCard2 : GameCardType,
-    cardList2 : GameCardType[]
-  ) => {
-    gameCard.play = 1
-    if (gameCard2.life > gameCard.attack){
-      gameCard.exp += gameCard.attack * 5
-      gameCard2.exp += gameCard.attack
-      gameCard2.life = gameCard2.life - gameCard.attack
-    } else {
-      gameCard.exp += gameCard2.life * 10
-      gameCard2.exp += gameCard2.life
-      gameCard2.life = 0
-      gameCard2.position = 4
-    }
-    if (gameCard.life > gameCard2.attack){
-      gameCard2.exp += gameCard2.attack * 2
-      gameCard.exp += gameCard2.attack
-      gameCard.life = gameCard.life - gameCard2.attack
-    } else {
-      gameCard2.exp += gameCard.life * 4
-      gameCard.exp += gameCard.life
-      gameCard.life = 0
-      gameCard.position = 4
-    }
-    const newTurnData = {
-      playActionList : turnData.playActionList.concat([[gameCard.id, gameCard2.id]]),
-      mana : turnData.mana,
-      cardList1 : cardList1,
-      cardList2 : cardList2,
-      life1 : turnData.life1,
-      life2 : turnData.life2,
-    }
-    setTurnData(newTurnData)
-  }
-
-  const playAttackOponent = (
-    gameCard : GameCardType,
-    cardList1 : GameCardType[],
-    life2 : number,
-  ) => {
-    gameCard.play = 1
-    if (life2 > gameCard.attack){
-      gameCard.exp += gameCard.attack * 5
-      life2 = life2 - gameCard.attack
-    } else {
-      gameCard.exp += life2 * 10
-      life2 = 0
-    }
-    const newTurnData = {
-      playActionList : turnData.playActionList.concat([[gameCard.id, 255]]),
-      mana : turnData.mana,
-      cardList1 : cardList1,
-      cardList2 : turnData.cardList2,
-      life1 : turnData.life1,
-      life2 : life2,
-    }
-    setTurnData(newTurnData)
-  }
-
-  const playRandomly = (test?: boolean) => {
-    const cardList1 = turnData.cardList1.map((_gameCard : GameCardType) => {
-      return {
-        ..._gameCard
-      } as GameCardType
-    })
-    if (cardList1.filter(card => card.position === 3).length < 8){
-      for (let i = 0; i < cardList1.length; i++){
-        const gameCard = cardList1[i]
-        if (gameCard.position === 1 && gameCard.mana <= turnData.mana && gameCard.play === 0){
-          if (!test){
-            playCardTo3(gameCard, cardList1)
-            console.log("play " + gameCard.id)
-          }
-          return 1
-        }
-      }
-    }
-    const cardList2 = turnData.cardList2.map((_gameCard : GameCardType) => {
-      return {
-        ..._gameCard
-      } as GameCardType
-    })
-    for (let i = 0; i < cardList1.length; i++){
-      const gameCard = cardList1[i]
-      if (gameCard.position === 3 && gameCard.play === 0){
-        for (let j = 0; j < cardList2.length; j++){
-          const gameCard2 = cardList2[j]
-          if (gameCard2.position === 3){
-            if (!test){
-              console.log("attack ", gameCard.id, gameCard2.id)
-              playAttack(gameCard, cardList1, gameCard2, cardList2)
-            }
-            return 1
-          }
-        }
-      }
-    }
-    for (let i = 0; i < cardList1.length; i++){
-      const gameCard = cardList1[i]
-      if (gameCard.position === 3 && gameCard.play === 0){
-          if (!test){
-            playAttackOponent(gameCard, cardList1, turnData.life2)
-          }
-          return 1
-      }
-    }
-    return 0
-  }
 
   const displayGameCard = (gameCard : GameCardType) => {
     const card = props.cardList.filter((card) => card.id === gameCard.cardId)[0]
@@ -331,10 +186,10 @@ const GameBoard = (props : {
       <Col xs={1}>
       { !!myTurn &&
         <>
-        { playRandomly(true) === 1 &&
-          <Button onClick={() => {playRandomly()}}>Play randomly</Button>
+        { playRandomly(turnData, setTurnData, true) === 1 &&
+          <Button onClick={() => {playRandomly(turnData, setTurnData)}}>Play randomly</Button>
         }
-        <Button onClick={() => {props.endTurn(turnData.playActionList)}}>End turn</Button>
+        <Button onClick={() => {props.endTurn(turnData.playActionList, turn)}}>End turn</Button>
         </>
 
       }

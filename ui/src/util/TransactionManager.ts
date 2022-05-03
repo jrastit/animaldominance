@@ -20,6 +20,10 @@ export class TransactionManager {
     this.nextNonce = -1
   }
 
+  async getBalance() {
+    return this.signer.getBalance()
+  }
+
   async getNonce() {
     if (this.nextNonce === -1) {
       this.nextNonce = await this.signer.getTransactionCount()
@@ -31,7 +35,7 @@ export class TransactionManager {
 
   async sendTx(txu: ethers.ethers.PopulatedTransaction | ethers.providers.TransactionRequest, log: string) {
     try {
-      txu.gasLimit = (await this.signer.estimateGas(txu)).mul(200).div(100)
+      txu.gasLimit = (await this.signer.estimateGas(txu)).mul(120).div(100)
       txu.gasPrice = await this.signer.getGasPrice()
       txu.nonce = await this.getNonce()
       const tx = await this.signer.sendTransaction(txu)
@@ -43,7 +47,16 @@ export class TransactionManager {
         log
       } as TransactionItem
       this.transactionList.push(transactionItem)
-      console.log("Success" + log + ":" + txu.nonce)
+      console.log("Success => " +
+        log +
+        ":" +
+        txu.nonce +
+        ' ' +
+        result.gasUsed.toNumber() +
+        ' ' +
+        (Math.round(result.gasUsed.mul(10000).div(txu.gasLimit).toNumber()) / 100) +
+        '% ' +
+        ethers.utils.formatEther(txu.gasPrice.mul(result.gasUsed)))
       return transactionItem
     } catch (e: any) {
       this.nextNonce = -1

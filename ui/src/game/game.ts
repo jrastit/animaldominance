@@ -71,29 +71,29 @@ export const getGameCardList = async (
 
 export const getGameFull = async (
   gameContract: ethers.Contract,
-  setMessage: (massage: string) => void
+  setMessage?: (message: string) => void
 ) => {
-  setMessage('Load id ')
+  setMessage && setMessage('Load id ')
   const id = ethers.BigNumber.from(await gameContract.gameId()).toNumber()
-  setMessage('Load user1 id ')
+  setMessage && setMessage('Load user1 id ')
   const gameUser1 = await gameContract.gameUser(0)
   const userId1 = ethers.BigNumber.from(gameUser1.userId).toNumber()
   const life1 = ethers.BigNumber.from(gameUser1.life).toNumber()
-  setMessage('Load user2 id ')
+  setMessage && setMessage('Load user2 id ')
   const gameUser2 = await gameContract.gameUser(1)
   const userId2 = ethers.BigNumber.from(gameUser2.userId).toNumber()
   const life2 = ethers.BigNumber.from(gameUser2.life).toNumber()
-  setMessage('Load user1 card ')
+  setMessage && setMessage('Load user1 card ')
   const cardList1 = await getGameCardList(gameContract, 0)
-  setMessage('Load user2 card ')
+  setMessage && setMessage('Load user2 card ')
   const cardList2 = await getGameCardList(gameContract, 1)
-  setMessage('Load latest time ')
+  setMessage && setMessage('Load latest time ')
   const latestTime = ethers.BigNumber.from(await gameContract.latestTime()).toNumber()
-  setMessage('Load version ')
+  setMessage && setMessage('Load version ')
   const version = await gameContract.version()
-  setMessage('Load turn ')
+  setMessage && setMessage('Load turn ')
   const turn = await gameContract.turn()
-  setMessage('Load winner ')
+  setMessage && setMessage('Load winner ')
   const winner = ethers.BigNumber.from(await gameContract.winner()).toNumber()
   const game = {
     id,
@@ -137,7 +137,7 @@ export const createGame = async (
       return log2.args.id.toNumber()
     }
   }))
-  return gameId[0]
+  return gameId[0] as number
 }
 
 export const joinGame = async (
@@ -172,11 +172,12 @@ export const endTurn = async (
   gameContract: ethers.Contract,
   transactionManager: TransactionManager,
   playActionList: number[][],
+  turn: number,
 ) => {
   const tx = await transactionManager.sendTx(
     await gameContract.populateTransaction.endTurn(
       playActionList,
-    ), "Play turn"
+    ), "Play turn " + turn
   )
   return tx
 }

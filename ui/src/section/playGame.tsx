@@ -95,9 +95,9 @@ const PlayGame = (props:{
     dispatch(clearError(stepId))
   }
 
-  const _playTurn = (playActionList : number[][]) => {
+  const _playTurn = (playActionList : number[][], turn : number) => {
     if (gameContract){
-      endTurn(gameContract, props.transactionManager, playActionList).then(() => {
+      endTurn(gameContract, props.transactionManager, playActionList, turn).then(() => {
 
       }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
     }

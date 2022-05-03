@@ -3,6 +3,7 @@ import { getWalletList } from '../__test_util__/testConfig'
 
 import {
   createWithManagerContractCardAdmin,
+  createWithManagerContractPlayGameFactory,
 } from '../contract/solidity/compiled/contractAutoFactory'
 
 import { TransactionManager } from '../util/TransactionManager'
@@ -10,8 +11,6 @@ import {
   createAllCard,
   loadAllCard
 } from '../game/card'
-
-let cardFile = require("../card/card.json")
 
 const testTransaction = () => {
 
@@ -37,8 +36,12 @@ const testTransaction = () => {
 
   describe('Test card', () => {
     it('Test card', async () => {
-      const contract = await createWithManagerContractCardAdmin(
+      const factory = await createWithManagerContractPlayGameFactory(
         transactionManager
+      )
+      const contract = await createWithManagerContractCardAdmin(
+        factory,
+        transactionManager,
       )
 
       await createAllCard(contract, transactionManager)

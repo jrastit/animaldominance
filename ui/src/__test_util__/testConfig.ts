@@ -1,5 +1,6 @@
 import * as ethers from 'ethers'
 const networkName = "ganache"
+//const networkName = "EmeraldTestnet"
 
 import { TransactionManager } from '../util/TransactionManager'
 

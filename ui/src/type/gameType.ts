@@ -1,3 +1,12 @@
+export type TurnDataType = {
+  mana: number,
+  playActionList: number[][],
+  cardList1: GameCardType[],
+  cardList2: GameCardType[],
+  life1: number,
+  life2: number,
+}
+
 export type GameCardType = {
   id: number
   userId: number

@@ -7,8 +7,9 @@
       "gameContract": "0xF12b5dd4EAD5F743C6BaA640B0216200e89B60Da"
     },
     {
-      "name" : "Emerald",
+      "name" : "EmeraldTestnet",
       "url": "https://testnet.emerald.oasis.dev",
+      "faucet" : "https://faucet.testnet.oasis.dev/",
       "chainId": 42261,
       "gameContract": "0x3fA06B3191b4646cdFaBb94C727D08c8a4822a4a"
     }
