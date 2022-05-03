@@ -104,20 +104,27 @@ contract CardAdmin {
         cardList[_cardId].level[_level].attack = _attack;
     }
 
-    ///////////////////////// Game Factory //////////////////////////////////
+    ///////////////////////// contract /////////////////////////////////////
 
-    address private owner;
-    PlayGameFactory playGameFactory;
+    address payable private owner;
 
     modifier isOwner() {
      require(msg.sender == owner, "Not owner");
         _;
     }
 
+    function withdraw (uint _amount) public isOwner {
+      owner.transfer(_amount);
+    }
+
     constructor(PlayGameFactory _playGameFactory) {
         _updatePlayGameFactory(_playGameFactory);
-        owner = msg.sender;
+        owner = payable( msg.sender);
     }
+
+    ///////////////////////// Game Factory //////////////////////////////////
+
+    PlayGameFactory playGameFactory;
 
     function _updatePlayGameFactory(PlayGameFactory _playGameFactory) private {
         require(address(_playGameFactory) != address(0), "playGameFactory is null");
@@ -243,6 +250,16 @@ contract CardAdmin {
     function addUserCard(uint64 _userId, uint32 _cardId) private {
         userIdList[_userId].userCardListLastId++;
         userIdList[_userId].userCardList[userIdList[_userId].userCardListLastId] = UserCard(_cardId, 0);
+    }
+
+    function buyNewCard(uint32 _cardId) public payable isUser {
+        require(0 < _cardId && _cardId <= cardLastId, "Wrong card");
+        if (cardList[_cardId].starter > 0) {
+          require(msg.value == 1 ether, "Price is 1 ether");
+        } else {
+          require(msg.value == 10 ether, "Price is 10 ether");
+        }
+        addUserCard(userAddressList[msg.sender], _cardId);
     }
 
     function addUserStarterCard(uint64 _userId) public {

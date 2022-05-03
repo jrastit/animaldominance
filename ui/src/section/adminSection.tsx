@@ -9,6 +9,8 @@ import AdminUserCardList from '../section/adminUserCardList'
 import AdminUserDeckList from '../section/adminUserDeckList'
 import AdminGameList from '../section/adminGameList'
 import AdminGame from '../section/adminGame'
+import DisplayUserCard from '../section/displayUserCard'
+import DisplayCard from '../section/displayCard'
 import ContractLoader from '../section/contractLoader'
 import GameJoin from '../section/gameJoin'
 import PlayGame from './playGame'
@@ -25,6 +27,7 @@ import {
 } from '../reducer/contractSlice'
 
 const AdminSection = (props: {
+  section : string | undefined,
   transactionManager : TransactionManager,
   networkName : string,
 })=> {
@@ -33,6 +36,81 @@ const AdminSection = (props: {
   const user = useAppSelector((state) => state.userSlice.user)
   const deckList = useAppSelector((state) => state.userSlice.userDeckList)
   const game = useAppSelector((state) => state.gameSlice.game)
+
+  const displayGame = () => {
+    return (
+      <>
+      { isStep(StepId.Game, Step.Init, step) &&
+        <Row>
+          <Col>
+            <AdminContract
+              contract={contract}
+              transactionManager={props.transactionManager}
+              setContract={setContract}
+              networkName={props.networkName}
+            />
+            {!!contract &&
+              <>
+              <AdminCard />
+              <AdminGameList/>
+              <AdminUser
+                contract={contract}
+                transactionManager={props.transactionManager}
+              />
+              </>
+            }
+            {!!contract && !!user &&
+              <>
+              <AdminUserCardList
+                contract={contract}
+                transactionManager={props.transactionManager}
+              />
+              <AdminUserDeckList
+                contract={contract}
+                transactionManager={props.transactionManager}
+              />
+              </>
+            }
+            { !!contract && !!game &&
+              <AdminGame />
+            }
+          </Col>
+          { !!contract && !!user && deckList && (deckList.length > 0) &&
+          <Col>
+            <GameJoin
+            contract={contract}
+            transactionManager={props.transactionManager}
+            />
+          </Col>
+          }
+        </Row>
+      }
+      {
+        !isStep(StepId.Game, Step.Init, step) && !!contract &&
+        <PlayGame
+        contract={contract}
+        transactionManager={props.transactionManager}
+        />
+      }
+      </>
+    )
+  }
+
+  const render = () => {
+    switch (props.section){
+      case 'card':
+      return (
+        <DisplayCard
+        contract={contract}
+        transactionManager={props.transactionManager}
+        />
+      )
+      case 'userCard':
+      return (<DisplayUserCard/>)
+      default :
+      return displayGame()
+    }
+  }
 
   return (
     <>
@@ -46,58 +124,7 @@ const AdminSection = (props: {
         />
       </Col>
     </Row>
-    { isStep(StepId.Game, Step.Init, step) &&
-      <Row>
-        <Col>
-          <AdminContract
-            contract={contract}
-            transactionManager={props.transactionManager}
-            setContract={setContract}
-            networkName={props.networkName}
-          />
-          {!!contract &&
-            <>
-            <AdminCard />
-            <AdminGameList/>
-            <AdminUser
-              contract={contract}
-              transactionManager={props.transactionManager}
-            />
-            </>
-          }
-          {!!contract && !!user &&
-            <>
-            <AdminUserCardList
-              contract={contract}
-              transactionManager={props.transactionManager}
-            />
-            <AdminUserDeckList
-              contract={contract}
-              transactionManager={props.transactionManager}
-            />
-            </>
-          }
-          { !!contract && !!game &&
-            <AdminGame />
-          }
-        </Col>
-        { !!contract && !!user && deckList && (deckList.length > 0) &&
-        <Col>
-          <GameJoin
-          contract={contract}
-          transactionManager={props.transactionManager}
-          />
-        </Col>
-        }
-      </Row>
-    }
-    {
-      !isStep(StepId.Game, Step.Init, step) && !!contract &&
-      <PlayGame
-      contract={contract}
-      transactionManager={props.transactionManager}
-      />
-    }
+    {render()}
     </>
   )
 

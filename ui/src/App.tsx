@@ -17,6 +17,7 @@ function App() {
   const [isHome, setIsHome] = useState(1);
   const [walletInfo, setWalletInfo] = useState<WalletInfo>({})
   const [password, setPassword] = useState<string | null>()
+  const [section, setSection] = useState<string | undefined>();
 
   return (
     <div className="App">
@@ -26,6 +27,8 @@ function App() {
           networkName={walletInfo.networkName}
           address={walletInfo.address}
           error={walletInfo.error}
+          section={section}
+          setSection={setSection}
         />}
         { (!!isHome) &&
           <WalletConnection
@@ -40,6 +43,7 @@ function App() {
 
         { !isHome && !!walletInfo.transactionManager && !!walletInfo.networkName && !!walletInfo.address && (
           <AdminSection
+            section={section}
             transactionManager={walletInfo.transactionManager}
             networkName={walletInfo.networkName}
           />

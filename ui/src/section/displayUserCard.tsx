@@ -15,7 +15,7 @@ const DisplayUserCard = () => {
 
   const selectCard = (userCard : UserCardType) => {
     const length = userCardSubList.length
-    const list = userCardSubList.filter(_userCard => _userCard.id != userCard.id)
+    const list = userCardSubList.filter(_userCard => _userCard.id !== userCard.id)
     if (list.length === length){
       list.push(userCard)
     }

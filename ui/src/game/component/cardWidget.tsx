@@ -1,5 +1,8 @@
 import Image from 'react-bootstrap/Image'
 
+const format = (num : number | string) =>
+    String(num).replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
+
 const cardWidget = (props : {
   family : number
   name : string
@@ -31,31 +34,24 @@ const cardWidget = (props : {
   }
 
   let levelColor="black"
-  let levelDisplay="0"
   switch (props.level){
     case 0:
       levelColor="black"
-      levelDisplay="0"
     break
     case 1:
       levelColor="#202020"
-      levelDisplay="10"
     break
     case 2:
       levelColor="#404040"
-      levelDisplay="100"
     break
     case 3:
       levelColor="#996515"
-      levelDisplay="1 000"
     break
     case 4:
       levelColor="#daa520"
-      levelDisplay="10 000"
     break
     case 5:
       levelColor="#ffd700"
-      levelDisplay="100 000"
     break
     default:
     break
@@ -68,7 +64,7 @@ const cardWidget = (props : {
       backgroundColor:familyColor,
       width:"12em",
       height:"18em",
-      marginBottom:"2em",
+      //marginBottom:"2em",
       color:"white",
       fontWeight:"bolder",
       marginLeft:"auto",
@@ -186,7 +182,7 @@ const cardWidget = (props : {
         marginBottom:"-.2em",
         fontWeight:"normal",
         }}>
-      {props.exp}
+      {format(props.exp)}
       </div>
       </div>
 

@@ -15,6 +15,7 @@ type CardType = {
   mana: number
   family: number
   level: Array<CardLevelType>
+  starter: number
 }
 
 export type { CardType, CardLevelType }

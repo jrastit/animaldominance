@@ -106,6 +106,20 @@ export const createAllCard = async (
   */
 }
 
+export const buyNewCard = async (
+  contract: ethers.Contract,
+  transactionManager: TransactionManager,
+  cardId: number,
+  value: number,
+) => {
+  const ptx = await contract.populateTransaction.buyNewCard(
+    cardId
+  )
+  ptx.value = ethers.utils.parseEther(value.toString())
+  const tx = await transactionManager.sendTx(ptx, "Buy new card " + cardId + " for " + value + "ROSE")
+  return tx
+}
+
 export const getCardLastId = async (
   contract: ethers.Contract,
 ) => {
@@ -168,10 +182,10 @@ export const loadAllCardFromFile = () => {
 }
 
 export const getLevel = (exp: number) => {
-  if (exp > 100000) return 5
-  if (exp > 10000) return 4
-  if (exp > 1000) return 3
-  if (exp > 100) return 2
-  if (exp > 10) return 1
+  if (exp >= 100000) return 5
+  if (exp >= 10000) return 4
+  if (exp >= 1000) return 3
+  if (exp >= 100) return 2
+  if (exp >= 10) return 1
   return 0
 }

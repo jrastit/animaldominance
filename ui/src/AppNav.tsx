@@ -15,6 +15,8 @@ const AppNav = (props: {
   address?: string,
   error: string | undefined,
   networkName: string | undefined,
+  section: string | undefined,
+  setSection: (section : string) => void,
 }) => {
 
   const user = useAppSelector((state) => state.userSlice.user)
@@ -26,6 +28,9 @@ const AppNav = (props: {
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="mr-auto">
           <Nav.Link onClick={() => props.setIsHome(1)}>Wallet</Nav.Link>
+          <Nav.Link onClick={() => props.setSection('game')}>Game</Nav.Link>
+          <Nav.Link onClick={() => props.setSection('userCard')}>My cards</Nav.Link>
+          <Nav.Link onClick={() => props.setSection('card')}>All cards</Nav.Link>
           {/*
           <Nav.Link href="#link">Link</Nav.Link>
           <NavDropdown title="Dropdown" id="basic-nav-dropdown">
