@@ -5,7 +5,6 @@ import type { UserType } from '../type/userType'
 
 // Define a type for the slice state
 interface GameState {
-  gameId: number
   game: GameType | undefined
   gameList: GameListItemType[]
   gameVersion: number
@@ -14,7 +13,6 @@ interface GameState {
 
 // Define the initial state using that type
 const initialState: GameState = {
-  gameId: 0,
   game: undefined,
   gameList: [],
   gameVersion: 0,
@@ -83,9 +81,6 @@ export const gameSlice = createSlice({
     clearGameList: (state) => {
       state.gameList = []
     },
-    setGameId: (state, action: PayloadAction<number>) => {
-      state.gameId = action.payload
-    },
     setGameVersion: (state, action: PayloadAction<number>) => {
       state.gameVersion = action.payload
     },
@@ -102,7 +97,6 @@ export const gameSlice = createSlice({
     },
     clearGame: (state) => {
       state.game = undefined
-      state.gameId = 0
       state.gameVersion = 0
       state.oponent = undefined
     }
@@ -117,7 +111,6 @@ export const {
   clearGameList,
   setGame,
   setOponent,
-  setGameId,
   setGameVersion,
   clearGame,
   cleanGame,

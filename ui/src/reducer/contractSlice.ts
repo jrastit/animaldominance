@@ -24,6 +24,7 @@ export enum Step {
   Waiting,
   Joining,
   Running,
+  Refresh,
   Update,
   Ended,
   Ready,

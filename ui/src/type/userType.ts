@@ -3,6 +3,7 @@ export type UserType = {
   name: string
   totem: number
   rank: number
+  gameId: number
 }
 
 export type UserDeckType = {

@@ -30,6 +30,7 @@ const AppNav = (props: {
           <Nav.Link onClick={() => props.setIsHome(1)}>Wallet</Nav.Link>
           <Nav.Link onClick={() => props.setSection('game')}>Game</Nav.Link>
           <Nav.Link onClick={() => props.setSection('userCard')}>My cards</Nav.Link>
+          <Nav.Link onClick={() => props.setSection('userDeck')}>My decks</Nav.Link>
           <Nav.Link onClick={() => props.setSection('card')}>All cards</Nav.Link>
           {/*
           <Nav.Link href="#link">Link</Nav.Link>

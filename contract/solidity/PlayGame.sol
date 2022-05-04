@@ -25,22 +25,47 @@ struct GameUser {
 
 contract PlayGame {
 
-    uint64 public gameId;
-
     CardAdmin cardAdmin;
-
-    GameUser[2] public gameUser;
-
-    uint16 public version = 0;
+    uint64 public gameId;
     uint8 public turn = 0;
-
     uint public latestTime = block.timestamp;
 
+    /////////////////////////////////////// Constructor //////////////////////////////
+    constructor(
+      CardAdmin _cardAdmin,
+      uint64 _userId1,
+      uint16 _gameDeckId1,
+      uint64 _userId2,
+      uint16 _gameDeckId2,
+      uint64 _gameId
+    ) {
+        cardAdmin = _cardAdmin;
+        uint8 pos = (random8(2) == 1) ? 0 : 1;
+        _loadCard(_userId1, _gameDeckId1, pos);
+        _loadCard(_userId2, _gameDeckId2, 1 - pos);
+        latestTime = block.timestamp;
+        gameId = _gameId;
+        _drawRandomCard(0);
+        _drawRandomCard(0);
+        _drawRandomCard(0);
+    }
+
+    ///////////////////////////// Random ///////////////////////////////////////////////////
+    function random8(uint8 number) public view returns(uint8){
+        return uint8(uint(keccak256(abi.encode(blockhash(block.number-1), block.timestamp, version)))) % number;
+    }
+
+    ///////////////////////////// winer //////////////////////////////////////////////////////
     uint64 public winner = 0;
 
-    event GameUpdate(uint16 version);
+    function getWinner() public view returns (uint64){
+        return winner;
+    }
 
-    event PlayAction(uint8 id, uint8 gameCard, uint8 dest, uint16 result);
+    ////////////////////////////// Version //////////////////////////////////////////////////////
+    uint16 public version = 0;
+
+    event GameUpdate(uint16 version);
 
     function _updateVersion() private {
         version = version + 1;
@@ -48,12 +73,21 @@ contract PlayGame {
         emit GameUpdate(version);
     }
 
-    function getWinner() public view returns (uint64){
-        return winner;
+    /////////////////////////////// Game User //////////////////////////////////////////////////////////
+
+    GameUser[2] public gameUser;
+
+    function getUserPos(uint64 userId) public view returns(uint8){
+        if (userId == gameUser[0].userId){
+            return 0;
+        }
+        return 1;
     }
 
-    function random8(uint8 number) public view returns(uint8){
-        return uint8(uint(keccak256(abi.encode(blockhash(block.number-1), block.timestamp, version)))) % number;
+    ////////////////////////////// GameCard /////////////////////////////////////////////////////////
+
+    function getUserCardExp(uint8 _pos, uint32 userCardId) public view returns(uint64){
+        return (gameUser[_pos].expWin[userCardId]);
     }
 
     function getGameCard(uint64 _userId, uint32 _userCardId) public view returns (GameCard memory){
@@ -86,42 +120,51 @@ contract PlayGame {
 
     function _drawRandomCard(uint8 _pos) private {
         uint32[] storage cardIdList = gameUser[_pos].cardIdList;
-        uint32[] memory _cardIdList = gameUser[_pos].cardIdList;
-        if (_cardIdList.length == 0) return;
-        uint8 index = random8(uint8(_cardIdList.length));
-        uint32 userCardId = _cardIdList[index];
-        cardIdList[index] = _cardIdList[_cardIdList.length - 1];
+        if (cardIdList.length == 0) return;
+        uint8 index = random8(uint8(cardIdList.length));
+        uint32 userCardId = cardIdList[index];
+        cardIdList[index] = cardIdList[cardIdList.length - 1];
         cardIdList.pop();
         gameUser[_pos].cardList.push(getGameCard(gameUser[_pos].userId, userCardId));
     }
 
-    constructor(
-      CardAdmin _cardAdmin,
-      uint64 _userId1,
-      uint16 _gameDeckId1,
-      uint64 _userId2,
-      uint16 _gameDeckId2,
-      uint64 _gameId
-    ) {
-        cardAdmin = _cardAdmin;
-        uint8 pos = (random8(2) == 1) ? 0 : 1;
-        _loadCard(_userId1, _gameDeckId1, pos);
-        _loadCard(_userId2, _gameDeckId2, 1 - pos);
-        latestTime = block.timestamp;
-        gameId = _gameId;
-        _drawRandomCard(0);
-        _drawRandomCard(0);
-        _drawRandomCard(0);
-    }
-
-    function _getCardNumber(uint8 _pos, uint8 _position) private view returns (uint8 j) {
-        j = 0;
-        GameCard[] storage cardList = gameUser[_pos].cardList;
+    function _getCardNumber(uint8 _pos, uint8 _position) private view returns (uint8) {
+        uint8 j = 0;
+        GameCard[] memory cardList = gameUser[_pos].cardList;
         for (uint8 k = 0; k < cardList.length; k++){
             if (cardList[k].position == _position){
                 j++;
             }
         }
+        return j;
+    }
+
+    function getGameCardList(uint8 _pos) public view returns (GameCard[] memory){
+        return gameUser[_pos].cardList;
+    }
+
+    ////////////////////////////// Play Action /////////////////////////////////////////////////////
+    event PlayAction(uint8 id, uint8 gameCard, uint8 dest, uint16 result);
+
+    function endTurn(uint8[2][] memory _action) public {
+      require(winner == 0, 'Already ended');
+      uint64 userId = cardAdmin.userAddressList(msg.sender);
+      uint8 pos = turn % 2;
+      require(userId == gameUser[pos].userId, 'Wrong user');
+      uint8 mana = (turn / 2) + 1;
+      for (uint8 i = 0; i < _action.length && winner == 0; i++){
+        mana = _playAction(pos, i, mana, _action[i][0], _action[i][1]);
+      }
+      uint8 j = _getCardNumber(1 - pos, 1);
+      if (j < 6){
+          _drawRandomCard(1 - pos);
+          if (turn == 1){
+              if (j <= 5) _drawRandomCard(1);
+              if (j <= 4) _drawRandomCard(1);
+          }
+      }
+      turn = turn + 1;
+      _updateVersion();
     }
 
     function _playAction(uint8 _pos, uint8 _i, uint8 _mana, uint8 _gameCardId, uint8 _dest) private returns (uint8) {
@@ -212,30 +255,7 @@ contract PlayGame {
         return _mana;
     }
 
-    function endTurn(uint8[2][] memory _action) public {
-      require(winner == 0, 'Already ended');
-      uint64 userId = cardAdmin.userAddressList(msg.sender);
-      uint8 pos = turn % 2;
-      require(userId == gameUser[pos].userId, 'Wrong user');
-      uint8 mana = (turn / 2) + 1;
-      for (uint8 i = 0; i < _action.length && winner == 0; i++){
-        mana = _playAction(pos, i, mana, _action[i][0], _action[i][1]);
-      }
-      turn = turn + 1;
-      uint8 j = _getCardNumber(pos, 1);
-      if (j < 6){
-          _drawRandomCard(1 - pos);
-          if (turn == 1){
-              if (j <= 5) _drawRandomCard(1);
-              if (j <= 4) _drawRandomCard(1);
-          }
-      }
-      _updateVersion();
-    }
-
-    function getGameCardList(uint8 _pos) public view returns (GameCard[] memory){
-        return gameUser[_pos].cardList;
-    }
+    //////////////////////////// End Game ///////////////////////////////////
 
     function _endGame(uint64 _winner) private {
         require(winner == 0, 'Already ended');
@@ -247,17 +267,6 @@ contract PlayGame {
         require(block.timestamp > latestTime + 180, 'Time not ok');
         _endGame(gameUser[1 - (turn % 2)].userId);
         _updateVersion();
-    }
-
-    function getUserCardExp(uint8 _pos, uint32 userCardId) public view returns(uint64){
-        return (gameUser[_pos].expWin[userCardId]);
-    }
-
-    function getUserPos(uint64 userId) public view returns(uint8){
-        if (userId == gameUser[0].userId){
-            return 0;
-        }
-        return 1;
     }
 
     function leaveGame() public {

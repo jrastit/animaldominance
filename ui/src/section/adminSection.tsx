@@ -9,6 +9,7 @@ import AdminUserCardList from '../section/adminUserCardList'
 import AdminUserDeckList from '../section/adminUserDeckList'
 import AdminGameList from '../section/adminGameList'
 import AdminGame from '../section/adminGame'
+import DisplayUserDeck from '../section/displayUserDeck'
 import DisplayUserCard from '../section/displayUserCard'
 import DisplayCard from '../section/displayCard'
 import ContractLoader from '../section/contractLoader'
@@ -107,6 +108,15 @@ const AdminSection = (props: {
       )
       case 'userCard':
       return (<DisplayUserCard/>)
+      case 'userDeck':
+      if (contract) {
+        return (<DisplayUserDeck
+          contract={contract}
+          transactionManager={props.transactionManager}
+          />)
+      } else {
+        return displayGame()
+      }
       default :
       return displayGame()
     }

@@ -7,7 +7,7 @@ import Button from 'react-bootstrap/Button'
 
 import SpaceWidget from '../component/spaceWidget'
 import BoxWidget from '../component/boxWidget'
-import SelectWidget from '../component/selectWidget'
+import DeckSelect from '../game/component/deckSelect'
 
 import {
   joinGame,
@@ -18,7 +18,10 @@ import {
   UserDeckType
 } from '../type/userType'
 
-import { setGameId } from '../reducer/gameSlice'
+import {
+  setGameId
+} from '../reducer/userSlice'
+
 import {
   Step,
   StepId,
@@ -40,17 +43,6 @@ const GameJoin = (props : {
   const [deck, setDeck] = useState<UserDeckType | undefined>(
     userDeckList ? userDeckList[0] : undefined
   )
-
-
-  const onChangeDeck = (event : {target : {name : string, value : string}}) => {
-    if (userDeckList){
-      setDeck(
-        userDeckList.filter(
-          (userDeck) => userDeck.id === parseInt(event.target.value)
-        )[0]
-      )
-    }
-  }
 
   const onGameJoin = async (gameId : number) => {
     if (deck){
@@ -78,26 +70,12 @@ const GameJoin = (props : {
         props.contract,
         props.transactionManager,
         deck.id
-      ).then((gameId) => {
-        dispatch(setGameId(gameId))
+      ).then((_gameId) => {
+        dispatch(setGameId(_gameId))
         dispatch(updateStep({id : stepId, step: Step.Waiting}))
       }).catch((err) => {
         dispatch(setError({id : stepId, catchError: err}))
       })
-    }
-
-  }
-
-  const userGame = gameList.filter((_game) => {
-    return !_game.winner && user && (_game.userId1 === user.id || _game.userId2 === user.id)
-  })
-
-  if (userGame && userGame.length > 0){
-    dispatch(setGameId(userGame[0].id))
-    if (userGame[0].userId2){
-      dispatch(updateStep({id : stepId, step: Step.Ready}))
-    } else {
-      dispatch(updateStep({id : stepId, step: Step.Waiting}))
     }
 
   }
@@ -134,33 +112,14 @@ const GameJoin = (props : {
     }
   }
 
-
-  const render2 = () => {
-    let deckList = [{name:"", value:"-1"}] as {name: string, value:string}[]
-
-    if (userDeckList){
-      deckList = deckList.concat(
-        userDeckList.map(userDeck => {
-          return {
-            name : "Deck " + userDeck.id,
-            value : userDeck.id.toString()
-          }
-        })
-      )
-    }
-    return (
-      <SelectWidget
-        onChange={onChangeDeck}
-        option={deckList}
-        value={deck ? deck.id.toString() : undefined}
-      />
-    )
-  }
-
   return (
     <SpaceWidget>
       <BoxWidget title='Select deck'>
-        { render2() }
+        <DeckSelect
+          userDeckList={userDeckList}
+          setDeck={setDeck}
+          deck={deck}
+        />
       </BoxWidget>
       <BoxWidget title='Create Game'>
       {deck &&

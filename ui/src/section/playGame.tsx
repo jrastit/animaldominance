@@ -43,7 +43,6 @@ const PlayGame = (props:{
   const stepId = StepId.Game
   const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)
-  const gameId = useAppSelector((state) => state.gameSlice.gameId)
   const game = useAppSelector((state) => state.gameSlice.game)
   const oponent = useAppSelector((state) => state.gameSlice.oponent)
   const gameList = useAppSelector((state) => state.gameSlice.gameList)
@@ -70,8 +69,8 @@ const PlayGame = (props:{
   }
   */
 
-  if (isStep(stepId, Step.Waiting, step)) {
-    const gameItem = gameList.filter(_gameItem => _gameItem.id === gameId)[0]
+  if (isStep(stepId, Step.Waiting, step) && user && user.gameId) {
+    const gameItem = gameList.filter(_gameItem => _gameItem.id === user.gameId)[0]
     if (gameItem) {
       if (gameItem.winner !== 0){
         setTimeout(() => {dispatch(updateStep({id : stepId, step : Step.Ended}))}, 100)
@@ -120,7 +119,7 @@ const PlayGame = (props:{
   }
 
   const _cancelGame = () => {
-    cancelGame(props.contract, props.transactionManager, gameId).then(() => {
+    cancelGame(props.contract, props.transactionManager).then(() => {
     }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
   }
 
@@ -128,7 +127,7 @@ const PlayGame = (props:{
     if (isStep(stepId, Step.Waiting, step)){
       return (
         <Row>
-          <Col>Waiting for opponent for game {gameId}<br/>
+          <Col>Waiting for opponent for game {user?.gameId}<br/>
             <Button variant='danger' onClick={_cancelGame}>Cancel</Button>
           </Col>
         </Row>
@@ -149,7 +148,7 @@ const PlayGame = (props:{
       return (
         <Row><Col>Error!!!</Col></Row>
       )
-    } else if (isStep(stepId, Step.Running, step)){
+    } else if (isStep(stepId, Step.Running, step) || isStep(stepId, Step.Refresh, step)){
       if (game && user && oponent){
         return (
           <GameBoard

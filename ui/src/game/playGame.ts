@@ -90,7 +90,9 @@ export const playRandomly = (
   setTurnData: (turnData: TurnDataType) => void,
   test?: boolean,
 ) => {
-  const cardList1 = turnData.cardList1.concat([])
+  const cardList1 = turnData.cardList1.map(gameCard => {
+    return { ...gameCard } as GameCardType
+  })
   if (cardList1.filter(card => card.position === 3).length < 8) {
     for (let i = 0; i < cardList1.length; i++) {
       const gameCard = cardList1[i]

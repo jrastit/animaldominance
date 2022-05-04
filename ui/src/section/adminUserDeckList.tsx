@@ -8,6 +8,10 @@ import SpaceWidget from '../component/spaceWidget'
 import BoxWidgetHide from '../component/boxWidgetHide'
 import StepMessageWidget from '../component/stepMessageWidget'
 
+import type {
+  UserDeckType
+} from '../type/userType'
+
 import {
   addUserDefaultDeck,
 } from '../game/user'
@@ -45,11 +49,14 @@ const AdminUserDeckList = (props : {
         props.contract,
         props.transactionManager,
         userCardList,
-      ).then((deckId) => {
-        dispatch(setUserDeckList([{
-          id : deckId,
-          userCardIdList : userCardList.map(userCard => userCard.id),
-        }]))
+      ).then((deck) => {
+        let newUserDeckList = [] as UserDeckType[]
+        if (userDeckList){
+          newUserDeckList = userDeckList.concat([deck])
+        } else {
+          newUserDeckList = [deck]
+        }
+        dispatch(setUserDeckList(newUserDeckList))
         dispatch(updateStep({id: stepId, step: Step.Ok}))
       }).catch((err) => {
         dispatch(setError({id : stepId, catchError : err}))

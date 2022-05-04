@@ -25,8 +25,9 @@ export const getGameContract = async (
 ) => {
   const gameChain = await contract.gameList(gameId)
   const contractAddress = gameChain.playGame
-  if (!contractAddress) {
-    throw Error("Game contract not found")
+  console.log(contractAddress)
+  if (!contractAddress || contractAddress === "0x0000000000000000000000000000000000000000") {
+    return undefined
   }
   return getContractPlayGame(contractAddress, transactionManager.signer)
 }
@@ -158,11 +159,9 @@ export const joinGame = async (
 export const cancelGame = async (
   contract: ethers.Contract,
   transactionManager: TransactionManager,
-  gameId: number,
 ) => {
   const tx = await transactionManager.sendTx(
     await contract.populateTransaction.cancelGame(
-      gameId,
     ), "Cancel game"
   )
   return tx

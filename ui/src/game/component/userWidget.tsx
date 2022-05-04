@@ -12,6 +12,9 @@ const UserWidget = (props : {
       { props.user &&
         <>{props.user.name}#{props.user.id}</>
       }
+      { props.user && props.user.gameId &&
+        <>in game {props.user.gameId}</>
+      }
       {
         !props.user &&
           <>User not registered</>

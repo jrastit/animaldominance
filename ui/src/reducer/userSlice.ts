@@ -37,6 +37,16 @@ export const userSlice = createSlice({
     setUser: (state, action: PayloadAction<UserType>) => {
       state.user = action.payload
     },
+    setGameId: (state, action: PayloadAction<number>) => {
+      if (state.user) {
+        state.user.gameId = action.payload
+      }
+    },
+    endGameId: (state, action: PayloadAction<number>) => {
+      if (state.user && state.user.gameId === action.payload) {
+        state.user.gameId = 0
+      }
+    },
     clearUser: (state) => {
       state.user = undefined
     }
@@ -44,6 +54,8 @@ export const userSlice = createSlice({
 })
 
 export const {
+  setGameId,
+  endGameId,
   setUserDeckList,
   clearUserDeckList,
   setUserCardList,

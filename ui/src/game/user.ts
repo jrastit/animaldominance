@@ -42,6 +42,7 @@ export const getUser = async (
     name: userChain.name,
     totem: userChain.totem,
     rank: userChain.rank.toNumber(),
+    gameId: userChain.gameId.toNumber(),
   } as UserType
 }
 
@@ -52,7 +53,7 @@ export const getUserCardList = async (
   const cardListChain = await contract.getUserCardList(userId)
   return cardListChain.map((userCardChain: any, id: number) => {
     return {
-      id: id,
+      id: id + 1,
       cardId: userCardChain.cardId,
       exp: userCardChain.exp.toNumber(),
     } as UserCardType
@@ -83,11 +84,53 @@ export const addUserDefaultDeck = async (
   if (userCardList.length < 20) {
     throw new Error("Not enought card")
   }
-  const deckCardList = userCardList.slice(0, 20).map(userCard => userCard.id)
-  await transactionManager.sendTx(await contract.populateTransaction.addGameDeckSelf(
-    deckCardList,
+  const deckCardList = userCardList.slice(0, 20)
+  return await addUserDeck(contract, transactionManager, deckCardList)
+}
+
+export const addUserDeck = async (
+  contract: ethers.Contract,
+  transactionManager: TransactionManager,
+  userCardList: UserCardType[],
+) => {
+  if (userCardList.length !== 20) {
+    throw new Error("Should have 20 cards")
+  }
+  const deckCardIdList = userCardList.map(userCard => userCard.id)
+  const tx = await transactionManager.sendTx(await contract.populateTransaction.addGameDeckSelf(
+    deckCardIdList,
   ), "Add default deck")
-  return 0
+  let deckId = 0
+  await Promise.all(tx.result.logs.map(async (log) => {
+    const log2 = contract.interface.parseLog(log)
+    if (log2.name === 'DeckUpdated') {
+      deckId = log2.args.deckId
+    }
+  }))
+  return {
+    id: deckId,
+    userCardIdList: deckCardIdList,
+  } as UserDeckType
+}
+
+export const updateUserDeck = async (
+  contract: ethers.Contract,
+  transactionManager: TransactionManager,
+  deckId: number,
+  userCardList: UserCardType[],
+) => {
+  if (userCardList.length !== 20) {
+    throw new Error("Should have 20 cards")
+  }
+  const deckCardIdList = userCardList.map(userCard => userCard.id)
+  await transactionManager.sendTx(await contract.populateTransaction.updateGameDeckSelf(
+    deckId,
+    deckCardIdList,
+  ), "Update deck " + deckId)
+  return {
+    id: deckId,
+    userCardIdList: deckCardIdList,
+  } as UserDeckType
 }
 
 export const addUserStarterCard = async (

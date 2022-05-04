@@ -11,8 +11,10 @@ struct User {
     uint64 rank;
     uint32 userCardListLastId;
     uint16 deckListLastId;
+    uint64 gameId;
     mapping(uint32 => UserCard) userCardList;
     mapping(uint16 => GameDeck) deckList;
+
 }
 
 struct Card {
@@ -34,10 +36,11 @@ struct CardLevel {
 struct UserCard {
     uint32 cardId;
     uint64 exp;
+    bool lock;
 }
 
 struct GameDeck {
-    uint32[20] userCardList;
+    uint32[20] userCardIdList;
 }
 
 struct Game {
@@ -156,8 +159,11 @@ contract CardAdmin {
     }
 
     function createGame(uint64 _userId, uint16 _gameDeckId) private {
+        require(userIdList[_userId].gameId == 0, 'user already in game');
+        _checkDeck(_userId, _gameDeckId);
         gameLastId = gameLastId + 1;
         joinGamePos(gameLastId, _userId, _gameDeckId, true);
+        userIdList[_userId].gameId = gameLastId;
         emit GameCreated(gameLastId, _userId);
     }
 
@@ -165,16 +171,19 @@ contract CardAdmin {
         createGame(userAddressList[msg.sender], _gameDeckId);
     }
 
-    function cancelGame(uint64 _gameId) public isUser {
+    function cancelGame() public isUser {
         uint64 _userId = userAddressList[msg.sender];
-        require(gameList[_gameId].userId1 == _userId, "Not owner");
+        uint64 _gameId = userIdList[_userId].gameId;
         require(gameList[_gameId].userId2 == 0, "Player has join");
         gameList[_gameId].winner = _userId;
+        userIdList[_userId].gameId = 0;
         emit GameEnd(_gameId, _userId);
     }
 
     function joinGame(uint64 _gameId, uint64 _userId, uint16 _gameDeckId) private {
         require(gameList[_gameId].userId2 == 0, "Game is full");
+        require(userIdList[_userId].gameId == 0, 'user already in game');
+        _checkDeck(_userId, _gameDeckId);
         joinGamePos(_gameId, _userId, _gameDeckId, false);
         Game storage game = gameList[_gameId];
         game.playGame = playGameFactory.newGame(
@@ -185,6 +194,7 @@ contract CardAdmin {
             game.userDeck2,
             gameLastId
         );
+        userIdList[_userId].gameId = gameLastId;
         emit GameFill(gameLastId, _userId);
     }
 
@@ -203,12 +213,15 @@ contract CardAdmin {
     }
 
     function endGame(uint64 _gameId) public {
-        require(gameList[_gameId].winner == 0);
-        uint64 winner = gameList[_gameId].playGame.getWinner();
+        Game storage game = gameList[_gameId];
+        require(game.winner == 0);
+        uint64 winner = game.playGame.getWinner();
         require(winner != 0);
-        gameList[_gameId].winner = winner;
-        addCardExp(gameList[_gameId].userId1, gameList[_gameId].userDeck1, gameList[_gameId].playGame);
-        addCardExp(gameList[_gameId].userId2, gameList[_gameId].userDeck2, gameList[_gameId].playGame);
+        game.winner = winner;
+        addCardExp(game.userId1, game.userDeck1, game.playGame);
+        addCardExp(game.userId2, game.userDeck2, game.playGame);
+        userIdList[game.userId1].gameId = 0;
+        userIdList[game.userId2].gameId = 0;
         emit GameEnd(_gameId, winner);
     }
 
@@ -249,7 +262,7 @@ contract CardAdmin {
 
     function addUserCard(uint64 _userId, uint32 _cardId) private {
         userIdList[_userId].userCardListLastId++;
-        userIdList[_userId].userCardList[userIdList[_userId].userCardListLastId] = UserCard(_cardId, 0);
+        userIdList[_userId].userCardList[userIdList[_userId].userCardListLastId] = UserCard(_cardId, 0, false);
     }
 
     function buyNewCard(uint32 _cardId) public payable isUser {
@@ -284,22 +297,50 @@ contract CardAdmin {
     }
 
     ////////////////////////////////////// User Deck ///////////////////////////////////////
+    event DeckUpdated(uint64 userId, uint16 deckId);
+
+    function _checkDeck(uint64 _userId, uint16 _deckId) private view {
+        uint32[20] memory userCardIdList = userIdList[_userId].deckList[_deckId].userCardIdList;
+        for (uint8 i = 0; i < 20; i++){
+            require(userIdList[_userId].userCardList[userCardIdList[i]].lock == false, "card is locked");
+        }
+    }
 
     function getUserDeckLength(uint64 _userId) public view returns (uint16){
        return userIdList[_userId].deckListLastId;
     }
 
     function getUserDeckCard(uint64 _userId, uint16 _deckId) public view returns (uint32[20] memory){
-       return userIdList[_userId].deckList[_deckId].userCardList;
+       return userIdList[_userId].deckList[_deckId].userCardIdList;
     }
 
-    function addGameDeck(uint64 _userId, uint32[20] memory _userCardList) private {
+    function _updateGameDeck(uint64 _userId, uint16 _deckId, uint32[20] memory _userCardIdList) private {
+      for (uint8 i = 0; i < 20; i++){
+        require(_userCardIdList[i] > 0 && _userCardIdList[i] <=  userIdList[_userId].userCardListLastId , 'Wrong user card');
+        uint8 nb = 0;
+        for (uint8 j = i + 1; j < 20; j++){
+          require(_userCardIdList[i] != _userCardIdList[j], 'Two same user cards');
+          if (userIdList[_userId].userCardList[_userCardIdList[i]].cardId == userIdList[_userId].userCardList[_userCardIdList[j]].cardId){
+            nb++;
+            require(nb < 2, 'To many same card');
+          }
+        }
+      }
+      userIdList[_userId].deckList[_deckId].userCardIdList = _userCardIdList;
+      emit DeckUpdated(_userId, _deckId);
+    }
+
+    function _addGameDeck(uint64 _userId, uint32[20] memory _userCardIdList) private {
       userIdList[_userId].deckListLastId++;
-      userIdList[_userId].deckList[userIdList[_userId].deckListLastId].userCardList = _userCardList;
+      _updateGameDeck(_userId, userIdList[_userId].deckListLastId, _userCardIdList);
     }
 
-    function addGameDeckSelf(uint32[20] memory _userCardList) public isUser {
-      addGameDeck(userAddressList[msg.sender], _userCardList);
+    function addGameDeckSelf(uint32[20] memory _userCardIdList) public isUser {
+      _addGameDeck(userAddressList[msg.sender], _userCardIdList);
+    }
+
+    function updateGameDeckSelf(uint16 _deckId, uint32[20] memory _userCardIdList) public isUser {
+      _updateGameDeck(userAddressList[msg.sender], _deckId, _userCardIdList);
     }
 
 }
