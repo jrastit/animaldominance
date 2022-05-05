@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 import { TransactionManager } from '../util/TransactionManager'
 import AdminCard from './adminCard'
+import AdminTrade from './adminTrade'
 import AdminUser from '../section/adminUser'
 import AdminContract from '../section/adminContract'
 import AdminUserCardList from '../section/adminUserCardList'
@@ -33,6 +34,7 @@ const AdminSection = (props: {
   networkName : string,
 })=> {
   const [contract, setContract] = useState<ethers.Contract>()
+  const [tradingContract, setTradingContract] = useState<ethers.Contract>()
   const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)
   const deckList = useAppSelector((state) => state.userSlice.userDeckList)
@@ -50,32 +52,42 @@ const AdminSection = (props: {
               setContract={setContract}
               networkName={props.networkName}
             />
+          </Col>
             {!!contract &&
-              <>
+              <Col>
               <AdminCard />
+              <AdminTrade />
               <AdminGameList/>
+              </Col>
+            }
+            {!!contract &&
+              <Col>
               <AdminUser
                 contract={contract}
                 transactionManager={props.transactionManager}
               />
-              </>
+              {!!contract && !!user &&
+                <>
+                <AdminUserCardList
+                  contract={contract}
+                  transactionManager={props.transactionManager}
+                />
+                <AdminUserDeckList
+                  contract={contract}
+                  transactionManager={props.transactionManager}
+                />
+                </>
+              }
+              { !!contract && !!game &&
+
+                <AdminGame />
+
+              }
+              </Col>
             }
-            {!!contract && !!user &&
-              <>
-              <AdminUserCardList
-                contract={contract}
-                transactionManager={props.transactionManager}
-              />
-              <AdminUserDeckList
-                contract={contract}
-                transactionManager={props.transactionManager}
-              />
-              </>
-            }
-            { !!contract && !!game &&
-              <AdminGame />
-            }
-          </Col>
+
+
+
           { !!contract && !!user && deckList && (deckList.length > 0) &&
           <Col>
             <GameJoin
@@ -107,7 +119,15 @@ const AdminSection = (props: {
         />
       )
       case 'userCard':
-      return (<DisplayUserCard/>)
+      if (contract){
+        return (<DisplayUserCard
+            contract={contract}
+            transactionManager={props.transactionManager}
+          />)
+      } else {
+        return (<p>Contract not set</p>)
+      }
+
       case 'userDeck':
       if (contract) {
         return (<DisplayUserDeck
@@ -130,6 +150,8 @@ const AdminSection = (props: {
           contract={contract}
           transactionManager={props.transactionManager}
           setContract={setContract}
+          tradingContract={tradingContract}
+          setTradingContract={setTradingContract}
           networkName={props.networkName}
         />
       </Col>

@@ -66,7 +66,7 @@ const AdminUserDeckList = (props : {
 
   return (
     <SpaceWidget>
-      <BoxWidgetHide title='Decks' hide={false}>
+      <BoxWidgetHide title='My Decks' hide={false}>
         <StepMessageWidget
           step = {getStep(stepId, step)}
           resetStep = {() => {dispatch(clearError(stepId))}}

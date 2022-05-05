@@ -15,6 +15,7 @@ export enum StepId {
   UserDeckList,
   GameList,
   Game,
+  Trading,
 }
 
 export enum Step {
@@ -51,6 +52,7 @@ const initialState: ContractState = {
     { id: StepId.UserDeckList, step: Step.Init, message: undefined, error: undefined },
     { id: StepId.GameList, step: Step.Init, message: undefined, error: undefined },
     { id: StepId.Game, step: Step.Init, message: undefined, error: undefined },
+    { id: StepId.Trading, step: Step.Init, message: undefined, error: undefined },
   ],
   version: 0,
 }

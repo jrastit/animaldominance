@@ -8,7 +8,8 @@ import StepMessageWidget from '../component/stepMessageWidget'
 import Button from 'react-bootstrap/Button'
 
 import {
-  createAllCard
+  createAllCard,
+  registerTrading,
 } from '../game/card'
 
 import {
@@ -102,16 +103,35 @@ const AdminContract = (props : {
     }
   }
 
+  const updateContractTrading = () => {
+    if (props.contract){
+      dispatch(updateStep({id: stepId, step: Step.Creating}))
+      registerTrading(props.contract, props.transactionManager).then(() => {
+          dispatch(updateStep({id: stepId, step: Step.Ok}))
+          dispatch(updateStep({id: StepId.Trading, step: Step.Init}))
+      }).catch((err) => {
+        dispatch(setError({id : stepId, catchError : err}))
+      })
+    }
+  }
+
+
   const createContract = () => {
     dispatch(updateStep({id: stepId, step: Step.Creating}))
     _setMessage("Creating contract game factory...")
     createWithManagerContractPlayGameFactory(props.transactionManager).then(async (contractFactory) => {
       _setMessage("Creating contract card admin...")
       createWithManagerContractCardAdmin(contractFactory, props.transactionManager).then(async (contract) => {
-        props.setContract(contract)
-        clearState()
-        dispatch(resetAllSubStep())
-        fillContract(contract)
+        _setMessage("Creating trading contract...")
+        registerTrading(contract, props.transactionManager).then(() => {
+          dispatch(updateStep({id: StepId.Trading, step: Step.Init}))
+          props.setContract(contract)
+          clearState()
+          dispatch(resetAllSubStep())
+          fillContract(contract)
+        }).catch((err) => {
+          dispatch(setError({id : stepId, catchError : err}))
+        })
       }).catch((err) => {
         dispatch(setError({id : stepId, catchError : err}))
       })
@@ -146,11 +166,18 @@ const AdminContract = (props : {
       { (
         isStep(stepId, Step.Ok, step)
       ) &&
+        <>
         <SpaceWidget>
         <Button variant="warning" onClick={() => {updateContractGameFactory()}}>
           Update game factory contract
         </Button>
         </SpaceWidget>
+        <SpaceWidget>
+        <Button variant="warning" onClick={() => {updateContractTrading()}}>
+          Update contract trading
+        </Button>
+        </SpaceWidget>
+        </>
       }
       { isStep(stepId, Step.Empty, step) &&
         <SpaceWidget>

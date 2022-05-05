@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
+import { Trading } from "./Trading.sol";
 import { PlayGame, GameCard } from "./PlayGame.sol";
 import { PlayGameFactory } from "./PlayGameFactory.sol";
 
@@ -12,9 +13,9 @@ struct User {
     uint32 userCardListLastId;
     uint16 deckListLastId;
     uint64 gameId;
+    address payable wallet;
     mapping(uint32 => UserCard) userCardList;
     mapping(uint16 => GameDeck) deckList;
-
 }
 
 struct Card {
@@ -36,7 +37,9 @@ struct CardLevel {
 struct UserCard {
     uint32 cardId;
     uint64 exp;
-    bool lock;
+    uint64 expWin;
+    uint price;
+    bool sold;
 }
 
 struct GameDeck {
@@ -180,7 +183,7 @@ contract CardAdmin {
         emit GameEnd(_gameId, _userId);
     }
 
-    function joinGame(uint64 _gameId, uint64 _userId, uint16 _gameDeckId) private {
+    function _joinGame(uint64 _gameId, uint64 _userId, uint16 _gameDeckId) private {
         require(gameList[_gameId].userId2 == 0, "Game is full");
         require(userIdList[_userId].gameId == 0, 'user already in game');
         _checkDeck(_userId, _gameDeckId);
@@ -199,7 +202,7 @@ contract CardAdmin {
     }
 
     function joinGameSelf(uint64 _gameId, uint16 _gameDeckId) public isUser {
-        joinGame(_gameId, userAddressList[msg.sender], _gameDeckId);
+        _joinGame(_gameId, userAddressList[msg.sender], _gameDeckId);
     }
 
     /////////////////////////////////// End game ///////////////////////////////
@@ -209,6 +212,7 @@ contract CardAdmin {
         uint8 pos = _playGame.getUserPos(_userId);
         for (uint8 i = 0; i < 20; i++){
             userIdList[_userId].userCardList[gameDeckCard[i]].exp += _playGame.getUserCardExp(pos, gameDeckCard[i]);
+            userIdList[_userId].userCardList[gameDeckCard[i]].expWin += _playGame.getUserCardExp(pos, gameDeckCard[i]);
         }
     }
 
@@ -237,7 +241,7 @@ contract CardAdmin {
         _;
     }
 
-    function registerUser(address _userAddress, string memory _name) private {
+    function registerUser(address payable _userAddress, string memory _name) private {
         require(userAddressList[_userAddress] == 0, "already registered");
         require(userNameList[_name] == 0, "name exist");
         userLastId = userLastId + 1;
@@ -245,13 +249,18 @@ contract CardAdmin {
         userNameList[_name] = userLastId;
         userIdList[userLastId].id = userLastId;
         userIdList[userLastId].name = _name;
+        userIdList[userLastId].wallet = _userAddress;
     }
 
     function registerUserSelf(string memory _name) public {
-        registerUser(msg.sender, _name);
+        registerUser(payable(msg.sender), _name);
     }
 
     ///////////////////////////////////// UserCard //////////////////////////////////////
+
+    function getUserCard(uint64 _userId, uint32 _userCardId) public view returns(UserCard memory userCard){
+        userCard = userIdList[_userId].userCardList[_userCardId];
+    }
 
     function getUserCardList(uint64 _userId) public view returns (UserCard[] memory userCard){
         userCard = new UserCard[](userIdList[_userId].userCardListLastId);
@@ -262,17 +271,13 @@ contract CardAdmin {
 
     function addUserCard(uint64 _userId, uint32 _cardId) private {
         userIdList[_userId].userCardListLastId++;
-        userIdList[_userId].userCardList[userIdList[_userId].userCardListLastId] = UserCard(_cardId, 0, false);
+        userIdList[_userId].userCardList[userIdList[_userId].userCardListLastId].cardId = _cardId;
     }
 
-    function buyNewCard(uint32 _cardId) public payable isUser {
-        require(0 < _cardId && _cardId <= cardLastId, "Wrong card");
-        if (cardList[_cardId].starter > 0) {
-          require(msg.value == 1 ether, "Price is 1 ether");
-        } else {
-          require(msg.value == 10 ether, "Price is 10 ether");
-        }
-        addUserCard(userAddressList[msg.sender], _cardId);
+    function addUserCardWithExp(uint64 _userId, uint32 _cardId, uint64 _exp) private {
+        userIdList[_userId].userCardListLastId++;
+        userIdList[_userId].userCardList[userIdList[_userId].userCardListLastId].cardId = _cardId;
+        userIdList[_userId].userCardList[userIdList[_userId].userCardListLastId].exp = _exp;
     }
 
     function addUserStarterCard(uint64 _userId) public {
@@ -286,8 +291,7 @@ contract CardAdmin {
         }
     }
 
-    function getUserCardLevel(uint64 _userId, uint32 _userCardId) public view returns(uint8){
-        uint64 exp = userIdList[_userId].userCardList[_userCardId].exp;
+    function getLevel(uint64 exp) public pure returns(uint8){
         if (exp < 10) return 0;
         if (exp < 100) return 1;
         if (exp < 1000) return 2;
@@ -296,13 +300,73 @@ contract CardAdmin {
         return 5;
     }
 
+    //////////////////////////////// Trade contract /////////////////////////////////
+
+    Trading public trading;
+
+    function _updateTrading(Trading _trading) private {
+        require(address(_trading) != address(0), "trading is null");
+        trading = _trading;
+    }
+
+    function updateTrading(Trading _trading) public isOwner {
+        _updateTrading(_trading);
+    }
+
+    //////////////////////////////// Trade /////////////////////////////////
+
+    function buyNewCard(uint32 _cardId) public payable isUser {
+        require(0 < _cardId && _cardId <= cardLastId, "Wrong card");
+        if (cardList[_cardId].starter > 0) {
+          require(msg.value == 1 ether, "Price is 1 ROSE");
+        } else {
+          require(msg.value == 10 ether, "Price is 10 ROSE");
+        }
+        addUserCard(userAddressList[msg.sender], _cardId);
+    }
+
+    function buyCard(uint64 _userId, uint32 _userCardId) public payable isUser {
+        UserCard storage userCard = userIdList[_userId].userCardList[_userCardId];
+        require(userCard.price > 0 && userCard.sold == false, 'wrong card');
+        require(userCard.price == msg.value, "Wrong card or prive");
+        userCard.sold = true;
+        userIdList[_userId].wallet.transfer(msg.value * 80 / 100);
+        if (address(trading) != address(0)){
+            trading.removeUserCard(_userId, _userCardId);
+        }
+        addUserCardWithExp(userAddressList[msg.sender], userCard.cardId, userCard.exp);
+    }
+
+    function sellCardSelf(uint32 _userCardId, uint price) public isUser {
+        require(price >= 1 ether, 'price less than 1 ROSE');
+        uint64 userId = userAddressList[msg.sender];
+        UserCard storage userCard = userIdList[userId].userCardList[_userCardId];
+        require(userCard.price == 0 && userCard.sold == false, 'wrong card');
+        userCard.price = price;
+        if (address(trading) != address(0)){
+            trading.addUserCard(userId, _userCardId, price);
+        }
+    }
+
+    function cancelSellCardSelf(uint32 _userCardId) public isUser {
+        uint64 userId = userAddressList[msg.sender];
+        UserCard storage userCard = userIdList[userId].userCardList[_userCardId];
+        require(userCard.price > 0 && userCard.sold == false, 'wrong card');
+        userCard.price = 0;
+        if (address(trading) != address(0)){
+            trading.removeUserCard(userId, _userCardId);
+        }
+    }
+
+
+
     ////////////////////////////////////// User Deck ///////////////////////////////////////
     event DeckUpdated(uint64 userId, uint16 deckId);
 
     function _checkDeck(uint64 _userId, uint16 _deckId) private view {
         uint32[20] memory userCardIdList = userIdList[_userId].deckList[_deckId].userCardIdList;
         for (uint8 i = 0; i < 20; i++){
-            require(userIdList[_userId].userCardList[userCardIdList[i]].lock == false, "card is locked");
+            require(userIdList[_userId].userCardList[userCardIdList[i]].price == 0, "card is for sale");
         }
     }
 

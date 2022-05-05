@@ -16,6 +16,7 @@ import {
   StepId,
   isInit,
   isOk,
+  isStep,
   updateStep,
   setError,
   setMessage,
@@ -44,10 +45,20 @@ import {
 } from '../game/card'
 
 import {
+  getTradingContract,
+  loadAllTrade,
+} from '../game/trading'
+
+import {
   getGameList,
 } from '../game/game'
 
-import { setCardList } from '../reducer/cardListSlice'
+import {
+  setCardList,
+  setTradeList,
+  addTrade,
+  removeTrade,
+} from '../reducer/cardListSlice'
 import {
   addGameList,
   fillGameList,
@@ -55,6 +66,70 @@ import {
   setGameList
 } from '../reducer/gameSlice'
 
+const _loadAllTread = (
+  dispatch: any,
+  contract: ethers.Contract,
+  tradingContract : ethers.Contract,
+) => {
+  const stepId = StepId.Trading
+  dispatch(updateStep({ id: stepId, step: Step.Loading }))
+  const setMessageTradeList = (message: string | undefined) => {
+    dispatch(setMessage({ id: StepId.Trading, message: message }))
+  }
+  loadAllTrade(contract, tradingContract, setMessageTradeList).then((_tradeList) => {
+      dispatch(setTradeList(_tradeList))
+      dispatch(updateStep({ id: stepId, step: Step.Ok }))
+  }).catch((err) => {
+    dispatch(setError({ id: stepId, catchError: err }))
+  })
+}
+
+const addTradingListener = (
+  dispatch: any,
+  tradingContract: ethers.Contract,
+) => {
+  if (tradingContract.listenerCount("TradeAdd") === 0) {
+    tradingContract.on("TradeAdd", (_cardId, _level, _chainUserId, _userCardId, _price) => {
+      const _userId = _chainUserId.toNumber()
+      console.log("Trade add event ", _cardId, _level, _userId, _userCardId, ethers.utils.formatEther(_price))
+      dispatch(addTrade({
+        cardId: _cardId,
+        level: _level,
+        userId: _userId,
+        userCardId: _userCardId,
+        price: _price,
+      }))
+    })
+  }
+  if (tradingContract.listenerCount("TradeRemove") === 0) {
+    tradingContract.on("TradeRemove", (_cardId, _level, _chainUserId, _userCardId) => {
+      const _userId = _chainUserId.toNumber()
+      console.log("Trade remove event ", _cardId, _level, _userId, _userCardId)
+      dispatch(removeTrade({
+        cardId: _cardId,
+        level: _level,
+        userId: _userId,
+        userCardId: _userCardId,
+      }))
+    })
+  }
+}
+
+const loadTradingContract = (
+  dispatch: any,
+  contract: ethers.Contract,
+  setTradingContract: (contract: ethers.Contract) => void,
+) => {
+  const stepId = StepId.Trading
+  dispatch(updateStep({ id: stepId, step: Step.Loading }))
+  getTradingContract(contract).then((_tradingContract) => {
+      addTradingListener(dispatch, _tradingContract)
+      setTradingContract(_tradingContract)
+      dispatch(updateStep({ id: stepId, step: Step.Ready }))
+  }).catch((err) => {
+    dispatch(setError({ id: stepId, catchError: err }))
+  })
+}
 
 const loadUser = (
   dispatch: any,
@@ -254,6 +329,8 @@ const ContractLoader = (props: {
   transactionManager: TransactionManager,
   contract?: ethers.Contract,
   setContract: (contract: ethers.Contract) => void,
+  tradingContract?: ethers.Contract,
+  setTradingContract: (contract: ethers.Contract) => void,
   networkName: string,
 }) => {
 
@@ -280,6 +357,12 @@ const ContractLoader = (props: {
           props.contract,
         )
       }
+      if (isOk(StepId.Contract, step) && isInit(StepId.Trading, step)) {
+        loadTradingContract(dispatch, props.contract, props.setTradingContract)
+      }
+      if (isOk(StepId.Contract, step) && isStep(StepId.Trading, Step.Ready, step) && props.tradingContract) {
+        _loadAllTread(dispatch, props.contract, props.tradingContract)
+      }
       if (isOk(StepId.Contract, step) && isInit(StepId.User, step)) {
         loadUser(dispatch, props.contract)
       }
@@ -304,6 +387,8 @@ const ContractLoader = (props: {
       step,
       version,
       props.setContract,
+      props.setTradingContract,
+      props.tradingContract,
       props.transactionManager,
       props.contract,
       props.networkName,

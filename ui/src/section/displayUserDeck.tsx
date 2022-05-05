@@ -125,7 +125,7 @@ const DisplayUserDeck = (props : {
               <Button onClick={() => {setError(undefined)}}>Ok</Button>
               </>
             }
-            {!loading &&
+            {!loading && userCardSubList.length === 20 &&
               <Button onClick={() => {_updateDeck()}}>Update deck</Button>
             }
             {loading &&

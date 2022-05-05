@@ -15,4 +15,7 @@ export type UserCardType = {
   id: number,
   cardId: number,
   exp: number,
+  expWin: number,
+  price: number,
+  sold: boolean,
 }

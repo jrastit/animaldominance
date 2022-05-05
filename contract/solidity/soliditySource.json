@@ -16,6 +16,15 @@
     },
     {
       "contract": "PlayGameFactory"
+    },
+    {
+      "contract": "Trading",
+      "arg": [
+        {
+          "name": "_cardAdmin",
+          "type": "ethers.Contract"
+        }
+      ]
     }
   ]
 }

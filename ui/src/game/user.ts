@@ -56,6 +56,9 @@ export const getUserCardList = async (
       id: id + 1,
       cardId: userCardChain.cardId,
       exp: userCardChain.exp.toNumber(),
+      expWin: userCardChain.expWin.toNumber(),
+      price: parseFloat(ethers.utils.formatEther(userCardChain.price)),
+      sold: userCardChain.sold,
     } as UserCardType
   })
 }

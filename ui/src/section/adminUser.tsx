@@ -52,7 +52,7 @@ const AdminUser = (props : {
 
   return (
     <SpaceWidget>
-      <BoxWidgetHide title="user" hide={false}>
+      <BoxWidgetHide title="User" hide={false}>
         <StepMessageWidget
           step = {getStep(stepId, step)}
           resetStep = {() => {dispatch(clearError(stepId))}}

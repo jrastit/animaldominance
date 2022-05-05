@@ -11,7 +11,8 @@ import {
 import { TransactionManager } from '../util/TransactionManager'
 import {
   createAllCard,
-  loadAllCard
+  loadAllCard,
+  registerTrading,
 } from '../game/card'
 
 import {
@@ -161,6 +162,7 @@ const testTransaction = () => {
           factory,
           transactionManager,
         )
+        await registerTrading(contract, transactionManager)
 
         await createAllCard(contract, transactionManager)
         //console.log(transactionManager.transactionList.map(transactionManager.gasInfo))
@@ -229,7 +231,7 @@ const testTransaction = () => {
           gasPrice1 = gasPrice1.add(tx.result.gasUsed.mul(tx.txu.gasPrice))
           gasUsed1 = gasUsed1.add(tx.result.gasUsed)
         }
-        return (tx.log + ' ' + (tx.txu.gasPrice && ethers.utils.formatEther(
+        return (tx.log + ' ' + tx.result.gasUsed.toNumber() + ' ' + (tx.txu.gasPrice && ethers.utils.formatEther(
           tx.result.gasUsed.mul(tx.txu.gasPrice)
         )))
 
@@ -239,7 +241,7 @@ const testTransaction = () => {
           gasPrice2 = gasPrice2.add(tx.result.gasUsed.mul(tx.txu.gasPrice))
           gasUsed2 = gasUsed2.add(tx.result.gasUsed)
         }
-        return (tx.log + ' ' + (tx.txu.gasPrice && ethers.utils.formatEther(
+        return (tx.log + ' ' + tx.result.gasUsed.toNumber() + ' ' + (tx.txu.gasPrice && ethers.utils.formatEther(
           tx.result.gasUsed.mul(tx.txu.gasPrice)
         )))
       }))
