@@ -117,16 +117,16 @@ export const buyNewCard = async (
 export const buyCard = async (
   contract: ethers.Contract,
   transactionManager: TransactionManager,
-  cardId: number,
+  userId: number,
   userCardId: number,
-  value: number,
+  value: ethers.BigNumber,
 ) => {
   const ptx = await contract.populateTransaction.buyCard(
+    userId,
     userCardId,
-    cardId,
   )
-  ptx.value = ethers.utils.parseEther(value.toString())
-  const tx = await transactionManager.sendTx(ptx, "Buy card " + userCardId + ' ' + cardId + " for " + value + " ROSE")
+  ptx.value = value
+  const tx = await transactionManager.sendTx(ptx, "Buy card " + userId + ' ' + userCardId + " for " + value + " ROSE")
   return tx
 }
 

@@ -26,7 +26,7 @@ export const cardListSlice = createSlice({
     },
     addTrade: (state, action: PayloadAction<{ cardId: number, level: number, userId: number, userCardId: number, price: ethers.BigNumber }>) => {
       if (state.tradeList) {
-        const _tradeList = state.tradeList[action.payload.cardId][action.payload.level]
+        const _tradeList = state.tradeList[action.payload.cardId - 1][action.payload.level]
         const trade = _tradeList.filter(_trade => _trade.userId === action.payload.userId && _trade.userCardId === action.payload.userCardId)[0]
         if (trade) {
           trade.price = action.payload.price
@@ -41,8 +41,8 @@ export const cardListSlice = createSlice({
     },
     removeTrade: (state, action: PayloadAction<{ cardId: number, level: number, userId: number, userCardId: number }>) => {
       if (state.tradeList) {
-        const _tradeList = state.tradeList[action.payload.cardId][action.payload.level]
-        state.tradeList[action.payload.cardId][action.payload.level] = _tradeList.filter(_trade => _trade.userId !== action.payload.userId || _trade.userCardId !== action.payload.userCardId)
+        const _tradeList = state.tradeList[action.payload.cardId - 1][action.payload.level]
+        state.tradeList[action.payload.cardId - 1][action.payload.level] = _tradeList.filter(_trade => _trade.userId !== action.payload.userId || _trade.userCardId !== action.payload.userCardId)
       }
     },
     setCardList: (state, action: PayloadAction<CardType[]>) => {

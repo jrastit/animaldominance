@@ -3,7 +3,7 @@ import { TransactionManager } from '../util/TransactionManager'
 import { useState } from 'react'
 import CardListWidget from '../game/component/cardListWidget'
 
-import { buyNewCard } from '../game/card'
+import { buyNewCard, buyCard } from '../game/card'
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 import {
@@ -23,7 +23,9 @@ const DisplayCard = (props: {
 }) => {
 
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
+  const tradeList = useAppSelector((state) => state.cardListSlice.tradeList)
   const step = useAppSelector((state) => state.contractSlice.step)
+  const user = useAppSelector((state) => state.userSlice.user)
   const dispatch = useAppDispatch()
 
   const [loading, setLoading] = useState<boolean>()
@@ -33,6 +35,19 @@ const DisplayCard = (props: {
     if (props.contract) {
       setLoading(true)
       buyNewCard(props.contract, props.transactionManager, cardId, value).then(() => {
+        setLoading(false)
+        dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))
+      }).catch((err) => {
+        setLoading(false)
+        setError(err.toString())
+      })
+    }
+  }
+
+  const _buyCard = (userId : number, userCardId: number, value: ethers.BigNumber) => {
+    if (props.contract) {
+      setLoading(true)
+      buyCard(props.contract, props.transactionManager, userId, userCardId, value).then(() => {
         setLoading(false)
         dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))
       }).catch((err) => {
@@ -67,7 +82,10 @@ const DisplayCard = (props: {
         {!loading && !error &&
           <CardListWidget
             buyNewCard={props.contract && _buyNewCard}
+            buyCard={props.contract && _buyCard}
             cardList={cardList}
+            tradeList={tradeList}
+            userId={user?.id}
           />
         }
 

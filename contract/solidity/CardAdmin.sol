@@ -326,9 +326,10 @@ contract CardAdmin {
     }
 
     function buyCard(uint64 _userId, uint32 _userCardId) public payable isUser {
+        require(_userId != userAddressList[msg.sender], 'same seller and buyer');
         UserCard storage userCard = userIdList[_userId].userCardList[_userCardId];
         require(userCard.price > 0 && userCard.sold == false, 'wrong card');
-        require(userCard.price == msg.value, "Wrong card or prive");
+        require(userCard.price == msg.value, "Wrong card or price");
         userCard.sold = true;
         userIdList[_userId].wallet.transfer(msg.value * 80 / 100);
         if (address(trading) != address(0)){
