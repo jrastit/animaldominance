@@ -158,31 +158,34 @@ const DisplayUserCard = (props: {
                 {!sellCard && userCardListItem.map((userCard) => {
                   const card = cardList.filter(card => card.id === userCard.cardId)[0]
                   const level = getLevel(userCard.exp)
-                  if (!userCard.price) {
-                    return (
-                      <div key={userCard.id} style={{ marginBottom: '.5em' }}>
-                        <Button onClick={() => { setSellCard({ userCardId: userCard.id }) }}>
-                          Sell {card.name} level {level} ({userCard.exp})
-                        </Button>
-                      </div>
-                    )
-                  } else if (!userCard.sold) {
-                    return (
-                      <div key={userCard.id}>
-                        <div>
-                          Selling {card.name} level {level} ({userCard.exp}) for {userCard.price} ROSE
-                      &nbsp;&nbsp;<Button
-                            variant='danger'
-                            onClick={() => { _cancelListCard(userCard.id) }}
-                          >
-                            Cancel
-                      </Button>
+                  if (level > 0){
+                    if (!userCard.price) {
+                      return (
+                        <div key={userCard.id} style={{ marginBottom: '.5em' }}>
+                          <Button onClick={() => { setSellCard({ userCardId: userCard.id }) }}>
+                            Sell {card.name} level {level} ({userCard.exp})
+                          </Button>
                         </div>
-                      </div>
-                    )
-                  } else {
-                    <div>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} ROSE</div>
+                      )
+                    } else if (!userCard.sold) {
+                      return (
+                        <div key={userCard.id}>
+                          <div>
+                            Selling {card.name} level {level} ({userCard.exp}) for {userCard.price} ROSE
+                        &nbsp;&nbsp;<Button
+                              variant='danger'
+                              onClick={() => { _cancelListCard(userCard.id) }}
+                            >
+                              Cancel
+                        </Button>
+                          </div>
+                        </div>
+                      )
+                    } else{
+                      return (<div>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} ROSE</div>)
+                    }
                   }
+
                   return (<div></div>)
                 })
                 }

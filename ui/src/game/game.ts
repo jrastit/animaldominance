@@ -25,7 +25,6 @@ export const getGameContract = async (
 ) => {
   const gameChain = await contract.gameList(gameId)
   const contractAddress = gameChain.playGame
-  console.log(contractAddress)
   if (!contractAddress || contractAddress === "0x0000000000000000000000000000000000000000") {
     return undefined
   }

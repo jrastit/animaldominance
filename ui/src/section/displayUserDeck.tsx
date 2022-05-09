@@ -52,7 +52,10 @@ const DisplayUserDeck = (props : {
     const length = userCardSubList.length
     const list = userCardSubList.filter(_userCard => _userCard.id !== userCard.id)
     if (list.length === length){
-      list.push(userCard)
+      const list2 = userCardSubList.filter(_userCard => _userCard.cardId === userCard.cardId)
+      if (list2.length < 2){
+        list.push(userCard)
+      }
     }
     setUserCardSubList(list)
   }
@@ -81,7 +84,7 @@ const DisplayUserDeck = (props : {
         setDeck(newDeck)
       }
     } catch (err : any){
-      setError(err)
+      setError(err.toString())
     }
     setLoading(false)
   }
@@ -92,7 +95,7 @@ const DisplayUserDeck = (props : {
       if (deck){
         setUserCardSubList(deck.userCardIdList.map((id) => {
           return userCardList.filter((userCard) => userCard.id === id)[0]
-        }))
+        }).filter(userCard => !userCard.price))
       } else {
         setUserCardSubList([])
       }
@@ -120,12 +123,12 @@ const DisplayUserDeck = (props : {
         {!!userCardSubList.length &&
           <div>
             {error &&
-              <>
+              <div>
               <Alert variant='danger'>{error}</Alert>
-              <Button onClick={() => {setError(undefined)}}>Ok</Button>
-              </>
+              <Button variant='danger' onClick={() => {setError(undefined)}}>Ok</Button>
+              </div>
             }
-            {!loading && userCardSubList.length === 20 &&
+            {!error && !loading && userCardSubList.length === 20 &&
               <Button onClick={() => {_updateDeck()}}>Update deck</Button>
             }
             {loading &&
@@ -138,7 +141,7 @@ const DisplayUserDeck = (props : {
         <UserCardListWidget
           userCardList={userCardList.concat([]).sort((card1, card2) => {
             return card2.exp - card1.exp
-          })}
+          }).filter(card => !card.price)}
           selectCard={selectCard}
           userCardSubList={userCardSubList}
         />

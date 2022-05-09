@@ -3,7 +3,7 @@ import Image from 'react-bootstrap/Image'
 const format = (num : number | string) =>
     String(num).replace(/(?<!\..*)(\d)(?=(?:\d{3})+(?:\.|$))/g, '$1 ')
 
-const cardWidget = (props : {
+const CardWidget = (props : {
   family : number
   name : string
   mana : number
@@ -58,7 +58,9 @@ const cardWidget = (props : {
   }
 
   return (
-    <div style={{
+
+    <div
+    style={{
       borderRadius:"1.2em",
       padding:"0.75em",
       backgroundColor:familyColor,
@@ -83,6 +85,7 @@ const cardWidget = (props : {
         borderRadius:"0.5em",
         width:"9.5em",
         height:"7em",
+        pointerEvents: 'none',
       }}/>
       <div style={{
         marginTop:"-8.7em",
@@ -117,7 +120,8 @@ const cardWidget = (props : {
         width:"9.5em",
         height:"7em",
         transform: "scaleY(-1)",
-        opacity:".2"
+        opacity:".2",
+        pointerEvents: 'none',
       }}/>
       <div style={{
         marginTop:"-8em",
@@ -186,10 +190,10 @@ const cardWidget = (props : {
       </div>
       </div>
 
+    </div>
+    </div>
 
-    </div>
-    </div>
   )
 }
 
-export default cardWidget
+export default CardWidget

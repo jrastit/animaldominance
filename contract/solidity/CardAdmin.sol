@@ -163,7 +163,7 @@ contract CardAdmin {
 
     function createGame(uint64 _userId, uint16 _gameDeckId) private {
         require(userIdList[_userId].gameId == 0, 'user already in game');
-        _checkDeck(_userId, _gameDeckId);
+        checkDeck(_userId, _gameDeckId);
         gameLastId = gameLastId + 1;
         joinGamePos(gameLastId, _userId, _gameDeckId, true);
         userIdList[_userId].gameId = gameLastId;
@@ -186,7 +186,7 @@ contract CardAdmin {
     function _joinGame(uint64 _gameId, uint64 _userId, uint16 _gameDeckId) private {
         require(gameList[_gameId].userId2 == 0, "Game is full");
         require(userIdList[_userId].gameId == 0, 'user already in game');
-        _checkDeck(_userId, _gameDeckId);
+        checkDeck(_userId, _gameDeckId);
         joinGamePos(_gameId, _userId, _gameDeckId, false);
         Game storage game = gameList[_gameId];
         game.playGame = playGameFactory.newGame(
@@ -343,6 +343,8 @@ contract CardAdmin {
         uint64 userId = userAddressList[msg.sender];
         UserCard storage userCard = userIdList[userId].userCardList[_userCardId];
         require(userCard.price == 0 && userCard.sold == false, 'wrong card');
+        uint8 level = getLevel(userCard.exp);
+        require(level > 0, "Cannot sell level 0");
         userCard.price = price;
         if (address(trading) != address(0)){
             trading.addUserCard(userId, _userCardId, price);
@@ -364,7 +366,7 @@ contract CardAdmin {
     ////////////////////////////////////// User Deck ///////////////////////////////////////
     event DeckUpdated(uint64 userId, uint16 deckId);
 
-    function _checkDeck(uint64 _userId, uint16 _deckId) private view {
+    function checkDeck(uint64 _userId, uint16 _deckId) public view {
         uint32[20] memory userCardIdList = userIdList[_userId].deckList[_deckId].userCardIdList;
         for (uint8 i = 0; i < 20; i++){
             require(userIdList[_userId].userCardList[userCardIdList[i]].price == 0, "card is for sale");
@@ -382,6 +384,7 @@ contract CardAdmin {
     function _updateGameDeck(uint64 _userId, uint16 _deckId, uint32[20] memory _userCardIdList) private {
       for (uint8 i = 0; i < 20; i++){
         require(_userCardIdList[i] > 0 && _userCardIdList[i] <=  userIdList[_userId].userCardListLastId , 'Wrong user card');
+        require(userIdList[_userId].userCardList[_userCardIdList[i]].price == 0, "card is for sale");
         uint8 nb = 0;
         for (uint8 j = i + 1; j < 20; j++){
           require(_userCardIdList[i] != _userCardIdList[j], 'Two same user cards');

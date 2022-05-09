@@ -3,8 +3,9 @@ import { GameType, GameCardType, TurnDataType } from '../../type/gameType'
 import { CardType } from '../../type/cardType'
 import { UserType } from '../../type/userType'
 
-import CardWidget from './cardWidget'
+import GameCardWidget from './gameCardWidget'
 import UserGameWidget from './userGameWidget'
+import DropHelper from '../../component/dropHelper'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -19,6 +20,9 @@ import {
   isMyTurn,
   getTurnData,
   playRandomly,
+  playCardTo3,
+  playAttack,
+  playAttackOponent,
 } from '../../game/playGame'
 
 const GameBoard = (props : {
@@ -60,25 +64,6 @@ const GameBoard = (props : {
     return () => clearTimeout(timer)
   })
 
-
-
-  const displayGameCard = (gameCard : GameCardType) => {
-    const card = props.cardList.filter((card) => card.id === gameCard.cardId)[0]
-    const level = getLevel(gameCard.exp)
-    return (
-      <CardWidget
-        family={card.family}
-        mana={gameCard.mana}
-        name={card.name}
-        level={level}
-        attack={gameCard.attack}
-        life={gameCard.life}
-        description={card.level[level].description}
-        exp={gameCard.exp + gameCard.expWin}
-      />
-    )
-  }
-
   const displayUser = (user : UserType, life : number) => {
     const card = props.cardList.filter((card) => card.id === 1)[0]
     const level = getLevel(user.rank)
@@ -95,13 +80,26 @@ const GameBoard = (props : {
     )
   }
 
-  const displayGameCardList = (gameCardList : GameCardType[] ) => {
+  const displayGameCardList = (
+    gameCardList : GameCardType[],
+    draggable ?: boolean ,
+    onDrop ?: (data : string, gameCard : GameCardType
+    ) => void) => {
     return (
       <Row>
       {gameCardList.map((_card, id) => {
         return (
           <Col key={id}>
-            {displayGameCard(_card)}
+            <GameCardWidget
+              cardList={props.cardList}
+              gameCard={_card}
+              draggable={draggable ?
+                (_card.position === 1 && _card.mana <= turnData.mana) ||
+                (_card.position === 3 && _card.play === 0)
+              :
+                false}
+              onDrop={onDrop}
+            />
           </Col>
         )
       })}
@@ -120,6 +118,57 @@ const GameBoard = (props : {
     (remaining_sec < 10 ? '0' : '') +
     remaining_sec
 
+  const _playCardTo3 = (data : string) => {
+    const cardList1 = turnData.cardList1.map(_gameCard => {
+      return {..._gameCard}
+    })
+    const _gameCard = cardList1.filter(_gameCard => {
+      return _gameCard.id.toString() === data
+    })[0]
+    if (_gameCard.position === 1){
+      playCardTo3(_gameCard, cardList1, turnData, setTurnData)
+    }
+  }
+
+  const _playAttack = (data : string, gameCard2 : GameCardType) => {
+    const cardList1 = turnData.cardList1.map(_gameCard => {
+      return {..._gameCard}
+    })
+    const _gameCard = cardList1.filter(_gameCard => {
+      return _gameCard.id.toString() === data
+    })[0]
+    const cardList2 = turnData.cardList2.map(_gameCard => {
+      return {..._gameCard}
+    })
+    const _gameCard2 = cardList2.filter(_gameCard2 => {
+      return _gameCard2.id === gameCard2.id
+    })[0]
+    playAttack(
+      _gameCard,
+      cardList1,
+      _gameCard2,
+      cardList2,
+      turnData,
+      setTurnData
+    )
+  }
+
+  const _playAttackOponent = (data : string) => {
+    const cardList1 = turnData.cardList1.map(_gameCard => {
+      return {..._gameCard}
+    })
+    const _gameCard = cardList1.filter(_gameCard => {
+      return _gameCard.id.toString() === data
+    })[0]
+    playAttackOponent(
+      _gameCard,
+      cardList1,
+      turnData.life2,
+      turnData,
+      setTurnData
+    )
+  }
+
   return (
     <div style={{fontSize : "11px"}}>
     <Row style={{height : "20em", overflow : "hidden", backgroundColor:"grey", padding:"1em"}}>
@@ -131,7 +180,9 @@ const GameBoard = (props : {
         )}
       </Col>
       <Col xs={2} style={{backgroundColor:"gold"}}>
-      {displayUser(props.oponent, turnData.life2)}
+        <DropHelper onDrop={_playAttackOponent}>
+          {displayUser(props.oponent, turnData.life2)}
+        </DropHelper>
       </Col>
       <Col xs={4}>
         {displayGameCardList(
@@ -145,7 +196,9 @@ const GameBoard = (props : {
     {displayGameCardList(
       turnData.cardList2.filter(
         _gameCard => _gameCard.position === 3
-      )
+      ),
+      false,
+      _playAttack,
     )}
     </Row>
     <div>
@@ -158,19 +211,23 @@ const GameBoard = (props : {
     }
 
     </div>
-    <Row  style={{height : "20em", backgroundColor:"black", padding:"1em"}}>
+    <Row
+    style={{height : "20em", backgroundColor:"black", padding:"1em"}}
+    ><DropHelper onDrop={_playCardTo3}>
     {displayGameCardList(
       turnData.cardList1.filter(
         _gameCard => _gameCard.position === 3
-      )
+      ),
+      !!myTurn
     )}
-    </Row>
+    </DropHelper></Row>
     <Row  style={{height : "20em", backgroundColor:"grey", padding:"1em"}}>
       <Col xs={6}>
       {displayGameCardList(
         turnData.cardList1.filter(
           _gameCard => _gameCard.position === 1
-        )
+        ),
+        !!myTurn && turnData.cardList1.filter(card => card.position === 3).length < 8,
       )}
       </Col>
       <Col xs={2} style={{backgroundColor:"gold"}}>

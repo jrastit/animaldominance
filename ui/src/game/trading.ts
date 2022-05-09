@@ -16,7 +16,6 @@ export const getTradingContract = async (
   contract: ethers.Contract,
 ) => {
   const tradeContractAddress = await contract.trading()
-  console.log(tradeContractAddress)
   return getContractTrading(tradeContractAddress, contract.signer)
 }
 
