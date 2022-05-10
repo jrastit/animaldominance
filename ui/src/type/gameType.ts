@@ -7,6 +7,13 @@ export type TurnDataType = {
   life2: number,
 }
 
+export type GameCardPlaceType = {
+  x: number
+  y: number
+  heigth: number
+  width: number
+}
+
 export type GameCardType = {
   id: number
   userId: number

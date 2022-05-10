@@ -1,16 +1,17 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef} from 'react'
 import { GameType, GameCardType, TurnDataType } from '../../type/gameType'
 import { CardType } from '../../type/cardType'
 import { UserType } from '../../type/userType'
 
+import GameTimer from './gameTimer'
 import GameCardWidget from './gameCardWidget'
 import UserGameWidget from './userGameWidget'
 import DropHelper from '../../component/dropHelper'
+import PlaceHelper, {PlaceRefType} from '../../component/placeHelper'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
-import ProgressBar from 'react-bootstrap/ProgressBar'
 
 import {
   getLevel
@@ -35,11 +36,6 @@ const GameBoard = (props : {
   endTurn:(action : number[][], turn : number) => void
 }) => {
 
-  const getTimestamp = () => {
-    return Date.now();
-  }
-
-  const [timestamp, setTimestamp] = useState<number>(getTimestamp())
   const [turnData, setTurnData] = useState<TurnDataType>({
     mana : 0,
     playActionList : [],
@@ -56,18 +52,15 @@ const GameBoard = (props : {
     setTurnData(getTurnData(props.game, props.user.id))
   }, [turn, props.user.id, props.game])
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setTimestamp(getTimestamp())
-    }, 100);
-
-    return () => clearTimeout(timer)
-  })
-
-  const displayUser = (user : UserType, life : number) => {
+  const displayUser = (
+    pos : number,
+    user : UserType,
+    life : number
+  ) => {
     const card = props.cardList.filter((card) => card.id === 1)[0]
     const level = getLevel(user.rank)
     return (
+      <PlaceHelper ref={el => cardRefList.current[getRefId(pos, 254)] = el}>
       <UserGameWidget
         userName={"#" + user.id}
         family={card.family}
@@ -77,19 +70,56 @@ const GameBoard = (props : {
         attack={0}
         life={life}
       />
+      </PlaceHelper>
     )
   }
 
+  const cardRefList = useRef<(PlaceRefType | null)[]>([])
+  const cardRefIdList = [] as number[][]
+  let cardRefIdx = -1
+
+  const getRefId = (pos : number, gameCardId : number) => {
+    if (!cardRefIdList[pos]){
+      cardRefIdList[pos] = []
+    }
+    cardRefIdx++
+    cardRefIdList[pos][gameCardId] = cardRefIdx
+    return cardRefIdx
+  }
+
+  const annimatePlay  = async (gameCardId1 : number, gameCardId2 ?: number) => {
+    const place1 = cardRefList.current[cardRefIdList[0][gameCardId1]]?.getPlace()
+
+    if (place1){
+      if (gameCardId2){
+        const place2 = cardRefList.current[cardRefIdList[1][gameCardId2]]?.getPlace()
+        if (place2){
+          await cardRefList.current[cardRefIdList[0][gameCardId1]]?.doTranslate2({
+            x : place2.x - place1.x,
+            y : place2.y - place1.y,
+          })
+        }
+      } else {
+        await cardRefList.current[cardRefIdList[0][gameCardId1]]?.doTranslate({
+          x : 0,
+          y : -200,
+        })
+      }
+    }
+  }
+
   const displayGameCardList = (
+    pos : number,
     gameCardList : GameCardType[],
     draggable ?: boolean ,
     onDrop ?: (data : string, gameCard : GameCardType
     ) => void) => {
     return (
       <Row>
-      {gameCardList.map((_card, id) => {
+      {gameCardList.map((_card) => {
         return (
-          <Col key={id}>
+          <Col key={_card.id}>
+            <PlaceHelper ref={el => cardRefList.current[getRefId(pos, _card.id)] = el}>
             <GameCardWidget
               cardList={props.cardList}
               gameCard={_card}
@@ -100,6 +130,7 @@ const GameBoard = (props : {
                 false}
               onDrop={onDrop}
             />
+            </PlaceHelper>
           </Col>
         )
       })}
@@ -107,18 +138,7 @@ const GameBoard = (props : {
     )
   }
 
-  let remainingTime = 180 - ((timestamp/1000) - (props.game.latestTime))
-  if (remainingTime < 0) {
-    remainingTime = 0
-  }
-  const remaining_min = (Math.floor(remainingTime / 60))
-  const remaining_sec = (Math.floor(remainingTime) % 60)
-  const remaining_label =
-    (remaining_min ? remaining_min + ':' : '') +
-    (remaining_sec < 10 ? '0' : '') +
-    remaining_sec
-
-  const _playCardTo3 = (data : string) => {
+  const _playCardTo3 = async (data : string) => {
     const cardList1 = turnData.cardList1.map(_gameCard => {
       return {..._gameCard}
     })
@@ -126,11 +146,12 @@ const GameBoard = (props : {
       return _gameCard.id.toString() === data
     })[0]
     if (_gameCard.position === 1){
+      await annimatePlay(_gameCard.id)
       playCardTo3(_gameCard, cardList1, turnData, setTurnData)
     }
   }
 
-  const _playAttack = (data : string, gameCard2 : GameCardType) => {
+  const _playAttack = async (data : string, gameCard2 : GameCardType) => {
     const cardList1 = turnData.cardList1.map(_gameCard => {
       return {..._gameCard}
     })
@@ -143,6 +164,7 @@ const GameBoard = (props : {
     const _gameCard2 = cardList2.filter(_gameCard2 => {
       return _gameCard2.id === gameCard2.id
     })[0]
+    await annimatePlay(_gameCard.id, _gameCard2.id)
     playAttack(
       _gameCard,
       cardList1,
@@ -151,15 +173,17 @@ const GameBoard = (props : {
       turnData,
       setTurnData
     )
+
   }
 
-  const _playAttackOponent = (data : string) => {
+  const _playAttackOponent = async (data : string) => {
     const cardList1 = turnData.cardList1.map(_gameCard => {
       return {..._gameCard}
     })
     const _gameCard = cardList1.filter(_gameCard => {
       return _gameCard.id.toString() === data
     })[0]
+    await annimatePlay(_gameCard.id, 254)
     playAttackOponent(
       _gameCard,
       cardList1,
@@ -174,6 +198,7 @@ const GameBoard = (props : {
     <Row style={{height : "20em", overflow : "hidden", backgroundColor:"grey", padding:"1em"}}>
       <Col xs={6}>
         {displayGameCardList(
+          1,
           turnData.cardList2.filter(
             _gameCard => _gameCard.position === 1
           )
@@ -181,11 +206,12 @@ const GameBoard = (props : {
       </Col>
       <Col xs={2} style={{backgroundColor:"gold"}}>
         <DropHelper onDrop={_playAttackOponent}>
-          {displayUser(props.oponent, turnData.life2)}
+          {displayUser(1, props.oponent, turnData.life2)}
         </DropHelper>
       </Col>
       <Col xs={4}>
         {displayGameCardList(
+          1,
           turnData.cardList2.filter(
             _gameCard => _gameCard.position === 2
           )
@@ -194,6 +220,7 @@ const GameBoard = (props : {
     </Row>
     <Row  style={{height : "20em", backgroundColor:"black", padding:"1em"}}>
     {displayGameCardList(
+      1,
       turnData.cardList2.filter(
         _gameCard => _gameCard.position === 3
       ),
@@ -201,20 +228,19 @@ const GameBoard = (props : {
       _playAttack,
     )}
     </Row>
+    <GameTimer
+      myTurn={myTurn}
+      latestTime={props.game.latestTime}
+      endGameByTime={props.endGameByTime}
+    />
     <div>
-
-    {(remainingTime > 0 || !!myTurn) &&
-      <ProgressBar now={(remainingTime) * 100 / 180} label={remaining_label}/>
-    }
-    {remainingTime === 0 && !myTurn &&
-      <div style={{textAlign : 'center'}}><Button onClick={props.endGameByTime}>Win game by time</Button></div>
-    }
 
     </div>
     <Row
     style={{height : "20em", backgroundColor:"black", padding:"1em"}}
     ><DropHelper onDrop={_playCardTo3}>
     {displayGameCardList(
+      0,
       turnData.cardList1.filter(
         _gameCard => _gameCard.position === 3
       ),
@@ -224,6 +250,7 @@ const GameBoard = (props : {
     <Row  style={{height : "20em", backgroundColor:"grey", padding:"1em"}}>
       <Col xs={6}>
       {displayGameCardList(
+        0,
         turnData.cardList1.filter(
           _gameCard => _gameCard.position === 1
         ),
@@ -231,10 +258,11 @@ const GameBoard = (props : {
       )}
       </Col>
       <Col xs={2} style={{backgroundColor:"gold"}}>
-      {displayUser(props.user, turnData.life1)}
+      {displayUser(0, props.user, turnData.life1)}
       </Col>
       <Col xs={3}>
         {displayGameCardList(
+          0,
           turnData.cardList1.filter(
             _gameCard => _gameCard.position === 2
           )

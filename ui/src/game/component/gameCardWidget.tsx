@@ -1,5 +1,3 @@
-import { useState } from 'react'
-
 import {
   getLevel
 } from '../../game/card'
@@ -23,17 +21,8 @@ const GameCardWidget = (props : {
 
   const level = getLevel(props.gameCard.exp)
 
-  const [translate, setTranslate] = useState({
-    x: 0,
-    y: 0
-  });
-
   const renderCard = () => {
     return (
-      <div style={{
-        transform: `translateX(${translate.x}px) translateY(${translate.y}px)`
-      }}
-      >
       <CardWidget
         family={card.family}
         mana={props.gameCard.mana}
@@ -44,7 +33,6 @@ const GameCardWidget = (props : {
         description={card.level[level].description}
         exp={props.gameCard.exp + props.gameCard.expWin}
       />
-      </div>
     )
   }
 
