@@ -13,6 +13,7 @@ import AdminGame from '../section/adminGame'
 import DisplayUserDeck from '../section/displayUserDeck'
 import DisplayUserCard from '../section/displayUserCard'
 import DisplayCard from '../section/displayCard'
+import EditCard from '../section/editCard'
 import ContractLoader from '../section/contractLoader'
 import GameJoin from '../section/gameJoin'
 import PlayGame from './playGame'
@@ -111,6 +112,13 @@ const AdminSection = (props: {
 
   const render = () => {
     switch (props.section){
+      case 'editCard':
+      return (
+        <EditCard
+        contract={contract}
+        transactionManager={props.transactionManager}
+        />
+      )
       case 'card':
       return (
         <DisplayCard

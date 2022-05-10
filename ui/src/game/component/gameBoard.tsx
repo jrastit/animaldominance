@@ -60,7 +60,7 @@ const GameBoard = (props : {
     const card = props.cardList.filter((card) => card.id === 1)[0]
     const level = getLevel(user.rank)
     return (
-      <PlaceHelper ref={el => cardRefList.current[getRefId(pos, 254)] = el}>
+      <PlaceHelper ref={el => cardRefList.current[getRefId(pos, 255)] = el}>
       <UserGameWidget
         userName={"#" + user.id}
         family={card.family}
@@ -183,7 +183,7 @@ const GameBoard = (props : {
     const _gameCard = cardList1.filter(_gameCard => {
       return _gameCard.id.toString() === data
     })[0]
-    await annimatePlay(_gameCard.id, 254)
+    await annimatePlay(_gameCard.id, 255)
     playAttackOponent(
       _gameCard,
       cardList1,

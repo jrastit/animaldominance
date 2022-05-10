@@ -48,6 +48,32 @@ export const cardListSlice = createSlice({
     setCardList: (state, action: PayloadAction<CardType[]>) => {
       state.cardList = action.payload
     },
+    setCardLevel: (state, action: PayloadAction<{
+      cardId: number,
+      level: number,
+      attack: number,
+      life: number,
+      description: string
+    }>) => {
+      const card = state.cardList.filter((card => card.id === action.payload.cardId))[0]
+      const cardLevel = card.level[action.payload.level]
+      cardLevel.attack = action.payload.attack
+      cardLevel.life = action.payload.life
+      cardLevel.description = action.payload.description
+    },
+    setCard: (state, action: PayloadAction<{
+      cardId: number,
+      mana: number,
+      family: number,
+      starter: number,
+      name: string
+    }>) => {
+      const card = state.cardList.filter((card => card.id === action.payload.cardId))[0]
+      card.mana = action.payload.mana
+      card.family = action.payload.family
+      card.starter = action.payload.starter
+      card.name = action.payload.name
+    },
     addCard: (state, action: PayloadAction<CardType>) => {
       if (state.cardList.filter(card => card.id === action.payload.id).length === 0) {
         state.cardList.push(action.payload)
@@ -66,7 +92,9 @@ export const {
   removeTrade,
   addCard,
   setCardList,
-  clearCardList
+  clearCardList,
+  setCardLevel,
+  setCard,
 } = cardListSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

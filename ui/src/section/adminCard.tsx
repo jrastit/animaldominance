@@ -10,6 +10,7 @@ import { useAppSelector, useAppDispatch } from '../hooks'
 import SpaceWidget from '../component/spaceWidget'
 import BoxWidgetHide from '../component/boxWidgetHide'
 import StepMessageWidget from '../component/stepMessageWidget'
+import DownloadCardList from '../game/component/downloadCards'
 
 import {
   getStep,
@@ -41,6 +42,9 @@ const AdminCard = ()=> {
             {cardList.length * 6} Cards
           </>
         }
+        <br/><DownloadCardList
+        cardList={cardList}
+        />
       </BoxWidgetHide>
     </SpaceWidget>
   )

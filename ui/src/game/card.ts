@@ -43,8 +43,8 @@ export const createAllCard = async (
         card.family,
         card.starter,
         description,
-        attack,
         life,
+        attack,
       ), "Create card " + card.name)
       const tx = await _tx;
       if (setMessage) setMessage(tx.log)

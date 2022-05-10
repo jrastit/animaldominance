@@ -36,15 +36,15 @@ const stepId = StepId.Game
 
 const addGameListener = (dispatch : any, _gameContract : ethers.Contract) => {
   if (_gameContract){
+    if (_gameContract.listenerCount("PlayAction") === 0) {
+      _gameContract.on("PlayAction", (turn : number, id : number, gameCardId : number, dest : number, result : number) => {
+        console.log("Play action event " + turn + ' ,' + id + ', ' + gameCardId + ', ' + dest + ', ' + result)
+      })
+    }
     if (_gameContract.listenerCount("GameUpdate") === 0) {
       _gameContract.on("GameUpdate", (_gameVersion : number) => {
         console.log("game update event " + _gameVersion)
         dispatch(setGameVersion(_gameVersion))
-      })
-    }
-    if (_gameContract.listenerCount("PlayAction") === 0) {
-      _gameContract.on("PlayAction", (id : number, gameCard : number, dest : number, result : number) => {
-        console.log("Play action event " + id + ', ' + gameCard + ', ' + dest + ', ' + result)
       })
     }
   }

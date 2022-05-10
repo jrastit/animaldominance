@@ -40,7 +40,7 @@ contract PlayGame {
 
     event GameUpdate(uint16 version);
 
-    event PlayAction(uint8 id, uint8 gameCard, uint8 dest, uint16 result);
+    event PlayAction(uint8 turn, uint8 id, uint8 gameCard, uint8 dest, uint16 result);
 
     function _updateVersion() private {
         version = version + 1;
@@ -75,7 +75,7 @@ contract PlayGame {
     function _loadCard(uint64 _userId, uint16 _gameDeckId, uint8 _pos) private {
         GameUser storage user = gameUser[_pos];
         user.userId = _userId;
-        user.life = 20;
+        user.life = 200;
 
         uint32[20] memory gameDeckCard = cardAdmin.getUserDeckCard(_userId, _gameDeckId);
 
@@ -137,9 +137,9 @@ contract PlayGame {
                     if (j < 3){
                       gameCard.position = 2;
                       _mana -= gameCard.mana;
-                      emit PlayAction(_i, _gameCardId, _dest, 1);
+                      emit PlayAction(turn, _i, _gameCardId, _dest, 1);
                     } else {
-                      emit PlayAction(_i, _gameCardId, _dest, 0);
+                      emit PlayAction(turn, _i, _gameCardId, _dest, 0);
                     }
                 } else if (_dest == 3) {
                     require(gameCard.life > 0, '1:Error card have no life');
@@ -147,15 +147,15 @@ contract PlayGame {
                     if (j < 8){
                         gameCard.position = 3;
                         _mana -= gameCard.mana;
-                        emit PlayAction(_i, _gameCardId, _dest, 1);
+                        emit PlayAction(turn, _i, _gameCardId, _dest, 1);
                     } else {
-                        emit PlayAction(_i, _gameCardId, _dest, 0);
+                        emit PlayAction(turn, _i, _gameCardId, _dest, 0);
                     }
                 } else {
                     revert("1:Wrong destination");
                 }
             } else {
-                emit PlayAction(_i, _gameCardId, _dest, 0);
+                emit PlayAction(turn, _i, _gameCardId, _dest, 0);
             }
         } else if (gameCard.position == 2) {
             revert("2:not implemented");
@@ -170,7 +170,7 @@ contract PlayGame {
                     gameUser[1 - _pos].life = 0;
                     _endGame(user.userId);
                 }
-                emit PlayAction(_i, _gameCardId, _dest, gameCard.attack);
+                emit PlayAction(turn, _i, _gameCardId, _dest, gameCard.attack);
             } else {
                 require(_dest < gameUser[1 - _pos].cardList.length, "dest out of bound");
                 GameCard memory gameCard2 = gameUser[1 - _pos].cardList[_dest];
@@ -198,16 +198,16 @@ contract PlayGame {
                     }
                     gameUser[_pos].expWin[gameCard.userCardId] = gameCard.expWin;
                     gameUser[1 - _pos].expWin[gameCard.userCardId] = gameCard2.expWin;
-                    emit PlayAction(_i, _gameCardId, _dest, gameCard.attack);
+                    emit PlayAction(turn, _i, _gameCardId, _dest, gameCard.attack);
                 } else if (gameCard.position == 4 ){
-                    emit PlayAction(_i, _gameCardId, _dest, 0);
+                    emit PlayAction(turn, _i, _gameCardId, _dest, 0);
                 } else {
                     revert('3:Wrong destination');
                 }
                 gameUser[1 - _pos].cardList[_dest] = gameCard2;
             }
         } else if (gameCard.position == 4) {
-            emit PlayAction(_i, _gameCardId, _dest, 0);
+            emit PlayAction(turn, _i, _gameCardId, _dest, 0);
         }
         gameUser[_pos].cardList[_gameCardId] = gameCard;
         return _mana;
