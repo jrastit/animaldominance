@@ -1,5 +1,6 @@
 import Navbar from 'react-bootstrap/Navbar';
 import Nav from 'react-bootstrap/Nav';
+import Container from 'react-bootstrap/Container';
 //import NavDropdown from 'react-bootstrap/NavDropdown';
 //import Form from 'react-bootstrap/Form';
 //import FormControl from 'react-bootstrap/FormControl';
@@ -22,8 +23,9 @@ const AppNav = (props: {
   const user = useAppSelector((state) => state.userSlice.user)
 
   return (
-    <Navbar bg="light" expand="lg">
-      <Navbar.Brand onClick={() => props.setIsHome(1)}>EWallet{props.networkName && <> on {props.networkName}</>}</Navbar.Brand>
+    <Navbar variant="dark" style={{ backgroundColor:'#000000B0'}} expand="lg">
+    <Container>
+      <Navbar.Brand onClick={() => props.setIsHome(1)}>Annimal Dominance {props.networkName && <> on {props.networkName}</>}</Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />
       <Navbar.Collapse id="basic-navbar-nav">
         <Nav className="mr-auto">
@@ -33,6 +35,7 @@ const AppNav = (props: {
           <Nav.Link onClick={() => props.setSection('userDeck')}>My decks</Nav.Link>
           <Nav.Link onClick={() => props.setSection('card')}>All cards</Nav.Link>
           <Nav.Link onClick={() => props.setSection('editCard')}>Edit cards</Nav.Link>
+          <Nav.Link onClick={() => props.setSection('admin')}>Admin</Nav.Link>
           {/*
           <Nav.Link href="#link">Link</Nav.Link>
           <NavDropdown title="Dropdown" id="basic-nav-dropdown">
@@ -59,7 +62,7 @@ const AppNav = (props: {
       </Navbar.Brand>
       <Navbar.Brand>
       </Navbar.Brand>
-
+      </Container>
     </Navbar>
   )
 }

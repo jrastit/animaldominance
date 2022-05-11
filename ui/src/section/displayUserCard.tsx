@@ -29,6 +29,8 @@ import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
 import FormControl from 'react-bootstrap/FormControl'
 import Alert from 'react-bootstrap/Alert'
+import ButtonNice from '../component/buttonNice'
+import DivFullNice from '../component/divFullNice'
 
 const DisplayUserCard = (props: {
   contract: ethers.Contract,
@@ -146,7 +148,7 @@ const DisplayUserCard = (props: {
     return (
       <Row key={id}>
         <Col xs={3}>
-          <div>
+          <DivFullNice>
             {error &&
               <>
                 <Alert variant='danger'>{error}</Alert>
@@ -161,15 +163,15 @@ const DisplayUserCard = (props: {
                   if (level > 0){
                     if (!userCard.price) {
                       return (
-                        <div key={userCard.id} style={{ marginBottom: '.5em' }}>
-                          <Button onClick={() => { setSellCard({ userCardId: userCard.id }) }}>
+                        <div key={userCard.id} style={{margin : '.25em'}}>
+                          <ButtonNice onClick={() => { setSellCard({ userCardId: userCard.id }) }}>
                             Sell {card.name} level {level} ({userCard.exp})
-                          </Button>
+                          </ButtonNice>
                         </div>
                       )
                     } else if (!userCard.sold) {
                       return (
-                        <div key={userCard.id}>
+                        <div key={userCard.id}  style={{margin : '.25em'}}>
                           <div>
                             Selling {card.name} level {level} ({userCard.exp}) for {userCard.price} ROSE
                         &nbsp;&nbsp;<Button
@@ -182,7 +184,7 @@ const DisplayUserCard = (props: {
                         </div>
                       )
                     } else{
-                      return (<div>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} ROSE</div>)
+                      return (<div  style={{margin : '.25em'}}>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} ROSE</div>)
                     }
                   }
 
@@ -197,7 +199,7 @@ const DisplayUserCard = (props: {
             {loading &&
               <p>Loading...</p>
             }
-          </div>
+          </DivFullNice>
         </Col>
         <Col xs={9}>
           <UserCardListWidget

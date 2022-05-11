@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import Button from 'react-bootstrap/Button'
+import ButtonNice from '../../component/buttonNice'
 import ProgressBar from 'react-bootstrap/ProgressBar'
 
 
@@ -38,10 +38,22 @@ const GameTimer = (props : {
   return (
     <>
     {(remainingTime > 0 || !!props.myTurn) &&
-      <ProgressBar now={(remainingTime) * 100 / 180} label={remaining_label}/>
+      <ProgressBar
+      style={{
+        backgroundColor:'#ffffff',
+        marginLeft:'-12px',
+        marginRight:'-12px',
+        opacity:'.5'
+      }}
+      now={(remainingTime) * 100 / 180}
+      label={remaining_label}
+      />
     }
     {remainingTime === 0 && !props.myTurn &&
-      <div style={{textAlign : 'center'}}><Button onClick={props.endGameByTime}>Win game by time</Button></div>
+      <div style={{
+        textAlign : 'center',
+        backgroundColor:'#ffffff80',
+      }}><ButtonNice onClick={props.endGameByTime}>Win game by time</ButtonNice></div>
     }
     </>
   )

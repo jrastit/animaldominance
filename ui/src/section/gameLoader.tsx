@@ -28,6 +28,7 @@ import {
   setOponent,
   cleanGame,
   setGameVersion,
+  addPlayAction,
 } from '../reducer/gameSlice'
 
 import { useAppSelector, useAppDispatch } from '../hooks'
@@ -37,8 +38,9 @@ const stepId = StepId.Game
 const addGameListener = (dispatch : any, _gameContract : ethers.Contract) => {
   if (_gameContract){
     if (_gameContract.listenerCount("PlayAction") === 0) {
-      _gameContract.on("PlayAction", (turn : number, id : number, gameCardId : number, dest : number, result : number) => {
-        console.log("Play action event " + turn + ' ,' + id + ', ' + gameCardId + ', ' + dest + ', ' + result)
+      _gameContract.on("PlayAction", (turn : number, actionId : number, gameCardId : number, dest : number, result : number) => {
+        console.log("Play action event " + turn + ' ,' + actionId + ', ' + gameCardId + ', ' + dest + ', ' + result)
+        dispatch(addPlayAction({turn, actionId, data : [gameCardId, dest, result]}))
       })
     }
     if (_gameContract.listenerCount("GameUpdate") === 0) {

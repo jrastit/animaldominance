@@ -21,16 +21,22 @@ const GameCardWidget = (props : {
 
   const level = getLevel(props.gameCard.exp)
 
+  const family = card ? card.family : 0
+
+  const name = card ? card.name : 'loading...'
+
+  const description = card ? card.level[level].description : 'loading...'
+
   const renderCard = () => {
     return (
       <CardWidget
-        family={card.family}
+        family={family}
         mana={props.gameCard.mana}
-        name={card.name}
+        name={name}
         level={level}
         attack={props.gameCard.attack}
         life={props.gameCard.life}
-        description={card.level[level].description}
+        description={description}
         exp={props.gameCard.exp + props.gameCard.expWin}
       />
     )

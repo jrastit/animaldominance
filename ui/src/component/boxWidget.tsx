@@ -3,7 +3,7 @@ import ToastContainer from 'react-bootstrap/ToastContainer';
 const BoxWidget = (props: { title?: string, children: any }) => {
   return (
     <ToastContainer>
-    <Toast style={{ textAlign: 'center' }}>
+    <Toast className='boxWidget' style={{textAlign : 'center'}}>
       {!!props.title &&
         <Toast.Header closeButton={false}>
           <strong className="me-auto">{props.title}</strong>

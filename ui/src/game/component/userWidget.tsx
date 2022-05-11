@@ -13,7 +13,7 @@ const UserWidget = (props : {
         <>{props.user.name}#{props.user.id}</>
       }
       { props.user && props.user.gameId &&
-        <>in game {props.user.gameId}</>
+        <> in game {props.user.gameId}</>
       }
       {
         !props.user &&

@@ -17,6 +17,7 @@ import Button from 'react-bootstrap/Button'
 import SpaceWidget from '../component/spaceWidget'
 import Alert from 'react-bootstrap/Alert'
 
+
 const DisplayCard = (props: {
   contract?: ethers.Contract,
   transactionManager: TransactionManager,

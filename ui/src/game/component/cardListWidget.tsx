@@ -14,9 +14,12 @@ import CardWidget from './cardWidget'
 import Form from 'react-bootstrap/Form'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import Button from 'react-bootstrap/Button'
 import Container from 'react-bootstrap/Container'
 import FormControl from 'react-bootstrap/FormControl'
+
+import ButtonNice from '../../component/buttonNice'
+import DivFullNice from '../../component/divFullNice'
+import SpaceWidget from '../../component/spaceWidget'
 
 const CardEditFrom = (props : {
   name : string,
@@ -185,20 +188,20 @@ const CardListWidget = (props : {
   const displayCard = (card : CardType) => {
     const price = card.starter ? 1 : 10
     return (
-      <Row key={card.id} style={{backgroundColor : card.starter ? 'white' : 'black'}}>
+      <DivFullNice>
+      <Row key={card.id}>
         <Col xs={3}>
-          <Row>
+
             {props.buyNewCard &&
-              <Col>
-                <Button
-                  variant='primary'
+              <SpaceWidget>
+                <ButtonNice
                   onClick={() => props.buyNewCard &&
                     props.buyNewCard(card.id, price)
                   }
                 >
                   Buy a {card.name} level 0 for {price} ROSE
-                </Button>
-              </Col>
+                </ButtonNice>
+              </SpaceWidget>
             }
             {props.buyCard && props.tradeList && props.tradeList[card.id - 1] && props.tradeList[card.id - 1].map((tradeLevelList, level)=>{
                 if (tradeLevelList.length){
@@ -207,18 +210,15 @@ const CardListWidget = (props : {
                   })
                   if (minTrade.userId !== props.userId){
                     return (
-                    <Row key={card.id + ' ' + level}>
-                    <Col>
-                      <Button
-                        variant='primary'
+                    <SpaceWidget key={card.id + ' ' + level}>
+                      <ButtonNice
                         onClick={() => props.buyCard &&
                           props.buyCard(minTrade.userId, minTrade.userCardId, minTrade.price)
                         }
                       >
                         Buy {card.name} level {level} for {ethers.utils.formatEther(minTrade.price)} ROSE
-                      </Button>
-                    </Col>
-                    </Row>
+                      </ButtonNice>
+                    </SpaceWidget>
                     )
                   }
                 }
@@ -227,17 +227,12 @@ const CardListWidget = (props : {
             }
             {props.setCard && props.setCardLevel &&
               <>
-              <Row>
-              <Col>
-              </Col>
-              </Row>
               {
                 editCard(card)
               }
               </>
 
             }
-          </Row>
         </Col>
         <Col xs={9}>
           <Row>
@@ -245,6 +240,7 @@ const CardListWidget = (props : {
           </Row>
         </Col>
       </Row>
+      </DivFullNice>
     )
   }
 

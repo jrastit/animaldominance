@@ -5,6 +5,8 @@ import { TransactionManager } from '../util/TransactionManager'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
+import DivNice from '../component/divNice'
+import ButtonNice from '../component/buttonNice'
 import GameLoader from './gameLoader'
 import GameBoard from '../game/component/gameBoard'
 
@@ -46,28 +48,10 @@ const PlayGame = (props:{
   const game = useAppSelector((state) => state.gameSlice.game)
   const oponent = useAppSelector((state) => state.gameSlice.oponent)
   const gameList = useAppSelector((state) => state.gameSlice.gameList)
+  const playActionList = useAppSelector((state) => state.gameSlice.playActionList)
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
   const dispatch = useAppDispatch()
 
-  /*
-  const gameInfo = () => {
-    if (game)
-    return (
-      <>
-      Id : {game.id}<br/>
-      UserId1 : {game.userId1}<br/>
-      UserId2 : {game.userId2}<br/>
-      GameCard1 : {game.cardList1.map(card => card.userCardId).toString()}<br/>
-      GameCard2 : {game.cardList2.map(card => card.userCardId).toString()}<br/>
-      latestTime : {game.latestTime}<br/>
-      version : {game.version}<br/>
-      turn : {game.turn}<br/>
-      winner : {game.winner}<br/>
-      </>
-    )
-    return (<>Game not set</>)
-  }
-  */
 
   if (isStep(stepId, Step.Waiting, step) && user && user.gameId) {
     const gameItem = gameList.filter(_gameItem => _gameItem.id === user.gameId)[0]
@@ -126,27 +110,26 @@ const PlayGame = (props:{
   const render = () => {
     if (isStep(stepId, Step.Waiting, step)){
       return (
-        <Row>
-          <Col>Waiting for opponent for game {user?.gameId}<br/>
-            <Button variant='danger' onClick={_cancelGame}>Cancel</Button>
-          </Col>
-        </Row>
+        <DivNice>
+        Waiting for opponent for game {user?.gameId}<br/><br/>
+        <Button variant='danger' onClick={_cancelGame}>Cancel</Button>
+        </DivNice>
       )
     } else if (isStep(stepId, Step.Loading, step)) {
       return (
-        <Row><Col>Loading</Col></Row>
+        <DivNice>Loading</DivNice>
       )
     } else if (isStep(stepId, Step.Creating, step)) {
       return (
-        <Row><Col>Creating game</Col></Row>
+        <DivNice>Creating game</DivNice>
       )
     } else if (isStep(stepId, Step.Joining, step)) {
       return (
-        <Row><Col>Joining game</Col></Row>
+        <DivNice>Joining game</DivNice>
       )
     } else if (isStep(stepId, Step.Error, step)) {
       return (
-        <Row><Col>Error!!!</Col></Row>
+        <DivNice>Error!!!</DivNice>
       )
     } else if (isStep(stepId, Step.Running, step) || isStep(stepId, Step.Refresh, step)){
       if (game && user && oponent){
@@ -156,41 +139,40 @@ const PlayGame = (props:{
             oponent={oponent}
             game={game}
             cardList={cardList}
+            playActionList={playActionList}
             endGameByTime={_endGameByTime}
             endTurn={_playTurn}
-          ><Button onClick={_leaveGame}>Leave game</Button>
+          ><ButtonNice onClick={_leaveGame}>Leave game</ButtonNice>
           </GameBoard>
         )
       } else {
         if (!game) {
           return (
-            <Row><Col>Error game not set</Col></Row>
+            <DivNice>Error game not set</DivNice>
           )
         }
         if (!user) {
           return (
-            <Row><Col>Error user not set</Col></Row>
+            <DivNice>Error user not set</DivNice>
           )
         }
         if (!oponent) {
           return (
-            <Row><Col>Error oponent not set</Col></Row>
+            <DivNice>Error oponent not set</DivNice>
           )
         }
       }
     } else if (isStep(stepId, Step.Ended, step)){
       return (
-        <Row>
-          <Col>
+        <DivNice>
             {!!isWinner() && <div>You Win!!!</div>}
             {!isWinner() && <div>You Lose!!!</div>}
-            <Button onClick={_exitGame}>Ok</Button>
-          </Col>
-        </Row>
+            <ButtonNice onClick={_exitGame}>Ok</ButtonNice>
+        </DivNice>
       )
     } else {
       return (
-        <Row><Col>Unknow step</Col></Row>
+        <DivNice>Unknow step</DivNice>
       )
     }
   }

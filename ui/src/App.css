@@ -1,5 +1,13 @@
+html, body {
+  height: 100%;
+}
+
+#root {
+  min-height: 100%;
+  background-image: url('../public/background/background.jpeg');
+}
+
 .App {
-  /* text-align: center; */
 }
 
 .App-logo {
@@ -33,43 +41,19 @@
 #wallet-widget .circle-icon.warn {
   fill: hsl(48, 100%, 67%);
 }
-/*
-#wallet-widget .address {
-  display: inline-block;
-  white-space: nowrap;
-}
-*/
 
-/*
-.btn-box {
-    box-sizing: content-box;
-    width: 1em;
-    height: 1em;
-    padding: .25em .25em;
-    background: transparent;
-    border: 0;
-    border-radius: .25rem;
-    opacity: .5;
-}
 
-*/
 .toast-header .btn-box {
     margin-right: -.375rem;
     margin-left: .75rem;
 }
 
+.toast {
+  background-color: '#ffffff10';
+}
 
-.App-header {
-  /*
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  */
-  /*font-size: calc(10px + 2vmin);*/
-  /* color: white; */
+.boxWidget {
+  background-color: '#ffffff10';
 }
 
 .App-link {

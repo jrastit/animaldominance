@@ -17,6 +17,7 @@ import EditCard from '../section/editCard'
 import ContractLoader from '../section/contractLoader'
 import GameJoin from '../section/gameJoin'
 import PlayGame from './playGame'
+import FindGame from './findGame'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -41,63 +42,73 @@ const AdminSection = (props: {
   const deckList = useAppSelector((state) => state.userSlice.userDeckList)
   const game = useAppSelector((state) => state.gameSlice.game)
 
+  const displayAdmin = () => {
+    return (
+      <Row>
+        <Col>
+          <AdminContract
+            contract={contract}
+            transactionManager={props.transactionManager}
+            setContract={setContract}
+            networkName={props.networkName}
+          />
+        </Col>
+          {!!contract &&
+            <Col>
+            <AdminCard />
+            <AdminTrade />
+            <AdminGameList/>
+            </Col>
+          }
+          {!!contract &&
+            <Col>
+            <AdminUser
+              contract={contract}
+              transactionManager={props.transactionManager}
+            />
+            {!!contract && !!user &&
+              <>
+              <AdminUserCardList
+                contract={contract}
+                transactionManager={props.transactionManager}
+              />
+              <AdminUserDeckList
+                contract={contract}
+                transactionManager={props.transactionManager}
+              />
+              </>
+            }
+            { !!contract && !!game &&
+
+              <AdminGame />
+
+            }
+            </Col>
+          }
+
+
+
+        { !!contract && !!user && deckList && (deckList.length > 0) &&
+        <Col>
+          <GameJoin
+          contract={contract}
+          transactionManager={props.transactionManager}
+          />
+        </Col>
+        }
+      </Row>
+    )
+
+  }
+
   const displayGame = () => {
     return (
       <>
       { isStep(StepId.Game, Step.Init, step) &&
-        <Row>
-          <Col>
-            <AdminContract
-              contract={contract}
-              transactionManager={props.transactionManager}
-              setContract={setContract}
-              networkName={props.networkName}
-            />
-          </Col>
-            {!!contract &&
-              <Col>
-              <AdminCard />
-              <AdminTrade />
-              <AdminGameList/>
-              </Col>
-            }
-            {!!contract &&
-              <Col>
-              <AdminUser
-                contract={contract}
-                transactionManager={props.transactionManager}
-              />
-              {!!contract && !!user &&
-                <>
-                <AdminUserCardList
-                  contract={contract}
-                  transactionManager={props.transactionManager}
-                />
-                <AdminUserDeckList
-                  contract={contract}
-                  transactionManager={props.transactionManager}
-                />
-                </>
-              }
-              { !!contract && !!game &&
-
-                <AdminGame />
-
-              }
-              </Col>
-            }
-
-
-
-          { !!contract && !!user && deckList && (deckList.length > 0) &&
-          <Col>
-            <GameJoin
-            contract={contract}
-            transactionManager={props.transactionManager}
-            />
-          </Col>
-          }
-        </Row>
+        <FindGame
+        contract={contract}
+        transactionManager={props.transactionManager}
+        />
       }
       {
         !isStep(StepId.Game, Step.Init, step) && !!contract &&
@@ -112,12 +123,11 @@ const AdminSection = (props: {
 
   const render = () => {
     switch (props.section){
+      case 'admin':
+      return displayAdmin()
       case 'editCard':
       return (
-        <EditCard
-        contract={contract}
-        transactionManager={props.transactionManager}
-        />
+        <EditCard/>
       )
       case 'card':
       return (
@@ -145,6 +155,7 @@ const AdminSection = (props: {
       } else {
         return displayGame()
       }
+
       default :
       return displayGame()
     }

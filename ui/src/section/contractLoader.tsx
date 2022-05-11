@@ -140,6 +140,7 @@ const loadUser = (
   getUserId(contract).then((userId) => {
     if (userId && contract) {
       getUser(contract, userId).then((_user) => {
+        console.log(_user)
         dispatch(setUser(_user))
         dispatch(updateStep({ id: stepId, step: Step.Ok }))
       }).catch((err) => {
@@ -295,6 +296,7 @@ const loadContract = (
 ) => {
   const stepId = StepId.Contract
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
+  dispatch(setMessage({ id: stepId, message: 'Loading contract...' }))
   getNetworkList().then(async (networkList) => {
     const network = networkList.filter(
       (network) => network.name === networkName

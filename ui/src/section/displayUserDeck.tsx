@@ -6,6 +6,10 @@ import UserCardListWidget from '../game/component/userCardListWidget'
 
 import { useState, useEffect } from 'react'
 
+import ButtonNice from '../component/buttonNice'
+import DivFullNice from '../component/divFullNice'
+import SpaceWidget from '../component/spaceWidget'
+
 import {
   updateUserDeck,
   addUserDeck,
@@ -107,21 +111,22 @@ const DisplayUserDeck = (props : {
     return (
       <Row>
         <Col xs={3}>
-        <div>
+        <DivFullNice>
+        <SpaceWidget>
         <DeckSelect
           userDeckList={userDeckList}
           setDeck={setDeck}
           deck={deck}
         />
-        </div>
-        <div>
+        </SpaceWidget>
+        <SpaceWidget>
         {userCardSubList.length} card selected {userCardSubList.length === 20 ? "" : "(need 20 to update deck)"}
-        </div>
-        <div>
-        <Button onClick={() => {setResetSelection(true)}}>Reset selection</Button>
-        </div>
+        </SpaceWidget>
+        <SpaceWidget>
+        <ButtonNice onClick={() => {setResetSelection(true)}}>Reset selection</ButtonNice>
+        </SpaceWidget>
         {!!userCardSubList.length &&
-          <div>
+          <SpaceWidget>
             {error &&
               <div>
               <Alert variant='danger'>{error}</Alert>
@@ -129,13 +134,14 @@ const DisplayUserDeck = (props : {
               </div>
             }
             {!error && !loading && userCardSubList.length === 20 &&
-              <Button onClick={() => {_updateDeck()}}>Update deck</Button>
+              <ButtonNice onClick={() => {_updateDeck()}}>Update deck</ButtonNice>
             }
             {loading &&
               <p>Loading...</p>
             }
-          </div>
+          </SpaceWidget>
         }
+        </DivFullNice>
         </Col>
         <Col xs={9}>
         <UserCardListWidget

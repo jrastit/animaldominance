@@ -14,7 +14,7 @@ const BoxWidgetHide = (props: { title: string, children: any, hide?: boolean }) 
 
   return (
     <ToastContainer>
-    <Toast>
+    <Toast className='boxWidget'  style={{textAlign : 'center'}}>
       { hide &&
         <Toast.Header closeButton={false} onClick={() => setHide(false)}>
           <strong className="me-auto">{props.title}</strong>
@@ -31,7 +31,9 @@ const BoxWidgetHide = (props: { title: string, children: any, hide?: boolean }) 
               <XLg size='1.2em' aria-label="open"/>
             </Button>
           </Toast.Header>
-          <Toast.Body style={{ textAlign: 'center' }}>{props.children}</Toast.Body>
+          <Toast.Body style={{
+            textAlign: 'center' ,
+          }}>{props.children}</Toast.Body>
         </>
       }
     </Toast>

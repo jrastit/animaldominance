@@ -185,6 +185,7 @@ contract CardAdmin {
 
     function _joinGame(uint64 _gameId, uint64 _userId, uint16 _gameDeckId) private {
         require(gameList[_gameId].userId2 == 0, "Game is full");
+        require(gameList[_gameId].winner == 0, "Game is ended");
         require(userIdList[_userId].gameId == 0, 'user already in game');
         checkDeck(_userId, _gameDeckId);
         joinGamePos(_gameId, _userId, _gameDeckId, false);
@@ -195,10 +196,10 @@ contract CardAdmin {
             game.userDeck1,
             game.userId2,
             game.userDeck2,
-            gameLastId
+            _gameId
         );
-        userIdList[_userId].gameId = gameLastId;
-        emit GameFill(gameLastId, _userId);
+        userIdList[_userId].gameId = _gameId;
+        emit GameFill(_gameId, _userId);
     }
 
     function joinGameSelf(uint64 _gameId, uint16 _gameDeckId) public isUser {

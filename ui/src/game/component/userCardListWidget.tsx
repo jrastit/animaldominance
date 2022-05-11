@@ -25,7 +25,7 @@ const userCardListWidget = (props : {
         _userCard => _userCard.id === userCard.id).length
       ){
         style={
-          backgroundColor : "blue",
+          backgroundColor : "#FFFFFF80",
           borderRadius : "1em",
           padding: "0.5em 0.5em",
         }

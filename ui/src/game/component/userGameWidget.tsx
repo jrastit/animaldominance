@@ -67,7 +67,6 @@ const userGameWidget = (props : {
       backgroundColor:familyColor,
       width:"12em",
       height:"18em",
-      marginBottom:"2em",
       color:"white",
       fontWeight:"bolder",
       marginLeft:"auto",
