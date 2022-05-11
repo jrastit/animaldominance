@@ -37,6 +37,7 @@ import {
   getTurnData,
   playRandomly,
   checkTurnData,
+  playAction,
 } from '../game/playGame'
 
 import {
@@ -93,7 +94,13 @@ const autoPlayGame = async (
     const myTurn2 = isMyTurn(game2.turn, game2.userId1, userId2)
     expect(myTurn1 != myTurn2).toBeTruthy()
     if (myTurn1) {
-      while (playRandomly(turnData1, setTurnData1) != 0) { }
+      let data
+      do {
+        data = playRandomly(myTurn1, turnData1)
+        if (Array.isArray(data)) {
+          playAction(myTurn1, data, turnData1, setTurnData1)
+        }
+      } while (Array.isArray(data))
       //console.log(userId1, game1.turn, turnData1.playActionList.length)
       if (turnData1.playActionList.length === 0 &&
         lastPlayActionList.length === 0 &&
@@ -105,7 +112,13 @@ const autoPlayGame = async (
         lastPlayActionList = turnData1.playActionList
       }
     } else {
-      while (playRandomly(turnData2, setTurnData2) != 0) { }
+      let data
+      do {
+        data = playRandomly(myTurn2, turnData2)
+        if (Array.isArray(data)) {
+          playAction(myTurn2, data, turnData2, setTurnData2)
+        }
+      } while (Array.isArray(data))
       //console.log(userId2, game2.turn, turnData2.playActionList.length)
       if (turnData2.playActionList.length === 0 &&
         lastPlayActionList.length === 0 &&

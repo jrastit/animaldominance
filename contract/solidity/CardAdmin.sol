@@ -332,7 +332,7 @@ contract CardAdmin {
         require(userCard.price > 0 && userCard.sold == false, 'wrong card');
         require(userCard.price == msg.value, "Wrong card or price");
         userCard.sold = true;
-        userIdList[_userId].wallet.transfer(msg.value * 80 / 100);
+        userIdList[_userId].wallet.transfer(msg.value * 100 / 120);
         if (address(trading) != address(0)){
             trading.removeUserCard(_userId, _userCardId);
         }
@@ -346,9 +346,9 @@ contract CardAdmin {
         require(userCard.price == 0 && userCard.sold == false, 'wrong card');
         uint8 level = getLevel(userCard.exp);
         require(level > 0, "Cannot sell level 0");
-        userCard.price = price;
+        userCard.price = price * 120 / 100;
         if (address(trading) != address(0)){
-            trading.addUserCard(userId, _userCardId, price);
+            trading.addUserCard(userId, _userCardId, userCard.price);
         }
     }
 

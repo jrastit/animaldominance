@@ -132,6 +132,56 @@ export const playRandomly = (
   return 0
 }
 
+export const playAction = async (
+  myTurn: number,
+  data: number[],
+  turnData: TurnDataType,
+  setTurnData: (turnData: TurnDataType) => void,
+) => {
+
+  if (data[2]) {
+    const gameCard = turnData.cardList[1 - myTurn].filter(_gameCard => {
+      return _gameCard.id === data[0]
+    })[0]
+    if (gameCard.position === 1 && data[1] === 3) {
+      playCardTo3(
+        myTurn,
+        gameCard.id,
+        turnData,
+        setTurnData
+      )
+    } else if (gameCard.position === 3) {
+      if (data[1] === 255) {
+        playAttackOponent(
+          myTurn,
+          gameCard.id,
+          turnData,
+          setTurnData
+        )
+      } else {
+        const gameCardId2 = data[1]
+        playAttack(
+          myTurn,
+          gameCard.id,
+          gameCardId2,
+          turnData,
+          setTurnData
+        )
+      }
+    } else {
+      throw Error('invalid card' + gameCard.toString())
+    }
+  } else {
+    setTurnData({
+      turn: turnData.turn,
+      mana: turnData.mana,
+      playActionList: turnData.playActionList.concat([data[0], data[1]]),
+      cardList: turnData.cardList,
+      life: turnData.life,
+    })
+  }
+}
+
 const checkCard = (
   card1: GameCardType,
   card2: GameCardType,
