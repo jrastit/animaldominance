@@ -70,10 +70,14 @@ const _getGameFull = (
     getGameFull(gameContract, _setMessage).then((_game) => {
       dispatch(setGame(_game))
       if (!oponent){
-        getUser(contract, user.id === _game.userId1?_game.userId2:_game.userId1).then(
+        let oponentId =  user.id === _game.userId1?_game.userId2:_game.userId1
+        if (!oponent) {
+          oponentId = user.id
+        }
+        getUser(contract, oponentId).then(
           (_oponent) => {
             dispatch(setOponent(_oponent))
-            if (_game.winner){
+            if (_game.ended){
               dispatch(updateStep({id : stepId, step: Step.Ended}))
             } else {
               dispatch(updateStep({id : stepId, step: Step.Running}))
@@ -81,7 +85,7 @@ const _getGameFull = (
           }
         )
       } else {
-        if (_game.winner){
+        if (_game.ended){
           dispatch(updateStep({id : stepId, step: Step.Ended}))
         } else {
           dispatch(updateStep({id : stepId, step: Step.Running}))

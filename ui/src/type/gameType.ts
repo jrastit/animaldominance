@@ -39,6 +39,7 @@ export type GameType = {
   version: number
   turn: number
   winner: number
+  ended: boolean
 }
 
 export type GameListItemType = {
@@ -48,4 +49,6 @@ export type GameListItemType = {
   userDeck1: number
   userDeck2: number
   winner: number
+  ended: boolean
+  playGame: string | undefined
 }

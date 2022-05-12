@@ -26,6 +26,7 @@ import {
 
 import {
   createGame,
+  createGameBot,
   joinGame,
   getGameFull,
   endTurn,
@@ -108,7 +109,13 @@ const autoPlayGame = async (
       ) {
         await leaveGame(gameContract1, transactionManager1)
       } else {
-        await endTurn(gameContract1, transactionManager1, turnData1.playActionList, game1.turn)
+        await endTurn(
+          gameContract1,
+          transactionManager1,
+          turnData1.playActionList,
+          game1.turn,
+          game1.cardList2,
+        )
         lastPlayActionList = turnData1.playActionList
       }
     } else {
@@ -126,7 +133,13 @@ const autoPlayGame = async (
       ) {
         await leaveGame(gameContract2, transactionManager2)
       } else {
-        await endTurn(gameContract2, transactionManager2, turnData2.playActionList, game2.turn)
+        await endTurn(
+          gameContract2,
+          transactionManager2,
+          turnData2.playActionList,
+          game2.turn,
+          game2.cardList2,
+        )
         lastPlayActionList = turnData2.playActionList
       }
     }
@@ -138,6 +151,87 @@ const autoPlayGame = async (
       checkTurnData(game2, userId2, turnData2, check)
     }
   } while (!game1.winner || !game2.winner)
+}
+
+const autoPlayGameBot = async (
+  contract: ethers.Contract,
+  transactionManager: TransactionManager,
+  deckId: number,
+  userId: number,
+) => {
+  const check = (val1: number, val2: number, message: string) => {
+    if (val1 != val2) {
+      console.error(message)
+      expect(val1).toBe(val2)
+      return false
+    }
+    return true
+  }
+
+  const gameId = await createGameBot(contract, transactionManager, deckId)
+  const gameChain = await contract.gameList(gameId)
+  const contractAddress = gameChain.playGame
+  if (!contractAddress) {
+    throw Error("Game contract not found")
+  }
+  const gameContract = getContractPlayGame(contractAddress, transactionManager.signer)
+  let lastPlayActionList = [] as number[][]
+  let game = await getGameFull(gameContract)
+  do {
+    let turnData = getTurnData(game, userId)
+    const setTurnData = (_turnData: TurnDataType) => {
+      turnData = _turnData
+    }
+    const myTurn = isMyTurn(game.turn, game.userId1, userId)
+    expect(myTurn).toBe(1)
+
+    let data
+    let nextPlayAction = [] as number[][]
+    let cardList1
+    do {
+      data = playRandomly(myTurn, turnData)
+      if (Array.isArray(data)) {
+        playAction(myTurn, data, turnData, setTurnData)
+      }
+    } while (Array.isArray(data))
+    //console.log(userId1, game1.turn, turnData1.playActionList.length)
+    if (turnData.playActionList.length === 0 &&
+      lastPlayActionList.length === 0 &&
+      game.turn > 36
+    ) {
+      await leaveGame(gameContract, transactionManager)
+    } else {
+      const _addPlayAction = (payload: {
+        turn: number,
+        actionId: number,
+        data: number[]
+      }) => {
+        //console.log(payload)
+        nextPlayAction.push(payload.data)
+      }
+
+      cardList1 = await endTurn(
+        gameContract,
+        transactionManager,
+        turnData.playActionList,
+        game.turn,
+        turnData.cardList[1],
+        _addPlayAction,
+      )
+
+      lastPlayActionList = turnData.playActionList
+
+      turnData.turn = turnData.turn++
+      turnData.mana = (turnData.turn + 1) % 2
+      turnData.cardList[1] = cardList1
+      //turnData.life = turnData.life
+      for (let i = 0; i < nextPlayAction.length; i++) {
+        playAction(1 - myTurn, nextPlayAction[i], turnData, setTurnData)
+      }
+    }
+    game = await getGameFull(gameContract)
+    checkTurnData(game, userId, turnData, check)
+  } while (!game.ended)
 }
 
 const testTransaction = () => {
@@ -154,9 +248,11 @@ const testTransaction = () => {
   let transactionManager1: TransactionManager
   let transactionManager2: TransactionManager
 
+  let userId: number
   let userId1: number
   let userId2: number
 
+  let deckList: UserDeckType[]
   let deckList1: UserDeckType[]
   let deckList2: UserDeckType[]
 
@@ -191,17 +287,23 @@ const testTransaction = () => {
           transactionManager2.signer,
         )
 
+        await registerUser(contract, transactionManager, 'test')
         await registerUser(contract1, transactionManager1, 'test1')
         await registerUser(contract2, transactionManager2, 'test2')
 
+        userId = await getUserId(contract, await transactionManager.signer.getAddress())
         userId1 = await getUserId(contract1, await transactionManager1.signer.getAddress())
         userId2 = await getUserId(contract2, await transactionManager2.signer.getAddress())
+        await addUserStarterCard(contract, transactionManager, userId)
         await addUserStarterCard(contract1, transactionManager1, userId1)
         await addUserStarterCard(contract2, transactionManager2, userId2)
+        const userCardList = await getUserCardList(contract, userId)
         const userCardList1 = await getUserCardList(contract1, userId1)
         const userCardList2 = await getUserCardList(contract2, userId2)
+        await addUserDefaultDeck(contract, transactionManager, userCardList)
         await addUserDefaultDeck(contract1, transactionManager1, userCardList1)
         await addUserDefaultDeck(contract2, transactionManager2, userCardList2)
+        deckList = await getUserDeckList(contract, userId)
         deckList1 = await getUserDeckList(contract1, userId1)
         deckList2 = await getUserDeckList(contract2, userId2)
         console.log(transactionManager.transactionList.map((tx) => {
@@ -222,6 +324,34 @@ const testTransaction = () => {
   })
 
   describe('Test game', () => {
+    it('Test game bot', async () => {
+      for (let i = 0; i < 10; i++) {
+        await autoPlayGameBot(
+          contract,
+          transactionManager,
+          deckList[0].id,
+          userId,
+        )
+      }
+      let gasUsed = ethers.BigNumber.from(0)
+      let gasPrice = ethers.BigNumber.from(0)
+      console.log(transactionManager.transactionList.map((tx) => {
+        if (tx.txu.gasPrice) {
+          gasPrice = gasPrice.add(tx.result.gasUsed.mul(tx.txu.gasPrice))
+          gasUsed = gasUsed.add(tx.result.gasUsed)
+        }
+        return (tx.log + ' ' + tx.result.gasUsed.toNumber() + ' ' + (tx.txu.gasPrice && ethers.utils.formatEther(
+          tx.result.gasUsed.mul(tx.txu.gasPrice)
+        )))
+
+      }))
+      console.log(
+        "total gaz used :",
+        gasUsed.toNumber(),
+        ethers.utils.formatEther(gasPrice),
+      )
+    })
+
     it('Test game', async () => {
       for (let i = 0; i < 10; i++) {
         await autoPlayGame(

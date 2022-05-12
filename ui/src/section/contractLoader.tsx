@@ -251,6 +251,8 @@ const addGameListener = (
         userDeck1: 0,
         userDeck2: 0,
         winner: 0,
+        ended: false,
+        playGame: undefined,
       }))
       if (user && user.id === _userId) {
         console.log("setGame created")

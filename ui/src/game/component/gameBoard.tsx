@@ -43,9 +43,9 @@ const annimatePlay = async (
   gameCardId1: number,
   gameCardId2?: number
 ) => {
-  console.log(gameCardId1, current, cardRefIdList[1 - myTurn])
+  //console.log(gameCardId1, current, cardRefIdList[1 - myTurn])
   const place1 = current[cardRefIdList[1 - myTurn][gameCardId1]]?.getPlace()
-  console.log(place1)
+  //console.log(place1)
   if (place1) {
     if (gameCardId2) {
       const place2 = current[cardRefIdList[myTurn][gameCardId2]]?.getPlace()
@@ -149,7 +149,7 @@ const _playNextAction = async (
   current: (PlaceRefType| null)[] ,
   check: (val1 : number, val2 : number, message : string) => boolean
 ) => {
-  if (turn > turnData.turn && myTurn) {
+  if (turn > turnData.turn && (myTurn || turn === turnData.turn + 2)) {
     if (
       playActionList[turnData.turn] &&
       playActionList[turnData.turn][turnData.playActionList.length]
@@ -240,7 +240,7 @@ const GameBoard = (props: {
     }
     if (play === Play.Ready) {
       if (turnData.turn < turn) {
-        if (!myTurn){
+        if (!myTurn && turnData.turn !== turn - 2){
           setTurnData(getTurnData(props.game, props.user.id))
         } else {
           setPlay(Play.Loading)

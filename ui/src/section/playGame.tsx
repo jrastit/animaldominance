@@ -21,7 +21,8 @@ import {
 } from '../reducer/contractSlice'
 
 import {
-  clearGame
+  clearGame,
+  addPlayAction,
 } from '../reducer/gameSlice'
 
 import { useAppSelector, useAppDispatch } from '../hooks'
@@ -56,9 +57,9 @@ const PlayGame = (props:{
   if (isStep(stepId, Step.Waiting, step) && user && user.gameId) {
     const gameItem = gameList.filter(_gameItem => _gameItem.id === user.gameId)[0]
     if (gameItem) {
-      if (gameItem.winner !== 0){
+      if (gameItem.ended){
         setTimeout(() => {dispatch(updateStep({id : stepId, step : Step.Ended}))}, 100)
-      } else if (gameItem.userId2 !== 0){
+      } else if (gameItem.playGame){
         setTimeout(() => {dispatch(updateStep({id : stepId, step : Step.Ready}))}, 100)
       }
     }
@@ -78,11 +79,30 @@ const PlayGame = (props:{
     dispatch(clearError(stepId))
   }
 
+  const _addPlayAction = (payload: {
+    turn: number,
+    actionId: number,
+    data: number[]
+  }) => {
+    console.log(payload)
+    dispatch(addPlayAction(payload))
+  }
+
   const _playTurn = (playActionList : number[][], turn : number) => {
     if (gameContract){
-      endTurn(gameContract, props.transactionManager, playActionList, turn).then(() => {
+      endTurn(
+        gameContract,
+        props.transactionManager,
+        playActionList,
+        turn,
+        [],
+        _addPlayAction
+      ).then(() => {
 
-      }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
+      }).catch((err) => {
+        console.log(err)
+        dispatch(setError({id:stepId, catchError:err}))
+      })
     }
   }
 

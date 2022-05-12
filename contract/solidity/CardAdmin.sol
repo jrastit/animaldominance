@@ -52,6 +52,7 @@ struct Game {
     uint16 userDeck1;
     uint16 userDeck2;
     uint64 winner;
+    bool ended;
     PlayGame playGame;
 }
 
@@ -144,13 +145,14 @@ contract CardAdmin {
     ///////////////////////// Games /////////////////////////////////////////
 
     event GameCreated(uint64 id, uint64 userId);
+    event GameCreatedBot(uint64 id, uint64 userId);
     event GameFill(uint64 id, uint64 userId);
     event GameEnd(uint64 id, uint64 winner);
 
     uint64 public gameLastId;
     mapping(uint64 => Game) public gameList;
 
-    function joinGamePos(uint64 _gameId, uint64 _userId, uint16 _gameDeckId, bool _pos) private {
+    function _joinGamePos(uint64 _gameId, uint64 _userId, uint16 _gameDeckId, bool _pos) private {
         Game storage game = gameList[_gameId];
         if (_pos){
             game.userId1 = _userId;
@@ -161,34 +163,52 @@ contract CardAdmin {
         }
     }
 
-    function createGame(uint64 _userId, uint16 _gameDeckId) private {
+    function _createGame(uint64 _userId, uint16 _gameDeckId) private {
         require(userIdList[_userId].gameId == 0, 'user already in game');
         checkDeck(_userId, _gameDeckId);
         gameLastId = gameLastId + 1;
-        joinGamePos(gameLastId, _userId, _gameDeckId, true);
+        _joinGamePos(gameLastId, _userId, _gameDeckId, true);
         userIdList[_userId].gameId = gameLastId;
-        emit GameCreated(gameLastId, _userId);
+    }
+
+    function _createGameBot(uint64 _userId, uint16 _gameDeckId) private {
+        _createGame(_userId, _gameDeckId);
+        gameList[gameLastId].playGame = playGameFactory.newGame(
+            this,
+            _userId,
+            _gameDeckId,
+            0,
+            _gameDeckId,
+            gameLastId
+        );
+        userIdList[_userId].gameId = gameLastId;
+        emit GameCreatedBot(gameLastId, _userId);
     }
 
     function createGameSelf(uint16 _gameDeckId) public isUser {
-        createGame(userAddressList[msg.sender], _gameDeckId);
+        _createGame(userAddressList[msg.sender], _gameDeckId);
+        emit GameCreated(gameLastId, userAddressList[msg.sender]);
+    }
+
+    function createGameBotSelf(uint16 _gameDeckId) public isUser {
+        _createGameBot(userAddressList[msg.sender], _gameDeckId);
     }
 
     function cancelGame() public isUser {
         uint64 _userId = userAddressList[msg.sender];
         uint64 _gameId = userIdList[_userId].gameId;
         require(gameList[_gameId].userId2 == 0, "Player has join");
-        gameList[_gameId].winner = _userId;
+        gameList[_gameId].ended = true;
         userIdList[_userId].gameId = 0;
         emit GameEnd(_gameId, _userId);
     }
 
     function _joinGame(uint64 _gameId, uint64 _userId, uint16 _gameDeckId) private {
-        require(gameList[_gameId].userId2 == 0, "Game is full");
-        require(gameList[_gameId].winner == 0, "Game is ended");
+        require(address(gameList[_gameId].playGame) == address(0), "Game is full");
+        require(!gameList[_gameId].ended, "Game is ended");
         require(userIdList[_userId].gameId == 0, 'user already in game');
         checkDeck(_userId, _gameDeckId);
-        joinGamePos(_gameId, _userId, _gameDeckId, false);
+        _joinGamePos(_gameId, _userId, _gameDeckId, false);
         Game storage game = gameList[_gameId];
         game.playGame = playGameFactory.newGame(
             this,
@@ -219,14 +239,16 @@ contract CardAdmin {
 
     function endGame(uint64 _gameId) public {
         Game storage game = gameList[_gameId];
-        require(game.winner == 0);
-        uint64 winner = game.playGame.getWinner();
-        require(winner != 0);
+        require(!game.ended);
+        require(game.playGame.ended());
+        uint64 winner = game.playGame.winner();
         game.winner = winner;
         addCardExp(game.userId1, game.userDeck1, game.playGame);
-        addCardExp(game.userId2, game.userDeck2, game.playGame);
         userIdList[game.userId1].gameId = 0;
-        userIdList[game.userId2].gameId = 0;
+        if (game.userId2 != 0){
+          addCardExp(game.userId2, game.userDeck2, game.playGame);
+          userIdList[game.userId2].gameId = 0;
+        }
         emit GameEnd(_gameId, winner);
     }
 

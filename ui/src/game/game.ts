@@ -44,7 +44,28 @@ export const getGame = async (
     userDeck1: gameChain.userDeck1,
     userDeck2: gameChain.userDeck2,
     winner: gameChain.winner.toNumber(),
+    ended: gameChain.ended,
+    playGame: gameChain.playGame,
   } as GameListItemType
+}
+
+export const getGameCardFromChain = (
+  gameCardListChain: any,
+  id: number,
+) => {
+  return {
+    id,
+    userId: gameCardListChain.userId.toNumber(),
+    userCardId: gameCardListChain.userCardId,
+    cardId: gameCardListChain.cardId,
+    life: gameCardListChain.life,
+    attack: gameCardListChain.attack,
+    mana: gameCardListChain.mana,
+    position: gameCardListChain.position,
+    exp: gameCardListChain.exp.toNumber(),
+    expWin: gameCardListChain.expWin.toNumber(),
+    play: 0,
+  }
 }
 
 export const getGameCardList = async (
@@ -52,19 +73,7 @@ export const getGameCardList = async (
   pos: number
 ) => {
   return (await gameContract.getGameCardList(pos)).map((gameCardListChain: any, id: number) => {
-    return {
-      id,
-      userId: gameCardListChain.userId.toNumber(),
-      userCardId: gameCardListChain.userCardId,
-      cardId: gameCardListChain.cardId,
-      life: gameCardListChain.life,
-      attack: gameCardListChain.attack,
-      mana: gameCardListChain.mana,
-      position: gameCardListChain.position,
-      exp: gameCardListChain.exp.toNumber(),
-      expWin: gameCardListChain.expWin.toNumber(),
-      play: 0,
-    }
+    return getGameCardFromChain(gameCardListChain, id)
   }) as GameCardType[]
 }
 
@@ -95,6 +104,8 @@ export const getGameFull = async (
   const turn = await gameContract.turn()
   setMessage && setMessage('Load winner ')
   const winner = ethers.BigNumber.from(await gameContract.winner()).toNumber()
+  setMessage && setMessage('Load ended ')
+  const ended = await gameContract.ended()
   const game = {
     id,
     userId1,
@@ -107,6 +118,7 @@ export const getGameFull = async (
     version,
     turn,
     winner,
+    ended,
   } as GameType
   return game
 }
@@ -131,13 +143,38 @@ export const createGame = async (
   const tx = await transactionManager.sendTx(await contract.populateTransaction.createGameSelf(
     userDeckId
   ), "Create game")
-  const gameId = await Promise.all(tx.result.logs.map(async (log) => {
-    const log2 = contract.interface.parseLog(log)
-    if (log2.name === 'GameCreated') {
-      return log2.args.id.toNumber()
+  for (let i = 0; i < tx.result.logs.length; i++) {
+    try {
+      const log = contract.interface.parseLog(tx.result.logs[i])
+      if (log.name === 'GameCreated') {
+        return log.args.id.toNumber()
+      }
+    } catch (err) {
+      console.log('no maching event')
     }
-  }))
-  return gameId[0] as number
+  }
+  throw Error('Game id not found')
+}
+
+export const createGameBot = async (
+  contract: ethers.Contract,
+  transactionManager: TransactionManager,
+  userDeckId: number,
+) => {
+  const tx = await transactionManager.sendTx(await contract.populateTransaction.createGameBotSelf(
+    userDeckId
+  ), "Create game bot")
+  for (let i = 0; i < tx.result.logs.length; i++) {
+    try {
+      const log = contract.interface.parseLog(tx.result.logs[i])
+      if (log.name === 'GameCreatedBot') {
+        return log.args.id.toNumber()
+      }
+    } catch (err) {
+      console.log('no maching event')
+    }
+  }
+  throw Error('Game id not found')
 }
 
 export const joinGame = async (
@@ -171,13 +208,36 @@ export const endTurn = async (
   transactionManager: TransactionManager,
   playActionList: number[][],
   turn: number,
+  cardList: GameCardType[],
+  addPlayAction?: (payload: {
+    turn: number,
+    actionId: number,
+    data: number[]
+  }) => void,
 ) => {
   const tx = await transactionManager.sendTx(
     await gameContract.populateTransaction.endTurn(
       playActionList,
     ), "Play turn " + turn
   )
-  return tx
+  if (addPlayAction) {
+    for (let i = 0; i < tx.result.logs.length; i++) {
+      const log = gameContract.interface.parseLog(tx.result.logs[i])
+      if (log.name === 'PlayAction') {
+        addPlayAction({
+          turn: log.args.turn,
+          actionId: log.args.id,
+          data: [log.args.gameCard, log.args.dest, log.args.result]
+        })
+      }
+      if (log.name === 'DrawCard') {
+        const gameCard = getGameCardFromChain(log.args.gameCard, cardList.length)
+        cardList.concat([gameCard])
+        console.log(log.args.id)
+      }
+    }
+  }
+  return cardList
 }
 
 export const endGameByTime = async (

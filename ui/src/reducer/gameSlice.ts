@@ -97,8 +97,11 @@ export const gameSlice = createSlice({
       actionId: number,
       data: number[]
     }>) => {
-      if (!state.playActionList[action.payload.turn]) {
-        state.playActionList[action.payload.turn] = []
+      for (let i = state.playActionList.length; i <= action.payload.turn; i++) {
+        state.playActionList[i] = []
+      }
+      for (let i = state.playActionList[action.payload.turn].length; i < action.payload.actionId; i++) {
+        state.playActionList[action.payload.turn][i] = []
       }
       state.playActionList[action.payload.turn][action.payload.actionId] = action.payload.data
     },

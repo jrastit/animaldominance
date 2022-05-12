@@ -3,8 +3,6 @@ import { TransactionManager } from '../util/TransactionManager'
 import { useState } from 'react'
 
 import Container from 'react-bootstrap/Container';
-import Row from 'react-bootstrap/Row'
-import Col from 'react-bootstrap/Col'
 import Button from '../component/buttonNice'
 import DivNice from '../component/divNice'
 import StepMessageNiceWidget from '../component/stepMessageNiceWidget'
@@ -13,6 +11,7 @@ import DeckSelect from '../game/component/deckSelect'
 import {
   joinGame,
   createGame,
+  createGameBot,
 } from '../game/game'
 
 import {
@@ -27,15 +26,11 @@ import { useAppSelector, useAppDispatch } from '../hooks'
 
 import {
   updateStep,
-  setMessage,
   setError,
   clearError,
   getStep,
   StepId,
   Step,
-  isStep,
-  resetAllStep,
-  resetAllSubStep,
 } from '../reducer/contractSlice'
 
 const FindGame= (props:{
@@ -44,7 +39,6 @@ const FindGame= (props:{
 }) => {
 
   const step = useAppSelector((state) => state.contractSlice.step)
-  const version = useAppSelector((state) => state.contractSlice.version)
   const user = useAppSelector((state) => state.userSlice.user)
   const gameList = useAppSelector((state) => state.gameSlice.gameList)
   const userDeckList = useAppSelector((state) => state.userSlice.userDeckList)
@@ -132,6 +126,23 @@ const FindGame= (props:{
 
   }
 
+  const _createGameBot = async () => {
+    if (deck && props.contract){
+      dispatch(updateStep({id : StepId.Game, step: Step.Creating}))
+      createGameBot(
+        props.contract,
+        props.transactionManager,
+        deck.id
+      ).then((_gameId) => {
+        dispatch(setGameId(_gameId))
+        dispatch(updateStep({id : StepId.Game, step: Step.Ready}))
+      }).catch((err) => {
+        dispatch(setError({id : StepId.Game, catchError: err}))
+      })
+    }
+
+  }
+
   const deckSelectRender = () => {
     return (
       <DeckSelect
@@ -144,13 +155,16 @@ const FindGame= (props:{
 
   const createGameRender = () => {
     return deck && (
-      <Button onClick={_createGame}>New Game</Button>
+      <>
+      <Button onClick={_createGame}>New Game</Button><br/><br/>
+      <Button onClick={_createGameBot}>New Game against bot</Button>
+      </>
     )
   }
 
   const joinGameRender = () => {
     if (props.contract && gameList && gameList.length > 0){
-      const openGame = gameList.filter(game  => !game.userId2 && !game.winner)
+      const openGame = gameList.filter(game  => !game.playGame && !game.userId2)
       const myOpenGame = openGame.filter(game  => user && game.userId1 === user.id)
       const gameToJoin = openGame.filter(game  => user && game.userId1 !== user.id)
 

@@ -218,7 +218,7 @@ export const checkTurnData = (
 export const getTurnData = (game: GameType, userId: number) => {
   return {
     turn: game.turn,
-    mana: Math.floor(game.turn / 2) + 1,
+    mana: Math.floor((game.turn + 1) / 2),
     playActionList: [],
     cardList: [userId === game.userId1 ? game.cardList1 : game.cardList2, userId === game.userId1 ? game.cardList2 : game.cardList1],
     life: [userId === game.userId1 ? game.life1 : game.life2, userId === game.userId1 ? game.life2 : game.life1],
@@ -228,10 +228,10 @@ export const getTurnData = (game: GameType, userId: number) => {
 
 export const isMyTurn = (turn: number, userId1: number, userId: number) => {
   if (turn % 2 === 0 && userId1 === userId) {
-    return 1
+    return 0
   }
   if (turn % 2 === 1 && userId1 !== userId) {
-    return 1
+    return 0
   }
-  return 0
+  return 1
 }
