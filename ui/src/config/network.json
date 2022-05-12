@@ -11,7 +11,7 @@
       "url": "https://testnet.emerald.oasis.dev",
       "faucet" : "https://faucet.testnet.oasis.dev/",
       "chainId": 42261,
-      "gameContract": "0x3fA06B3191b4646cdFaBb94C727D08c8a4822a4a"
+      "gameContract": "0xb7E9Ee3D83a50B806627Dc72Ba5c321f3C1A4d2E"
     }
   ]
 }
