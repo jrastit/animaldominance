@@ -37,9 +37,11 @@ export const _endGame = (
   state: GameState,
   gameEnd: { id: number, winner: number }
 ) => {
+  console.log('endgame', gameEnd.id, gameEnd.winner)
   state.gameList = state.gameList.map(_game => {
     if (_game.id === gameEnd.id) {
       _game.winner = gameEnd.winner
+      _game.ended = true
     }
     return _game
   })

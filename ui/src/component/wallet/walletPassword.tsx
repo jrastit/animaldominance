@@ -3,36 +3,61 @@ import encUTF8 from 'crypto-js/enc-utf8';
 import CryptoJS from 'crypto-js';
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
-import BoxWidget from '../../component/boxWidget'
 
-const WalletPassword = (props : {
-  passwordCheck : string | undefined | null
-  setPassword : (password : string, remeber : boolean) => void
-  newPassword : (password : string, passwordCheck : string, remember : boolean) => void
-}) => {
+import { useAppSelector, useAppDispatch } from '../../hooks'
+
+import {
+  walletStorageUpdatePassword
+} from '../../util/walletStorage'
+
+import {
+  updateStep,
+  Step,
+  StepId,
+} from '../../reducer/contractSlice'
+
+import {
+  setPassword,
+} from '../../reducer/walletSlice'
+
+const WalletPassword = () => {
+
+  const password = useAppSelector((state) => state.walletSlice.password)
+  const dispatch = useAppDispatch()
 
   const [password1, setPassword1] = useState<string>()
   const [password2, setPassword2] = useState<string>()
   const [remember, setRemember] = useState<boolean>(false)
 
-  const setPassword = (_password : string) => {
-    const password = CryptoJS.SHA256("2fysF8Tx" + _password).toString(CryptoJS.enc.Base64)
-    const passwordCheck = CryptoJS.AES.encrypt("2fysF8Tx", password).toString()
-    if (CryptoJS.AES.decrypt(passwordCheck, password).toString(encUTF8) === "2fysF8Tx"){
-      props.newPassword(password, passwordCheck, remember)
+  const _newPassword = (_password : string) => {
+    const newPassword = CryptoJS.SHA256("2fysF8Tx" + _password).toString(CryptoJS.enc.Base64)
+    const passwordCheck = CryptoJS.AES.encrypt("2fysF8Tx", newPassword).toString()
+    if (CryptoJS.AES.decrypt(passwordCheck, newPassword).toString(encUTF8) === "2fysF8Tx"){
+      if (remember){
+        walletStorageUpdatePassword(newPassword, passwordCheck)
+      } else {
+        walletStorageUpdatePassword(undefined, passwordCheck)
+        dispatch(setPassword(newPassword))
+      }
+      dispatch(updateStep({id : StepId.Wallet, step : Step.Init}))
     } else {
       console.error("Error creating password")
     }
   }
 
-  const updateInputPassword = (event : any) => {
+  const _unlockPassword = (event : any) => {
     const _password = event.target.value
     if (_password){
-      if (props.passwordCheck){
-        const password = CryptoJS.SHA256("2fysF8Tx" + _password).toString(CryptoJS.enc.Base64)
+      if (password.passwordCheck){
+        const unlockPassword = CryptoJS.SHA256("2fysF8Tx" + _password).toString(CryptoJS.enc.Base64)
         try {
-          if (CryptoJS.AES.decrypt(props.passwordCheck, password).toString(encUTF8) === "2fysF8Tx"){
-            props.setPassword(password, remember)
+          if (CryptoJS.AES.decrypt(password.passwordCheck, unlockPassword).toString(encUTF8) === "2fysF8Tx"){
+            if (remember){
+              walletStorageUpdatePassword(unlockPassword, password.passwordCheck)
+            } else {
+              dispatch(setPassword(unlockPassword))
+            }
+            dispatch(updateStep({id : StepId.Wallet, step : Step.Init}))
           }
         } catch (error) {
 
@@ -44,10 +69,9 @@ const WalletPassword = (props : {
 
   return (
     <>
-      { (!!props.passwordCheck) &&
-        <BoxWidget title='Password for broswer wallet'>
-          <Form.Label>Password</Form.Label>
-          <Form.Control type="password" placeholder="Password" name="password" onChange={updateInputPassword}/>
+      { (!!password.passwordCheck) &&
+        <>
+          <p style={{fontWeight:'bold'}}>Unlock your local wallet</p>
           <Form.Check
           checked={remember}
           type="checkbox"
@@ -55,22 +79,23 @@ const WalletPassword = (props : {
           name="remeber"
           onChange={(event) => {console.log(event.target.value); setRemember(!remember)}}
           />
-        </BoxWidget>
+          <Form.Control type="password" placeholder="Password" name="password" onChange={_unlockPassword}/>
+        </>
 
       }
-      { (!props.passwordCheck) &&
-        <BoxWidget title='Set password for broswer wallet'>
-          <p>Use your internet broswer cache to keep your wallet</p>
+      { (!password.passwordCheck) &&
+        <>
+          <p style={{fontWeight:'bold'}}>Setup your password</p>
           <p>Enter Password : <input type="password" name="password1" onChange={event => {setPassword1(event.target.value)}}></input></p>
           { !!password1 &&
             <>
             <p>ReEnter Password : <input type="password" name="password2" onChange={event => {setPassword2(event.target.value)}}></input></p>
             { (password1 === password2) &&
-              <Button onClick={() => {!!password1 && setPassword(password1)}}>Set password</Button>
+              <Button onClick={() => {!!password1 && _newPassword(password1)}}>Set password</Button>
             }
             </>
           }
-        </BoxWidget>
+        </>
       }
     </>
   )

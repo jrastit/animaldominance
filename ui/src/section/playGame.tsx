@@ -4,11 +4,12 @@ import { useState } from 'react'
 import { TransactionManager } from '../util/TransactionManager'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
-import Button from 'react-bootstrap/Button'
 import DivNice from '../component/divNice'
 import ButtonNice from '../component/buttonNice'
-import GameLoader from './gameLoader'
-import GameBoard from '../game/component/gameBoard'
+import GameLoader from '../loader/gameLoader'
+import GameBoard from '../game/gameComponent/gameBoard'
+import GameWaitingWidget from '../game/gameComponent/gameWaitingWidget'
+import GameEndedWidget from '../game/gameComponent/gameEndedWidget'
 
 import {
   Step,
@@ -21,7 +22,6 @@ import {
 } from '../reducer/contractSlice'
 
 import {
-  clearGame,
   addPlayAction,
 } from '../reducer/gameSlice'
 
@@ -31,10 +31,9 @@ import {
   endTurn,
   leaveGame,
   endGameByTime,
-  cancelGame,
 } from '../game/game'
 
-import StepMessageWidget from '../component/stepMessageWidget'
+import StepMessageNiceWidget from '../component/stepMessageNiceWidget'
 
 const PlayGame = (props:{
   transactionManager : TransactionManager,
@@ -48,36 +47,10 @@ const PlayGame = (props:{
   const user = useAppSelector((state) => state.userSlice.user)
   const game = useAppSelector((state) => state.gameSlice.game)
   const oponent = useAppSelector((state) => state.gameSlice.oponent)
-  const gameList = useAppSelector((state) => state.gameSlice.gameList)
+
   const playActionList = useAppSelector((state) => state.gameSlice.playActionList)
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
   const dispatch = useAppDispatch()
-
-
-  if (isStep(stepId, Step.Waiting, step) && user && user.gameId) {
-    const gameItem = gameList.filter(_gameItem => _gameItem.id === user.gameId)[0]
-    if (gameItem) {
-      if (gameItem.ended){
-        setTimeout(() => {dispatch(updateStep({id : stepId, step : Step.Ended}))}, 100)
-      } else if (gameItem.playGame){
-        setTimeout(() => {dispatch(updateStep({id : stepId, step : Step.Ready}))}, 100)
-      }
-    }
-  }
-
-  const isWinner = () => {
-    if (user && game){
-      if (game.winner === user.id){
-        return 1
-      }
-    }
-    return 0
-  }
-
-  const _exitGame = () => {
-    dispatch(clearGame())
-    dispatch(clearError(stepId))
-  }
 
   const _addPlayAction = (payload: {
     turn: number,
@@ -88,17 +61,19 @@ const PlayGame = (props:{
     dispatch(addPlayAction(payload))
   }
 
-  const _playTurn = (playActionList : number[][], turn : number) => {
+  const _playTurn = (playActionList : number[][], cardNextId0: number, cardNextId1 : number, turn : number) => {
     if (gameContract){
+      dispatch(updateStep({id : stepId, step : Step.Refresh}))
       endTurn(
         gameContract,
         props.transactionManager,
         playActionList,
         turn,
-        [],
+        cardNextId0,
+        cardNextId1,
         _addPlayAction
       ).then(() => {
-
+        dispatch(updateStep({id : stepId, step : Step.Running}))
       }).catch((err) => {
         console.log(err)
         dispatch(setError({id:stepId, catchError:err}))
@@ -108,8 +83,9 @@ const PlayGame = (props:{
 
   const _leaveGame = () => {
     if (gameContract){
+      dispatch(updateStep({id : stepId, step : Step.Loading}))
       leaveGame(gameContract, props.transactionManager).then(() => {
-
+        dispatch(updateStep({id : stepId, step : Step.Ended}))
       }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
     }
 
@@ -122,34 +98,26 @@ const PlayGame = (props:{
     }
   }
 
-  const _cancelGame = () => {
-    cancelGame(props.contract, props.transactionManager).then(() => {
-    }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
-  }
-
   const render = () => {
     if (isStep(stepId, Step.Waiting, step)){
+      return (<GameWaitingWidget
+      contract={props.contract}
+      transactionManager={props.transactionManager}
+      />)
+    } else if (
+      isStep(stepId, Step.Creating, step) ||
+      isStep(stepId, Step.Loading, step) ||
+      isStep(stepId, Step.Joining, step) ||
+      isStep(stepId, Step.Error, step)
+    ) {
       return (
         <DivNice>
-        Waiting for opponent for game {user?.gameId}<br/><br/>
-        <Button variant='danger' onClick={_cancelGame}>Cancel</Button>
+        <StepMessageNiceWidget
+          title='Game'
+          step={getStep(stepId, step)}
+          resetStep = {() => {dispatch(clearError(stepId))}}
+        />
         </DivNice>
-      )
-    } else if (isStep(stepId, Step.Loading, step)) {
-      return (
-        <DivNice>Loading</DivNice>
-      )
-    } else if (isStep(stepId, Step.Creating, step)) {
-      return (
-        <DivNice>Creating game</DivNice>
-      )
-    } else if (isStep(stepId, Step.Joining, step)) {
-      return (
-        <DivNice>Joining game</DivNice>
-      )
-    } else if (isStep(stepId, Step.Error, step)) {
-      return (
-        <DivNice>Error!!!</DivNice>
       )
     } else if (isStep(stepId, Step.Running, step) || isStep(stepId, Step.Refresh, step)){
       if (game && user && oponent){
@@ -162,6 +130,7 @@ const PlayGame = (props:{
             playActionList={playActionList}
             endGameByTime={_endGameByTime}
             endTurn={_playTurn}
+            isRefresh={isStep(stepId, Step.Refresh, step)}
           ><ButtonNice onClick={_leaveGame}>Leave game</ButtonNice>
           </GameBoard>
         )
@@ -184,25 +153,17 @@ const PlayGame = (props:{
       }
     } else if (isStep(stepId, Step.Ended, step)){
       return (
-        <DivNice>
-            {!!isWinner() && <div>You Win!!!</div>}
-            {!isWinner() && <div>You Lose!!!</div>}
-            <ButtonNice onClick={_exitGame}>Ok</ButtonNice>
-        </DivNice>
+        <GameEndedWidget/>
       )
     } else {
       return (
-        <DivNice>Unknow step</DivNice>
+        <DivNice>Unknow step {Step[getStep(StepId.Game, step).step]}</DivNice>
       )
     }
   }
 
   return (
     <>
-    <StepMessageWidget
-      step={getStep(stepId, step)}
-      resetStep = {() => {dispatch(clearError(stepId))}}
-    />
     <Row>
       <Col>
         <GameLoader

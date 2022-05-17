@@ -1,12 +1,23 @@
 import { useState } from 'react'
 import Form from 'react-bootstrap/Form';
 import Button from 'react-bootstrap/Button';
-import { walletAdd } from '../../util/walletStorage'
+import {
+  walletAdd,
+  walletStorageSetWallet,
+ } from '../../util/walletStorage'
 
-const WalletAddWidget = (props: {
-  password: string,
-  setWallet: (address : string) => void,
-}) => {
+import { useAppSelector, useAppDispatch } from '../../hooks'
+
+import {
+  updateStep,
+  Step,
+  StepId,
+} from '../../reducer/contractSlice'
+
+const WalletAddWidget = () => {
+
+  const password = useAppSelector((state) => state.walletSlice.password)
+  const dispatch = useAppDispatch()
 
   const [fieldValue, setFieldValue] = useState<any>({
     name: '',
@@ -24,20 +35,21 @@ const WalletAddWidget = (props: {
   }
 
   const formSubmit = (event: any) => {
-    walletAdd(
-      fieldValue.name,
-      fieldValue.pkey,
-      props.password,
-    ).then((wallet) => {
-      props.setWallet(
-          wallet.address
-      )
-      setSubmit(2)
-    }).catch((error) => {
-      setError(error.message)
-    })
-    event.preventDefault()
-    setSubmit(1)
+    if (password.password){
+      walletAdd(
+        fieldValue.name,
+        fieldValue.pkey,
+        password.password,
+      ).then((wallet) => {
+        walletStorageSetWallet(wallet.address)
+        dispatch(updateStep({id : StepId.Wallet, step : Step.Init}))
+        setSubmit(2)
+      }).catch((error) => {
+        setError(error.message)
+      })
+      event.preventDefault()
+      setSubmit(1)
+    }
   }
 
   if (error) return (

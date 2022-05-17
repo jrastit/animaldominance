@@ -61,6 +61,7 @@ const CardListWidget = (props : {
     description: string
   }) => void
   userId : number | undefined
+  tokenName ?: string | undefined
 }) => {
 
   const editCardLevel = (cardId : number, levelId : number, level : CardLevelType) => {
@@ -199,7 +200,7 @@ const CardListWidget = (props : {
                     props.buyNewCard(card.id, price)
                   }
                 >
-                  Buy a {card.name} level 0 for {price} ROSE
+                  Buy a {card.name} level 0 for {price} {props.tokenName}
                 </ButtonNice>
               </SpaceWidget>
             }
@@ -216,12 +217,16 @@ const CardListWidget = (props : {
                           props.buyCard(minTrade.userId, minTrade.userCardId, minTrade.price)
                         }
                       >
-                        Buy {card.name} level {level} for {ethers.utils.formatEther(minTrade.price)} ROSE
+                        Buy {card.name} level {level} for {ethers.utils.formatEther(minTrade.price)} {props.tokenName}
                       </ButtonNice>
                     </SpaceWidget>
                     )
                   }
                 }
+                return (
+                  <SpaceWidget key={card.id + ' ' + level}>
+                  </SpaceWidget>
+                )
             })
 
             }

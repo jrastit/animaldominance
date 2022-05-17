@@ -188,6 +188,8 @@ const checkCard = (
   check: (val1: number, val2: number, message: string) => boolean
 ) => {
   check(card1.id, card2.id, 'check id')
+  check(card1.cardId, card2.cardId, 'check cardId')
+  check(card1.mana, card2.mana, 'check mana')
   check(card1.attack, card2.attack, 'check attack')
   check(card1.life, card2.life, 'check life')
   check(card1.position, card2.position, 'check position')
@@ -205,9 +207,11 @@ export const checkTurnData = (
   const cardList2 = userId === game.userId1 ? game.cardList2 : game.cardList1
   const life1 = userId === game.userId1 ? game.life1 : game.life2
   const life2 = userId === game.userId1 ? game.life2 : game.life1
+  check(turnData.cardList[0].length, cardList1.length, "cardlist[0].length")
   for (let i = 0; i < turnData.cardList[0].length; i++) {
     checkCard(turnData.cardList[0][i], cardList1[i], check)
   }
+  check(turnData.cardList[1].length, cardList2.length, "cardlist[1].length")
   for (let i = 0; i < turnData.cardList[1].length; i++) {
     checkCard(turnData.cardList[1][i], cardList2[i], check)
   }

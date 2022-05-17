@@ -1,26 +1,45 @@
 import SelectWidget from '../../component/selectWidget'
 
+import { useEffect } from 'react'
+
 import {
   UserDeckType
 } from '../../type/userType'
+
+const _setDeck = (
+  deckId : string,
+  userDeckList : UserDeckType[] | undefined,
+  setDeck : (deck : UserDeckType | undefined) => void
+) => {
+  if (userDeckList){
+    setDeck(
+      userDeckList.filter(
+        (userDeck) => userDeck.id === parseInt(deckId)
+      )[0]
+    )
+  }
+}
+
 
 const DeckSelect = (props : {
   userDeckList : UserDeckType[] | undefined
   setDeck : (deck : UserDeckType | undefined) => void
   deck : UserDeckType | undefined
+  noEmpty ?: boolean
 }) => {
 
   const onChangeDeck = (event : {target : {name : string, value : string}}) => {
-    if (props.userDeckList){
-      props.setDeck(
-        props.userDeckList.filter(
-          (userDeck) => userDeck.id === parseInt(event.target.value)
-        )[0]
-      )
-    }
+    _setDeck(
+      event.target.value,
+      props.userDeckList,
+      props.setDeck
+    )
   }
 
-  let deckList = [{name:"", value:"-1"}] as {name: string, value:string}[]
+
+  let deckList = (
+    props.noEmpty ? [] : [{name:"", value:"-1"}]
+  ) as {name: string, value:string}[]
 
   if (props.userDeckList){
     deckList = deckList.concat(
@@ -34,6 +53,19 @@ const DeckSelect = (props : {
       })
     )
   }
+
+  const defaultDeck = deckList[0]?.value
+
+  useEffect(() => {
+    if (props.noEmpty && !props.deck && defaultDeck){
+      _setDeck(
+        defaultDeck,
+        props.userDeckList,
+        props.setDeck
+      )
+    }
+  }, [props.noEmpty, props.deck, defaultDeck, props.setDeck, props.userDeckList])
+
   return (
     <SelectWidget
       onChange={onChangeDeck}

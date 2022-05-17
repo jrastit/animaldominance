@@ -7,6 +7,7 @@ type NetworkType = {
   blockExplorerTxPrefix?: string
   faucet?: string
   entityRegistryAddress?: string
+  tokenName?: string
   contractDomainChainlink?: {
     linkAddress: string,
     oracle: string,

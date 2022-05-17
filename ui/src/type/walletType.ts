@@ -9,10 +9,10 @@ type WalletType = {
   pkey?: string
 }
 
-type WalletConfigType = {
+type WalletStorageType = {
   walletType?: string
   walletAddress?: string
-  networkName?: string
+  chainId?: number
   password?: string
   passwordCheck?: string
 }
@@ -43,14 +43,14 @@ const walletListFromJson = (walletList: string | null, password: string): Wallet
     return JSON.parse(walletList).map((wallet: WalletType) => walletFromString(wallet, password))
 }
 
-const walletConfigToJson = (walletConfig: WalletConfigType) => {
-  if (walletConfig)
-    return JSON.stringify(walletConfig)
+const walletStorageToJson = (walletStorage: WalletStorageType) => {
+  if (walletStorage)
+    return JSON.stringify(walletStorage)
 }
 
-const walletConfigFromJson = (walletConfig: string | null): WalletConfigType | undefined => {
-  if (walletConfig)
-    return JSON.parse(walletConfig)
+const walletStorageFromJson = (walletStorage: string | null): WalletStorageType | undefined => {
+  if (walletStorage)
+    return JSON.parse(walletStorage)
 }
 
 const walletNiceName = (wallet: WalletType | undefined) => {
@@ -59,11 +59,11 @@ const walletNiceName = (wallet: WalletType | undefined) => {
   return ''
 }
 
-export type { WalletType, WalletConfigType }
+export type { WalletType, WalletStorageType }
 export {
   walletListToJson,
   walletListFromJson,
   walletNiceName,
-  walletConfigToJson,
-  walletConfigFromJson
+  walletStorageToJson,
+  walletStorageFromJson
 }

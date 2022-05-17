@@ -4,39 +4,66 @@ import {
   walletListFromJson,
   walletListToJson,
   walletNiceName,
-  WalletConfigType,
-  walletConfigFromJson,
-  walletConfigToJson,
+  WalletStorageType,
+  walletStorageFromJson,
+  walletStorageToJson,
 } from '../type/walletType'
 
-const walletConfigLoad = (): WalletConfigType => {
-  let walletConfig
+export const walletStorageLoad = (): WalletStorageType => {
+  let walletStorage
   try {
-    walletConfig = walletConfigFromJson(localStorage.getItem("walletConfig"))
-    if (!walletConfig) {
+    walletStorage = walletStorageFromJson(localStorage.getItem("walletStorage"))
+    if (!walletStorage) {
       return {}
     }
   } catch (error) {
     console.error(error)
     return {}
   }
-  return walletConfig
+  return walletStorage
 }
 
-const walletConfigUpdatePassword = (password: string | undefined, passwordCheck: string) => {
-  let walletConfig = walletConfigLoad()
-  walletConfig.passwordCheck = passwordCheck
-  walletConfig.password = password
-  walletConfigSave(walletConfig)
-  return walletConfig
+export const walletStorageSetType = (type: string | undefined) => {
+  let walletStorage = walletStorageLoad()
+  walletStorage.walletType = type
+  walletStorageSave(walletStorage)
 }
 
-const walletConfigSave = async (walletConfig: WalletConfigType) => {
-  let walletConfigStr
+export const walletStorageSetWallet = (walletAddress: string | undefined) => {
+  let walletStorage = walletStorageLoad()
+  walletStorage.walletAddress = walletAddress
+  walletStorageSave(walletStorage)
+}
+
+export const walletStorageSetNetworkId = (chainId: number | undefined) => {
+  let walletStorage = walletStorageLoad()
+  walletStorage.chainId = chainId
+  walletStorageSave(walletStorage)
+}
+
+export const walletStorageClearPassword = () => {
+  let walletStorage = walletStorageLoad()
+  walletStorage.password = undefined
+  walletStorageSave(walletStorage)
+}
+
+export const walletStorageUpdatePassword = (
+  password: string | undefined,
+  passwordCheck: string | undefined
+) => {
+  let walletStorage = walletStorageLoad()
+  walletStorage.passwordCheck = passwordCheck
+  walletStorage.password = password
+  walletStorageSave(walletStorage)
+  return walletStorage
+}
+
+export const walletStorageSave = async (walletStorage: WalletStorageType) => {
+  let walletStorageStr
   try {
-    walletConfigStr = walletConfigToJson(walletConfig)
-    if (walletConfigStr) {
-      localStorage.setItem("walletConfig", walletConfigStr)
+    walletStorageStr = walletStorageToJson(walletStorage)
+    if (walletStorageStr) {
+      localStorage.setItem("walletStorage", walletStorageStr)
     } else {
       console.error("Wallet config is empty")
     }
@@ -45,7 +72,7 @@ const walletConfigSave = async (walletConfig: WalletConfigType) => {
   }
 }
 
-const walletListLoad = async (password: string) => {
+export const walletListLoad = async (password: string) => {
   let walletList
   try {
     walletList = walletListFromJson(localStorage.getItem("walletList"), password)
@@ -63,7 +90,7 @@ const walletListLoad = async (password: string) => {
   return walletList
 }
 
-const walletListLoadAddress = async (address: string, password: string) => {
+export const walletListLoadAddress = async (address: string, password: string) => {
   const walletList = await walletListLoad(password)
   if (walletList) {
     const walletAddress = walletList.filter(wallet => wallet.address === address)
@@ -85,7 +112,7 @@ const walletListSave = async (walletList: WalletType[], password: string) => {
   }
 }
 
-const walletAdd = async (name: string, pkey: string, password: string) => {
+export const walletAdd = async (name: string, pkey: string, password: string) => {
   let ethersWallet: ethers.Wallet
   if (!pkey) {
     ethersWallet = ethers.Wallet.createRandom()
@@ -110,7 +137,7 @@ const walletAdd = async (name: string, pkey: string, password: string) => {
   return wallet
 }
 
-const walletDelete = async (address: string, password: string) => {
+export const walletDelete = async (address: string, password: string) => {
   let walletList = await walletListLoad(password)
   if (walletList) {
     walletList = walletList.filter(wallet => wallet.address !== address)
@@ -118,19 +145,7 @@ const walletDelete = async (address: string, password: string) => {
   }
 }
 
-const walletListDelete = () => {
+export const walletListDelete = () => {
   localStorage.removeItem("walletList")
-  localStorage.removeItem("walletConfig")
-}
-
-export {
-  walletListLoad,
-  walletListSave,
-  walletDelete,
-  walletListDelete,
-  walletConfigLoad,
-  walletConfigSave,
-  walletAdd,
-  walletListLoadAddress,
-  walletConfigUpdatePassword
+  localStorage.removeItem("walletStorage")
 }

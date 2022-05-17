@@ -1,7 +1,6 @@
 import * as ethers from 'ethers'
 import { useEffect } from 'react'
 import { TransactionManager } from '../util/TransactionManager'
-import { getNetworkList } from '../util/networkInfo'
 
 import {
   getContractCardAdmin,
@@ -12,6 +11,10 @@ import {
 } from '../type/userType'
 
 import {
+  NetworkType
+} from '../type/networkType'
+
+import {
   Step,
   StepId,
   isInit,
@@ -20,6 +23,7 @@ import {
   updateStep,
   setError,
   setMessage,
+  resetAllStep,
 } from '../reducer/contractSlice'
 
 import { useAppSelector, useAppDispatch } from '../hooks'
@@ -35,8 +39,6 @@ import {
   setUser,
   setUserCardList,
   setUserDeckList,
-  setGameId,
-  endGameId,
 } from '../reducer/userSlice'
 
 import {
@@ -51,7 +53,7 @@ import {
 
 import {
   getGameList,
-} from '../game/game'
+} from '../game/gameList'
 
 import {
   setCardList,
@@ -140,7 +142,6 @@ const loadUser = (
   getUserId(contract).then((userId) => {
     if (userId && contract) {
       getUser(contract, userId).then((_user) => {
-        console.log(_user)
         dispatch(setUser(_user))
         dispatch(updateStep({ id: stepId, step: Step.Ok }))
       }).catch((err) => {
@@ -216,12 +217,11 @@ const loadCardList = (
 const loadGameList = (
   dispatch: any,
   contract: ethers.Contract,
-  user: UserType,
 ) => {
   const stepId = StepId.GameList
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
   try {
-    addGameListener(dispatch, contract, user)
+    addGameListener(dispatch, contract)
   } catch (err: any) {
     dispatch(setError({ id: stepId, catchError: err }))
     return
@@ -237,7 +237,6 @@ const loadGameList = (
 const addGameListener = (
   dispatch: any,
   contract: ethers.Contract,
-  user: UserType,
 ) => {
   if (contract.listenerCount("GameCreated") === 0) {
     contract.on("GameCreated", (_chainGameId, _chainUserId) => {
@@ -254,11 +253,6 @@ const addGameListener = (
         ended: false,
         playGame: undefined,
       }))
-      if (user && user.id === _userId) {
-        console.log("setGame created")
-        dispatch(setGameId(_gameId))
-        dispatch(updateStep({ id: StepId.Game, step: Step.Waiting }))
-      }
     })
   }
   if (contract.listenerCount("GameFill") === 0) {
@@ -270,10 +264,6 @@ const addGameListener = (
         id: _gameId,
         userId: _userId,
       }))
-      if (user && user.id === _userId) {
-        console.log("setGame join", _gameId)
-        dispatch(setGameId(_gameId))
-      }
     })
   }
   if (contract.listenerCount("GameEnd") === 0) {
@@ -285,48 +275,40 @@ const addGameListener = (
         id: _gameId,
         winner: _winner,
       }))
-      dispatch(endGameId(_gameId))
     })
   }
 }
 
-const loadContract = (
+const loadContract = async (
   dispatch: any,
   transactionManager: TransactionManager,
   setContract: (contract: ethers.Contract) => void,
-  networkName: string
+  network: NetworkType
 ) => {
   const stepId = StepId.Contract
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
   dispatch(setMessage({ id: stepId, message: 'Loading contract...' }))
-  getNetworkList().then(async (networkList) => {
-    const network = networkList.filter(
-      (network) => network.name === networkName
-    )[0]
-    if (network.gameContract) {
-      const _contract = getContractCardAdmin(
-        network.gameContract,
-        transactionManager.signer
-      )
-      try {
-        //check if contract is working
-        if (await getCardLastId(_contract) > 0) {
-          setContract(_contract)
-          dispatch(updateStep({ id: stepId, step: Step.Ok }))
-        } else {
-          dispatch(updateStep({ id: stepId, step: Step.Empty }))
-        }
+  if (network.gameContract) {
+    const _contract = getContractCardAdmin(
+      network.gameContract,
+      transactionManager.signer
+    )
+    try {
+      //check if contract is working
+      if (await getCardLastId(_contract) > 0) {
+        setContract(_contract)
+        dispatch(updateStep({ id: stepId, step: Step.Ok }))
+      } else {
+        dispatch(updateStep({ id: stepId, step: Step.Empty }))
       }
-      catch (err: any) {
-        dispatch(setError({ id: stepId, error: "Contract error" }))
-      }
-    } else {
-      //no game contract set
-      dispatch(updateStep({ id: stepId, step: Step.NotSet }))
     }
-  }).catch(() => {
-    dispatch(setError({ id: stepId, error: "network config error" }))
-  })
+    catch (err: any) {
+      dispatch(setError({ id: stepId, error: "Contract error" }))
+    }
+  } else {
+    //no game contract set
+    dispatch(updateStep({ id: stepId, step: Step.NotSet }))
+  }
 }
 
 const ContractLoader = (props: {
@@ -335,23 +317,22 @@ const ContractLoader = (props: {
   setContract: (contract: ethers.Contract) => void,
   tradingContract?: ethers.Contract,
   setTradingContract: (contract: ethers.Contract) => void,
-  networkName: string,
 }) => {
 
   const step = useAppSelector((state) => state.contractSlice.step)
   const version = useAppSelector((state) => state.contractSlice.version)
   const user = useAppSelector((state) => state.userSlice.user)
+  const network = useAppSelector((state) => state.walletSlice.network)
+  const wallet = useAppSelector((state) => state.walletSlice.wallet)
   const dispatch = useAppDispatch()
 
-
-
   useEffect(() => {
-    if (isInit(StepId.Contract, step) && props.networkName) {
+    if (isInit(StepId.Contract, step) && isOk(StepId.Wallet, step) && network) {
       loadContract(
         dispatch,
         props.transactionManager,
         props.setContract,
-        props.networkName,
+        network,
       )
     }
     if (props.contract) {
@@ -370,6 +351,9 @@ const ContractLoader = (props: {
       if (isOk(StepId.Contract, step) && isInit(StepId.User, step)) {
         loadUser(dispatch, props.contract)
       }
+      if (isOk(StepId.User, step) && isInit(StepId.GameList, step)) {
+        loadGameList(dispatch, props.contract)
+      }
       if (user) {
         if (isOk(StepId.User, step) && isInit(StepId.UserCardList, step)) {
           loadUserCardList(dispatch, props.contract, user)
@@ -377,25 +361,27 @@ const ContractLoader = (props: {
         if (isOk(StepId.User, step) && isInit(StepId.UserDeckList, step)) {
           loadUserDeckList(dispatch, props.contract, user)
         }
-        if (isOk(StepId.User, step) && isInit(StepId.GameList, step)) {
-          loadGameList(dispatch, props.contract, user)
-        }
         if (isOk(StepId.User, step) && isInit(StepId.Game, step) && user.gameId) {
           dispatch(updateStep({ id: StepId.Game, step: Step.Clean }))
         }
+      }
+    } else {
+      if (isOk(StepId.Contract, step)) {
+        dispatch(resetAllStep())
       }
     }
   }, [
       dispatch,
       user,
       step,
+      network,
       version,
+      wallet,
       props.setContract,
       props.setTradingContract,
       props.tradingContract,
       props.transactionManager,
       props.contract,
-      props.networkName,
     ])
 
   return (

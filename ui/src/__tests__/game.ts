@@ -1,5 +1,5 @@
 import * as ethers from 'ethers'
-import { getWalletList } from '../__test_util__/testConfig'
+import { network, getWalletList } from '../__test_util__/testConfig'
 
 import {
   createWithManagerContractCardAdmin,
@@ -16,9 +16,9 @@ import {
 } from '../game/card'
 
 import {
+  getUser,
   getUserId,
   registerUser,
-  addUserStarterCard,
   getUserCardList,
   addUserDefaultDeck,
   getUserDeckList,
@@ -28,6 +28,9 @@ import {
   createGame,
   createGameBot,
   joinGame,
+} from '../game/gameList'
+
+import {
   getGameFull,
   endTurn,
   leaveGame,
@@ -99,7 +102,7 @@ const autoPlayGame = async (
       do {
         data = playRandomly(myTurn1, turnData1)
         if (Array.isArray(data)) {
-          playAction(myTurn1, data, turnData1, setTurnData1)
+          await playAction(myTurn1, data, turnData1, setTurnData1)
         }
       } while (Array.isArray(data))
       //console.log(userId1, game1.turn, turnData1.playActionList.length)
@@ -109,21 +112,23 @@ const autoPlayGame = async (
       ) {
         await leaveGame(gameContract1, transactionManager1)
       } else {
-        await endTurn(
+        const cardList = await endTurn(
           gameContract1,
           transactionManager1,
           turnData1.playActionList,
-          game1.turn,
-          game1.cardList2,
+          turnData1.turn,
+          turnData1.cardList[0].length,
+          turnData1.cardList[1].length,
         )
         lastPlayActionList = turnData1.playActionList
+        turnData1.cardList[1] = turnData1.cardList[1].concat(cardList.cardList1)
       }
     } else {
       let data
       do {
         data = playRandomly(myTurn2, turnData2)
         if (Array.isArray(data)) {
-          playAction(myTurn2, data, turnData2, setTurnData2)
+          await playAction(myTurn2, data, turnData2, setTurnData2)
         }
       } while (Array.isArray(data))
       //console.log(userId2, game2.turn, turnData2.playActionList.length)
@@ -133,14 +138,16 @@ const autoPlayGame = async (
       ) {
         await leaveGame(gameContract2, transactionManager2)
       } else {
-        await endTurn(
+        const cardList = await endTurn(
           gameContract2,
           transactionManager2,
           turnData2.playActionList,
-          game2.turn,
-          game2.cardList2,
+          turnData2.turn,
+          turnData2.cardList[0].length,
+          turnData2.cardList[1].length,
         )
         lastPlayActionList = turnData2.playActionList
+        turnData2.cardList[1] = turnData2.cardList[1].concat(cardList.cardList1)
       }
     }
     game1 = await getGameFull(gameContract1)
@@ -187,11 +194,10 @@ const autoPlayGameBot = async (
 
     let data
     let nextPlayAction = [] as number[][]
-    let cardList1
     do {
       data = playRandomly(myTurn, turnData)
       if (Array.isArray(data)) {
-        playAction(myTurn, data, turnData, setTurnData)
+        await playAction(myTurn, data, turnData, setTurnData)
       }
     } while (Array.isArray(data))
     //console.log(userId1, game1.turn, turnData1.playActionList.length)
@@ -206,16 +212,16 @@ const autoPlayGameBot = async (
         actionId: number,
         data: number[]
       }) => {
-        //console.log(payload)
         nextPlayAction.push(payload.data)
       }
 
-      cardList1 = await endTurn(
+      const cardList = await endTurn(
         gameContract,
         transactionManager,
         turnData.playActionList,
-        game.turn,
-        turnData.cardList[1],
+        turnData.turn,
+        turnData.cardList[0].length,
+        turnData.cardList[1].length,
         _addPlayAction,
       )
 
@@ -223,15 +229,34 @@ const autoPlayGameBot = async (
 
       turnData.turn = turnData.turn++
       turnData.mana = (turnData.turn + 1) % 2
-      turnData.cardList[1] = cardList1
+      turnData.cardList[1] = turnData.cardList[1].concat(cardList.cardList1)
+      turnData.playActionList = []
       //turnData.life = turnData.life
       for (let i = 0; i < nextPlayAction.length; i++) {
-        playAction(1 - myTurn, nextPlayAction[i], turnData, setTurnData)
+        await playAction(1 - myTurn, nextPlayAction[i], turnData, setTurnData)
       }
+      turnData.playActionList = []
+      turnData.cardList[0] = turnData.cardList[0].concat(cardList.cardList0)
     }
     game = await getGameFull(gameContract)
     checkTurnData(game, userId, turnData, check)
   } while (!game.ended)
+}
+
+const userLeaveGame = async (
+  contract: ethers.Contract,
+  transactionManager: TransactionManager,
+  userId: number,
+) => {
+  const user = await getUser(contract, userId)
+  if (user.gameId) {
+    const gameChain = await contract.gameList(user.gameId)
+    const contractAddress = gameChain.playGame
+    if (contractAddress) {
+      const gameContract = getContractPlayGame(contractAddress, transactionManager.signer)
+      await leaveGame(gameContract, transactionManager)
+    }
+  }
 }
 
 const testTransaction = () => {
@@ -264,16 +289,32 @@ const testTransaction = () => {
         transactionManager = new TransactionManager(walletList[0])
         transactionManager1 = new TransactionManager(walletList[1])
         transactionManager2 = new TransactionManager(walletList[2])
-        const factory = await createWithManagerContractPlayGameFactory(
-          transactionManager
-        )
-        contract = await createWithManagerContractCardAdmin(
-          factory,
-          transactionManager,
-        )
-        await registerTrading(contract, transactionManager)
+        let useCache = false
+        if (network.gameContract) {
+          contract = getContractCardAdmin(network.gameContract, transactionManager.signer)
+          try {
+            const owner = await contract.owner()
+            if (owner === await transactionManager.getAddress()) {
+              useCache = true
+            }
+          } catch {
 
-        await createAllCard(contract, transactionManager)
+          }
+        }
+        if (!useCache) {
+          const factory = await createWithManagerContractPlayGameFactory(
+            transactionManager
+          )
+          contract = await createWithManagerContractCardAdmin(
+            factory,
+            transactionManager,
+          )
+          await registerTrading(contract, transactionManager)
+
+          await createAllCard(contract, transactionManager)
+
+        }
+
         //console.log(transactionManager.transactionList.map(transactionManager.gasInfo))
         await loadAllCard(contract)
 
@@ -287,34 +328,42 @@ const testTransaction = () => {
           transactionManager2.signer,
         )
 
-        await registerUser(contract, transactionManager, 'test')
-        await registerUser(contract1, transactionManager1, 'test1')
-        await registerUser(contract2, transactionManager2, 'test2')
+        if (!useCache) {
+          await registerUser(contract, transactionManager, 'test')
+          await registerUser(contract1, transactionManager1, 'test1')
+          await registerUser(contract2, transactionManager2, 'test2')
+        }
 
         userId = await getUserId(contract, await transactionManager.signer.getAddress())
         userId1 = await getUserId(contract1, await transactionManager1.signer.getAddress())
         userId2 = await getUserId(contract2, await transactionManager2.signer.getAddress())
-        await addUserStarterCard(contract, transactionManager, userId)
-        await addUserStarterCard(contract1, transactionManager1, userId1)
-        await addUserStarterCard(contract2, transactionManager2, userId2)
         const userCardList = await getUserCardList(contract, userId)
         const userCardList1 = await getUserCardList(contract1, userId1)
         const userCardList2 = await getUserCardList(contract2, userId2)
-        await addUserDefaultDeck(contract, transactionManager, userCardList)
-        await addUserDefaultDeck(contract1, transactionManager1, userCardList1)
-        await addUserDefaultDeck(contract2, transactionManager2, userCardList2)
+        if (!useCache) {
+          await addUserDefaultDeck(contract, transactionManager, userCardList)
+          await addUserDefaultDeck(contract1, transactionManager1, userCardList1)
+          await addUserDefaultDeck(contract2, transactionManager2, userCardList2)
+        }
         deckList = await getUserDeckList(contract, userId)
         deckList1 = await getUserDeckList(contract1, userId1)
         deckList2 = await getUserDeckList(contract2, userId2)
-        console.log(transactionManager.transactionList.map((tx) => {
-          return (tx.log + ' ' + tx.result.gasUsed.toNumber())
-        }))
-        console.log(transactionManager1.transactionList.map((tx) => {
-          return (tx.log + ' ' + tx.result.gasUsed.toNumber())
-        }))
-        console.log(transactionManager2.transactionList.map((tx) => {
-          return (tx.log + ' ' + tx.result.gasUsed.toNumber())
-        }))
+        if (!useCache) {
+          console.log(transactionManager.transactionList.map((tx) => {
+            return (tx.log + ' ' + tx.result.gasUsed.toNumber())
+          }))
+          console.log(transactionManager1.transactionList.map((tx) => {
+            return (tx.log + ' ' + tx.result.gasUsed.toNumber())
+          }))
+          console.log(transactionManager2.transactionList.map((tx) => {
+            return (tx.log + ' ' + tx.result.gasUsed.toNumber())
+          }))
+        }
+        if (useCache) {
+          await userLeaveGame(contract, transactionManager, userId)
+          await userLeaveGame(contract, transactionManager1, userId1)
+          await userLeaveGame(contract, transactionManager2, userId2)
+        }
         done()
       } catch (error) {
         done(error)
@@ -352,7 +401,7 @@ const testTransaction = () => {
       )
     })
 
-    it('Test game', async () => {
+    it('Test game 2', async () => {
       for (let i = 0; i < 10; i++) {
         await autoPlayGame(
           contract1,

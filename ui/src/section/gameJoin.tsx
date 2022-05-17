@@ -12,7 +12,7 @@ import DeckSelect from '../game/component/deckSelect'
 import {
   joinGame,
   createGame,
-} from '../game/game'
+} from '../game/gameList'
 
 import {
   UserDeckType

@@ -183,7 +183,8 @@ const GameBoard = (props: {
   playActionList: number[][][]
   children: any,
   endGameByTime: () => void,
-  endTurn: (action: number[][], turn: number) => void
+  endTurn: (action: number[][], cardNextId0: number, cardNextId1 : number, turn: number) => void,
+  isRefresh: boolean,
 }) => {
 
   const [turnData, setTurnData] = useState<TurnDataType>({
@@ -391,13 +392,18 @@ const GameBoard = (props: {
             {displayUser(1, props.oponent, turnData.life[1])}
           </DropHelper>
         </Col>
-        <Col xs={4}>
+        <Col xs={2}>
           {displayGameCardList(
             1,
             turnData.cardList[1].filter(
               _gameCard => _gameCard.position === 2
             )
           )}
+        </Col>
+        <Col xs={2} style={{
+          backgroundColor: '#ffffff80' ,
+          paddingTop : '1em',
+        }}>
         </Col>
       </Row>
       <Row style={{ height: "20em", backgroundColor: "#00000080" }}>
@@ -461,7 +467,7 @@ const GameBoard = (props: {
           paddingTop : '1em',
         }}>
           <div style={{height:'10em', textAlign:'center'}}>
-          {!!myTurn &&
+          {!!myTurn && !props.isRefresh &&
             <div>
               <div style={{height:'4em'}}>
               { play === Play.Ready &&
@@ -486,7 +492,12 @@ const GameBoard = (props: {
               {play === Play.Ready &&
                 <Button
                 onClick={() => {
-                  props.endTurn(turnData.playActionList, turn)
+                  props.endTurn(
+                    turnData.playActionList,
+                    turnData.cardList[0].length,
+                    turnData.cardList[1].length,
+                    turn
+                  )
                 }}
                 >End turn</Button>
               }

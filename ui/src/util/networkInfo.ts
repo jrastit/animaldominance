@@ -11,71 +11,57 @@ declare global {
   }
 }
 
-
-
-const getNetworkList = async (): Promise<NetworkType[]> => {
+export const getNetworkList = async (): Promise<NetworkType[]> => {
   const networkList = require('../config/network.json').network as any
   return networkList.sort((a: any, b: any) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
 }
 
-const getWalletList = async (password: string): Promise<WalletType[] | undefined> => {
+export const getNetwork = async (chainId: number | undefined): Promise<NetworkType | undefined> => {
+  const networkList = await getNetworkList()
+  if (!chainId) return undefined
+  return networkList.filter((network: any) => network.chainId === chainId)[0]
+}
+
+export const getWalletList = async (password: string): Promise<WalletType[] | undefined> => {
   return await walletListLoad(password)
 }
 
-const getProvider = async (networkName: string | undefined, setError: (error: string) => void) => {
-  const networkList = require('../config/network.json').network as any
-  if (!networkName) return null
-  const network = networkList.filter((network: any) => network.name === networkName)[0]
+export const getProvider = async (network: NetworkType | undefined, setError: (error: string) => void) => {
   try {
     if (network) {
       return new ethers.providers.JsonRpcProvider(network.url)
     } else {
-      console.error("error in get network ", networkName)
+      console.error("error in get network : network not set", )
     }
-
   } catch (error: any) {
     console.error("error in get network ", error)
     setError("Error in Metamask : " + error.message)
   }
 }
 
-const addHooks = () => {
+export const addHooks = () => {
   window.ethereum.on('chainChanged', (_chainId: number) => window.location.reload());
   window.ethereum.on('accountsChanged', (accounts: Array<string>) => { console.log(accounts); window.location.reload() });
 }
 
-const getEntityRegistryAddress = (
+export const getEntityRegistryAddress = (
   networkName: string,
 ) => {
   const networkList = require('../config/network.json').network as any
   return (networkList as NetworkType[]).filter((_networkItem) => _networkItem.name === networkName).map((_networkItem) => _networkItem.entityRegistryAddress)[0]
 }
 
-const getWallet = (
-  setWallet: (
-    networkName: string,
-    wallet: ethers.Wallet
-  ) => void, setError: (error: string) => void) => {
+export const getWeb3Wallet = async () => {
   const web3Provider = new ethers.providers.Web3Provider(
     window.ethereum)
-  web3Provider.getNetwork().then(
-    (network) => {
-      const wallet: any = web3Provider.getSigner()
-      let networkName = network.name
-      if (networkName === 'unknown') {
-        const chainId = network.chainId
-        const networkList = require('../config/network.json').network as any
-        networkName = networkList.filter((_networkItem: any) => _networkItem.chainId === chainId).map((_networkItem: any) => _networkItem.name)[0]
-        if (!networkName) networkName = network.chainId.toString()
-      }
-      setWallet(networkName, wallet)
-    }).catch((error) => {
-      console.error("error in get network ", error)
-      setError("Error in Metamask : " + error.message)
-    })
+  const _network = await web3Provider.getNetwork()
+  const signer = web3Provider.getSigner()
+  const chainId = _network.chainId
+  const network = await getNetwork(chainId)
+  return { network, signer }
 }
 
-const getAddress = (
+export const getAddress = (
   networkName: string,
   wallet: ethers.Wallet,
   setAddress: (
@@ -94,7 +80,7 @@ const getAddress = (
     )
 }
 
-const getBalance = async (
+export const getBalance = async (
   wallet: ethers.Wallet,
   address: string,
   setBalance: (balance: ethers.BigNumber) => void
@@ -103,15 +89,4 @@ const getBalance = async (
     (balance) => {
       setBalance(balance)
     }).catch(err => console.error("error in get balance ", err))
-}
-
-export {
-  addHooks,
-  getWallet,
-  getBalance,
-  getAddress,
-  getEntityRegistryAddress,
-  getNetworkList,
-  getWalletList,
-  getProvider,
 }

@@ -4,14 +4,16 @@
       "name" : "ganache",
       "url": "http://localhost:8545",
       "chainId": 1337,
-      "gameContract": "0xF12b5dd4EAD5F743C6BaA640B0216200e89B60Da"
+      "gameContract": "0xF12b5dd4EAD5F743C6BaA640B0216200e89B60Da",
+      "tokenName": "TEST"
     },
     {
-      "name" : "EmeraldTestnet",
+      "name" : "Emerald Testnet",
       "url": "https://testnet.emerald.oasis.dev",
       "faucet" : "https://faucet.testnet.oasis.dev/",
       "chainId": 42261,
-      "gameContract": "0xb7E9Ee3D83a50B806627Dc72Ba5c321f3C1A4d2E"
+      "gameContract": "",
+      "tokenName": "TEST"
     }
   ]
 }

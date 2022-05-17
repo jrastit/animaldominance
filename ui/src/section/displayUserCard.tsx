@@ -38,7 +38,10 @@ const DisplayUserCard = (props: {
 }) => {
   const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
+  const network = useAppSelector((state) => state.walletSlice.network)
   const dispatch = useAppDispatch()
+
+  const tokenName = network?.tokenName
 
   const [sellCard, setSellCard] = useState<{
     userCardId: number,
@@ -107,7 +110,7 @@ const DisplayUserCard = (props: {
               Selling {card.name} level {level} ({userCard.exp})
             </div>
             <div>
-              Your price in ROSE
+              Your price in {tokenName}
               <FormControl onChange={(e) => {
                 setSellCard({
                   userCardId: sellCard.userCardId,
@@ -118,21 +121,21 @@ const DisplayUserCard = (props: {
             {!!sellCard.price &&
               <>
                 <div>
-                  Your price is {sellCard.price} ROSE
+                  Your price is {sellCard.price} {tokenName}
               </div>
                 <div>
-                  Animal Comission is {sellCard.price * 5 / 100} ROSE
+                  Animal Comission is {sellCard.price * 5 / 100} {tokenName}
               </div>
                 <div>
-                  Game Comission is {sellCard.price * 5 / 100} ROSE
+                  Game Comission is {sellCard.price * 5 / 100} {tokenName}
               </div>
                 <div>
-                  XP Comission is {sellCard.price * 10 / 100} ROSE
+                  XP Comission is {sellCard.price * 10 / 100} {tokenName}
               </div>
                 <div>
-                  Final price is {sellCard.price * 120 / 100} ROSE
+                  Final price is {sellCard.price * 120 / 100} {tokenName}
               </div>
-                <Button onClick={() => { _listCart(userCard.id) }}>List {card.name} level {level} for {sellCard.price * 120 / 100} ROSE</Button>
+                <Button onClick={() => { _listCart(userCard.id) }}>List {card.name} level {level} for {sellCard.price * 120 / 100} {tokenName}</Button>
               </>
             }
             <div>
@@ -173,7 +176,7 @@ const DisplayUserCard = (props: {
                       return (
                         <div key={userCard.id}  style={{margin : '.25em'}}>
                           <div>
-                            Selling {card.name} level {level} ({userCard.exp}) for {userCard.price} ROSE
+                            Selling {card.name} level {level} ({userCard.exp}) for {userCard.price} {tokenName}
                         &nbsp;&nbsp;<Button
                               variant='danger'
                               onClick={() => { _cancelListCard(userCard.id) }}
@@ -184,7 +187,7 @@ const DisplayUserCard = (props: {
                         </div>
                       )
                     } else{
-                      return (<div  style={{margin : '.25em'}}>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} ROSE</div>)
+                      return (<div  style={{margin : '.25em'}}>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} {tokenName}</div>)
                     }
                   }
 

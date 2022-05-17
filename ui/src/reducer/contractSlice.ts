@@ -16,6 +16,7 @@ export enum StepId {
   GameList,
   Game,
   Trading,
+  Wallet,
 }
 
 export enum Step {
@@ -34,6 +35,9 @@ export enum Step {
   Empty,
   Ok,
   Error,
+  NoPassword,
+  NoAddress,
+  NoKey,
 }
 
 // Define a type for the slice state
@@ -53,6 +57,7 @@ const initialState: ContractState = {
     { id: StepId.GameList, step: Step.Init, message: undefined, error: undefined },
     { id: StepId.Game, step: Step.Init, message: undefined, error: undefined },
     { id: StepId.Trading, step: Step.Init, message: undefined, error: undefined },
+    { id: StepId.Wallet, step: Step.Init, message: undefined, error: undefined },
   ],
   version: 0,
 }
@@ -64,7 +69,7 @@ export const contractSlice = createSlice({
   reducers: {
     resetAllSubStep: (state) => {
       state.step.forEach((step) => {
-        if (step.id !== StepId.Contract) {
+        if (step.id !== StepId.Contract && step.id !== StepId.Wallet) {
           step.step = Step.Init
           step.message = undefined
           step.error = undefined
@@ -74,9 +79,11 @@ export const contractSlice = createSlice({
     },
     resetAllStep: (state) => {
       state.step.forEach((step) => {
-        step.step = Step.Init
-        step.message = undefined
-        step.error = undefined
+        if (step.id !== StepId.Wallet) {
+          step.step = Step.Init
+          step.message = undefined
+          step.error = undefined
+        }
       })
       state.version = state.version + 1
     },

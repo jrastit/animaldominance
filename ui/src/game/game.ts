@@ -3,7 +3,6 @@ import * as ethers from 'ethers'
 import { TransactionManager } from '../util/TransactionManager'
 
 import {
-  GameListItemType,
   GameCardType,
   GameType
 } from '../type/gameType'
@@ -11,12 +10,6 @@ import {
 import {
   getContractPlayGame
 } from '../contract/solidity/compiled/contractAutoFactory'
-
-export const getGameLastId = async (
-  contract: ethers.Contract,
-) => {
-  return ethers.BigNumber.from(await contract.gameLastId()).toNumber()
-}
 
 export const getGameContract = async (
   contract: ethers.Contract,
@@ -29,24 +22,6 @@ export const getGameContract = async (
     return undefined
   }
   return getContractPlayGame(contractAddress, transactionManager.signer)
-}
-
-
-export const getGame = async (
-  contract: ethers.Contract,
-  gameId: number
-) => {
-  const gameChain = await contract.gameList(gameId)
-  return {
-    id: gameId,
-    userId1: gameChain.userId1.toNumber(),
-    userId2: gameChain.userId2.toNumber(),
-    userDeck1: gameChain.userDeck1,
-    userDeck2: gameChain.userDeck2,
-    winner: gameChain.winner.toNumber(),
-    ended: gameChain.ended,
-    playGame: gameChain.playGame,
-  } as GameListItemType
 }
 
 export const getGameCardFromChain = (
@@ -123,121 +98,55 @@ export const getGameFull = async (
   return game
 }
 
-
-export const getGameList = async (
-  contract: ethers.Contract,
-) => {
-  const lastId = await getGameLastId(contract)
-  const gameList = [] as GameListItemType[]
-  for (let i = 1; i <= lastId; i++) {
-    gameList.push(await getGame(contract, i))
-  }
-  return gameList
-}
-
-export const createGame = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
-  userDeckId: number,
-) => {
-  const tx = await transactionManager.sendTx(await contract.populateTransaction.createGameSelf(
-    userDeckId
-  ), "Create game")
-  for (let i = 0; i < tx.result.logs.length; i++) {
-    try {
-      const log = contract.interface.parseLog(tx.result.logs[i])
-      if (log.name === 'GameCreated') {
-        return log.args.id.toNumber()
-      }
-    } catch (err) {
-      console.log('no maching event')
-    }
-  }
-  throw Error('Game id not found')
-}
-
-export const createGameBot = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
-  userDeckId: number,
-) => {
-  const tx = await transactionManager.sendTx(await contract.populateTransaction.createGameBotSelf(
-    userDeckId
-  ), "Create game bot")
-  for (let i = 0; i < tx.result.logs.length; i++) {
-    try {
-      const log = contract.interface.parseLog(tx.result.logs[i])
-      if (log.name === 'GameCreatedBot') {
-        return log.args.id.toNumber()
-      }
-    } catch (err) {
-      console.log('no maching event')
-    }
-  }
-  throw Error('Game id not found')
-}
-
-export const joinGame = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
-  gameId: number,
-  userDeckId: number,
-) => {
-  const tx = await transactionManager.sendTx(
-    await contract.populateTransaction.joinGameSelf(
-      gameId,
-      userDeckId,
-    ), "Join game"
-  )
-  return tx
-}
-
-export const cancelGame = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
-) => {
-  const tx = await transactionManager.sendTx(
-    await contract.populateTransaction.cancelGame(
-    ), "Cancel game"
-  )
-  return tx
-}
-
 export const endTurn = async (
   gameContract: ethers.Contract,
   transactionManager: TransactionManager,
   playActionList: number[][],
   turn: number,
-  cardList: GameCardType[],
+  cardNextId0: number,
+  cardNextId1: number,
   addPlayAction?: (payload: {
     turn: number,
     actionId: number,
     data: number[]
   }) => void,
 ) => {
+  const cardList0 = [] as GameCardType[]
+  const cardList1 = [] as GameCardType[]
   const tx = await transactionManager.sendTx(
     await gameContract.populateTransaction.endTurn(
       playActionList,
     ), "Play turn " + turn
   )
-  if (addPlayAction) {
-    for (let i = 0; i < tx.result.logs.length; i++) {
-      const log = gameContract.interface.parseLog(tx.result.logs[i])
-      if (log.name === 'PlayAction') {
+
+  for (let i = 0; i < tx.result.logs.length; i++) {
+    const log = gameContract.interface.parseLog(tx.result.logs[i])
+    if (log.name === 'PlayAction' && addPlayAction) {
+      if (log.args.turn === turn + 1) {
         addPlayAction({
           turn: log.args.turn,
           actionId: log.args.id,
           data: [log.args.gameCard, log.args.dest, log.args.result]
         })
       }
-      if (log.name === 'DrawCard') {
-        const gameCard = getGameCardFromChain(log.args.gameCard, cardList.length)
-        cardList.concat([gameCard])
-        console.log(log.args.id)
+    }
+    if (log.name === 'DrawCard') {
+      if (log.args.turn === turn + 1) {
+        const gameCard = getGameCardFromChain(log.args.gameCard, cardNextId1)
+        cardNextId1++
+        cardList1.push(gameCard)
+      }
+      if (log.args.turn === turn + 2) {
+        const gameCard = getGameCardFromChain(log.args.gameCard, cardNextId0)
+        cardNextId0++
+        cardList0.push(gameCard)
       }
     }
   }
-  return cardList
+  return {
+    cardList0,
+    cardList1,
+  }
 }
 
 export const endGameByTime = async (

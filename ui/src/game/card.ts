@@ -110,7 +110,7 @@ export const buyNewCard = async (
     cardId
   )
   ptx.value = ethers.utils.parseEther(value.toString())
-  const tx = await transactionManager.sendTx(ptx, "Buy new card " + cardId + " for " + value + " ROSE")
+  const tx = await transactionManager.sendTx(ptx, "Buy new card " + cardId + " for " + value)
   return tx
 }
 
@@ -126,7 +126,7 @@ export const buyCard = async (
     userCardId,
   )
   ptx.value = value
-  const tx = await transactionManager.sendTx(ptx, "Buy card " + userId + ' ' + userCardId + " for " + value + " ROSE")
+  const tx = await transactionManager.sendTx(ptx, "Buy card " + userId + ' ' + userCardId + " for " + value)
   return tx
 }
 

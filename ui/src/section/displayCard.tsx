@@ -27,6 +27,7 @@ const DisplayCard = (props: {
   const tradeList = useAppSelector((state) => state.cardListSlice.tradeList)
   const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)
+  const network = useAppSelector((state) => state.walletSlice.network)
   const dispatch = useAppDispatch()
 
   const [loading, setLoading] = useState<boolean>()
@@ -87,6 +88,7 @@ const DisplayCard = (props: {
             cardList={cardList}
             tradeList={tradeList}
             userId={user?.id}
+            tokenName={network?.tokenName}
           />
         }
 

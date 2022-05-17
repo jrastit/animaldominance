@@ -164,12 +164,16 @@ const GameLoader = (props : {
   const game = useAppSelector((state) => state.gameSlice.game)
   const user = useAppSelector((state) => state.userSlice.user)
   const oponent = useAppSelector((state) => state.gameSlice.oponent)
+  const network = useAppSelector((state) => state.walletSlice.network)
+  const wallet = useAppSelector((state) => state.walletSlice.wallet)
   const dispatch = useAppDispatch()
 
   useEffect(() => {
+
     if (isOk(StepId.Contract, step) && isStep(stepId, Step.Ready, step)){
       _cleanGame(dispatch)
     }
+
     if (isOk(StepId.Contract, step) && isStep(stepId, Step.Clean, step) && user && user.gameId){
       loadGameFromId(
         dispatch,
@@ -200,6 +204,8 @@ const GameLoader = (props : {
     version,
     props,
     gameVersion,
+    network,
+    wallet,
   ])
 
   return (

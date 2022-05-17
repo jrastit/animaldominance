@@ -4,6 +4,7 @@ import SpaceWidget from '../component/spaceWidget'
 
 const DivNice = (props:{
   children ?: any
+  style ?: any
 }) => {
   return <Row className="justify-content-center" style={{marginTop : '2em'}}>
   <Col md='6' lg='3' style={{
@@ -13,7 +14,9 @@ const DivNice = (props:{
   }}>
   <SpaceWidget>
   <div style={{textAlign :'center'}}>
+  <div style={props.style}>
   {props.children}
+  </div>
   </div>
   </SpaceWidget>
   </Col>

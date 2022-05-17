@@ -5,7 +5,7 @@ import {
 import { CardType } from '../../type/cardType'
 import { GameCardType } from '../../type/gameType'
 
-import CardWidget from './cardWidget'
+import CardWidget from '../component/cardWidget'
 
 import DragHelper from '../../component/dragHelper2'
 import DropHelper from '../../component/dropHelper'

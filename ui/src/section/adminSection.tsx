@@ -14,13 +14,15 @@ import DisplayUserDeck from '../section/displayUserDeck'
 import DisplayUserCard from '../section/displayUserCard'
 import DisplayCard from '../section/displayCard'
 import EditCard from '../section/editCard'
-import ContractLoader from '../section/contractLoader'
+import ContractLoader from '../loader/contractLoader'
 import GameJoin from '../section/gameJoin'
 import PlayGame from './playGame'
 import FindGame from './findGame'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
+
+import DivNice from '../component/divNice'
 
 import { useAppSelector } from '../hooks'
 
@@ -33,7 +35,6 @@ import {
 const AdminSection = (props: {
   section : string | undefined,
   transactionManager : TransactionManager,
-  networkName : string,
 })=> {
   const [contract, setContract] = useState<ethers.Contract>()
   const [tradingContract, setTradingContract] = useState<ethers.Contract>()
@@ -50,7 +51,6 @@ const AdminSection = (props: {
             contract={contract}
             transactionManager={props.transactionManager}
             setContract={setContract}
-            networkName={props.networkName}
           />
         </Col>
           {!!contract &&
@@ -102,23 +102,26 @@ const AdminSection = (props: {
   }
 
   const displayGame = () => {
-    return (
-      <>
-      { isStep(StepId.Game, Step.Init, step) &&
+    if (isStep(StepId.Game, Step.Init, step)){
+      return (
         <FindGame
         contract={contract}
         transactionManager={props.transactionManager}
+        setContract={setContract}
         />
+      )
+    }else{
+      if (contract){
+        return (
+          <PlayGame
+          contract={contract}
+          transactionManager={props.transactionManager}
+          />
+        )
       }
-      {
-        !isStep(StepId.Game, Step.Init, step) && !!contract &&
-        <PlayGame
-        contract={contract}
-        transactionManager={props.transactionManager}
-        />
-      }
-      </>
-    )
+      return (<DivNice>Error : Contract not set</DivNice>)
+    }
+
   }
 
   const render = () => {
@@ -171,7 +174,6 @@ const AdminSection = (props: {
           setContract={setContract}
           tradingContract={tradingContract}
           setTradingContract={setTradingContract}
-          networkName={props.networkName}
         />
       </Col>
     </Row>

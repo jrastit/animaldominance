@@ -26,6 +26,12 @@ struct GameUser {
 
 contract PlayGame {
 
+    ///////////////////////////// imported event /////////////////////////
+    event GameCreated(uint64 id, uint64 userId);
+    event GameCreatedBot(uint64 id, uint64 userId);
+    event GameFill(uint64 id, uint64 userId);
+    event GameEnd(uint64 id, uint64 winner);
+
     uint64 public gameId;
 
     CardAdmin cardAdmin;

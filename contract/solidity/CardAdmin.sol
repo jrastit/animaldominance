@@ -58,6 +58,13 @@ struct Game {
 
 contract CardAdmin {
 
+    /////////////////// imported event //////////////////////////////
+
+    event GameUpdate(uint16 version);
+
+    event PlayAction(uint8 turn, uint8 id, uint8 gameCard, uint8 dest, uint16 result);
+    event DrawCard(uint8 turn, uint8 id, GameCard gameCard);
+
     ///////////////////// Cards ////////////////////////////////////
 
     event CardCreated(uint32 id);
@@ -113,7 +120,7 @@ contract CardAdmin {
 
     ///////////////////////// contract /////////////////////////////////////
 
-    address payable private owner;
+    address payable public owner;
 
     modifier isOwner() {
      require(msg.sender == owner, "Not owner");
@@ -273,6 +280,7 @@ contract CardAdmin {
         userIdList[userLastId].id = userLastId;
         userIdList[userLastId].name = _name;
         userIdList[userLastId].wallet = _userAddress;
+        addUserStarterCard(userLastId);
     }
 
     function registerUserSelf(string memory _name) public {

@@ -3,49 +3,52 @@ import { useState } from 'react';
 import './App.css';
 import AppNav from './AppNav'
 
-import { WalletInfo } from './type/walletInfo'
-
 import Container from 'react-bootstrap/Container';
 
+import { TransactionManager } from './util/TransactionManager'
 import WalletConnection from './section/walletConnection'
 import AdminSection from './section/adminSection'
+import WalletLoader from './loader/walletLoader'
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
+import { useAppSelector } from './hooks'
+
+import {
+  StepId,
+  isOk,
+} from './reducer/contractSlice'
+
 function App() {
 
-  const [isHome, setIsHome] = useState(1);
-  const [walletInfo, setWalletInfo] = useState<WalletInfo>({})
-  const [password, setPassword] = useState<string | null>()
-  const [section, setSection] = useState<string | undefined>();
+  const [section, setSection] = useState<string | undefined>()
+  const [transactionManager, setTransactionManager] = useState<TransactionManager>()
+
+  const step = useAppSelector((state) => state.contractSlice.step)
+
+  const isWallet = (section === 'wallet' || !isOk(StepId.Wallet, step))
 
   return (
     <div className="App">
       <Container fluid>
-        {!isHome && <AppNav
-          setIsHome={setIsHome}
-          networkName={walletInfo.networkName}
-          address={walletInfo.address}
-          error={walletInfo.error}
+        <WalletLoader
+          setTransactionManager={setTransactionManager}
+        />
+        {!isWallet && <AppNav
           section={section}
           setSection={setSection}
         />}
-        { (!!isHome) &&
+        { !!isWallet &&
           <WalletConnection
-            password={password}
-            setPassword={setPassword}
-            walletInfo={walletInfo}
-            setWalletInfo={setWalletInfo}
-            setIsHome={setIsHome}
+            transactionManager={transactionManager}
+            setSection={setSection}
           />
         }
 
-
-        { !isHome && !!walletInfo.transactionManager && !!walletInfo.networkName && !!walletInfo.address && (
+        { !isWallet && transactionManager && (
           <AdminSection
             section={section}
-            transactionManager={walletInfo.transactionManager}
-            networkName={walletInfo.networkName}
+            transactionManager={transactionManager}
           />
         )}
 
