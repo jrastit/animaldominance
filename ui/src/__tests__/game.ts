@@ -37,11 +37,11 @@ import {
 } from '../game/game'
 
 import {
-  isMyTurn,
   getTurnData,
   playRandomly,
   checkTurnData,
   playAction,
+  endTurnData,
 } from '../game/playGame'
 
 import {
@@ -50,7 +50,78 @@ import {
 
 import {
   TurnDataType,
+  GameActionListType,
+  GameActionPayloadType,
 } from '../type/gameType'
+
+const check = (val1: number, val2: number, message: string) => {
+  if (val1 != val2) {
+    console.error(message)
+    expect(val1).toBe(val2)
+    return false
+  }
+  return true
+}
+
+const autoPlayTurn = async (
+  gameContract: ethers.Contract,
+  transactionManager: TransactionManager,
+  userId: number,
+  lastPlayActionList: GameActionListType,
+  turnData: TurnDataType,
+) => {
+
+  const setTurnData = (_turnData: TurnDataType) => {
+    turnData = _turnData
+  }
+
+  let _playActionList = [] as GameActionPayloadType[]
+  do {
+    const gameAction = playRandomly(turnData)
+    if (gameAction !== 0 && gameAction !== 1) {
+      await playAction(gameContract, gameAction, turnData, setTurnData)
+    }
+  } while (playRandomly(turnData, true))
+  if (turnData.playActionList.length === 0 &&
+    lastPlayActionList.length === 0 &&
+    turnData.turn > 36
+  ) {
+    await leaveGame(gameContract, transactionManager)
+  } else {
+    let playTurn = 0
+    const addPlayAction = async (payload: GameActionPayloadType) => {
+      _playActionList.push(payload)
+      if (payload.turn > playTurn) playTurn = payload.turn
+    }
+    await endTurn(
+      gameContract,
+      transactionManager,
+      turnData.playActionList,
+      turnData.turn,
+      addPlayAction,
+    )
+
+    lastPlayActionList = turnData.playActionList
+
+    while (playTurn > turnData.turn) {
+      endTurnData(turnData, setTurnData)
+      for (let i = 0; i < _playActionList.length; i++) {
+        const gameActionPayload = _playActionList[i]
+        if (gameActionPayload.turn === turnData.turn) {
+          await playAction(
+            gameContract,
+            gameActionPayload.gameAction,
+            turnData,
+            setTurnData
+          )
+        }
+      }
+    }
+  }
+  const game = await getGameFull(gameContract)
+  checkTurnData(game, userId, turnData, check)
+  return { turnData, lastPlayActionList, game }
+}
 
 const autoPlayGame = async (
   contract1: ethers.Contract,
@@ -62,14 +133,6 @@ const autoPlayGame = async (
   userId1: number,
   userId2: number,
 ) => {
-  const check = (val1: number, val2: number, message: string) => {
-    if (val1 != val2) {
-      console.error(message)
-      expect(val1).toBe(val2)
-      return false
-    }
-    return true
-  }
 
   const gameId = await createGame(contract1, transactionManager1, deckId1)
   //const gameList = await getGameList(contract1)
@@ -82,81 +145,41 @@ const autoPlayGame = async (
   }
   const gameContract1 = getContractPlayGame(contractAddress, transactionManager1.signer)
   const gameContract2 = getContractPlayGame(contractAddress, transactionManager2.signer)
-  let lastPlayActionList = [] as number[][]
+  let lastPlayActionList = [] as GameActionListType
   let game1 = await getGameFull(gameContract1)
   let game2 = await getGameFull(gameContract2)
+  let turnData1 = getTurnData(game1, userId1)
+  let turnData2 = getTurnData(game2, userId2)
+  checkTurnData(game1, userId1, turnData1, check)
+  checkTurnData(game2, userId2, turnData2, check)
+  expect(turnData1.myTurn != turnData2.myTurn).toBeTruthy()
   do {
-    let turnData1 = getTurnData(game1, userId1)
-    let turnData2 = getTurnData(game2, userId2)
-    const setTurnData1 = (turnData: TurnDataType) => {
-      turnData1 = turnData
-    }
-    const setTurnData2 = (turnData: TurnDataType) => {
-      turnData2 = turnData
-    }
-    const myTurn1 = isMyTurn(game1.turn, game1.userId1, userId1)
-    const myTurn2 = isMyTurn(game2.turn, game2.userId1, userId2)
-    expect(myTurn1 != myTurn2).toBeTruthy()
-    if (myTurn1) {
-      let data
-      do {
-        data = playRandomly(myTurn1, turnData1)
-        if (Array.isArray(data)) {
-          await playAction(myTurn1, data, turnData1, setTurnData1)
-        }
-      } while (Array.isArray(data))
-      //console.log(userId1, game1.turn, turnData1.playActionList.length)
-      if (turnData1.playActionList.length === 0 &&
-        lastPlayActionList.length === 0 &&
-        game1.turn > 36
-      ) {
-        await leaveGame(gameContract1, transactionManager1)
-      } else {
-        const cardList = await endTurn(
-          gameContract1,
-          transactionManager1,
-          turnData1.playActionList,
-          turnData1.turn,
-          turnData1.cardList[0].length,
-          turnData1.cardList[1].length,
-        )
-        lastPlayActionList = turnData1.playActionList
-        turnData1.cardList[1] = turnData1.cardList[1].concat(cardList.cardList1)
-      }
+    if (turnData1.myTurn) {
+      turnData1 = getTurnData(game1, userId1)
+      const ret = await autoPlayTurn(
+        gameContract1,
+        transactionManager1,
+        userId1,
+        lastPlayActionList,
+        turnData1,
+      )
+      turnData1 = ret.turnData
+      lastPlayActionList = ret.lastPlayActionList
     } else {
-      let data
-      do {
-        data = playRandomly(myTurn2, turnData2)
-        if (Array.isArray(data)) {
-          await playAction(myTurn2, data, turnData2, setTurnData2)
-        }
-      } while (Array.isArray(data))
-      //console.log(userId2, game2.turn, turnData2.playActionList.length)
-      if (turnData2.playActionList.length === 0 &&
-        lastPlayActionList.length === 0 &&
-        game1.turn > 36
-      ) {
-        await leaveGame(gameContract2, transactionManager2)
-      } else {
-        const cardList = await endTurn(
-          gameContract2,
-          transactionManager2,
-          turnData2.playActionList,
-          turnData2.turn,
-          turnData2.cardList[0].length,
-          turnData2.cardList[1].length,
-        )
-        lastPlayActionList = turnData2.playActionList
-        turnData2.cardList[1] = turnData2.cardList[1].concat(cardList.cardList1)
-      }
+      const ret = await autoPlayTurn(
+        gameContract2,
+        transactionManager2,
+        userId2,
+        lastPlayActionList,
+        turnData2,
+      )
+      turnData2 = ret.turnData
+      lastPlayActionList = ret.lastPlayActionList
     }
     game1 = await getGameFull(gameContract1)
     game2 = await getGameFull(gameContract2)
-    if (myTurn1) {
-      checkTurnData(game1, userId1, turnData1, check)
-    } else {
-      checkTurnData(game2, userId2, turnData2, check)
-    }
+    turnData1 = getTurnData(game1, userId1)
+    turnData2 = getTurnData(game2, userId2)
   } while (!game1.winner || !game2.winner)
 }
 
@@ -166,14 +189,6 @@ const autoPlayGameBot = async (
   deckId: number,
   userId: number,
 ) => {
-  const check = (val1: number, val2: number, message: string) => {
-    if (val1 != val2) {
-      console.error(message)
-      expect(val1).toBe(val2)
-      return false
-    }
-    return true
-  }
 
   const gameId = await createGameBot(contract, transactionManager, deckId)
   const gameChain = await contract.gameList(gameId)
@@ -182,62 +197,24 @@ const autoPlayGameBot = async (
     throw Error("Game contract not found")
   }
   const gameContract = getContractPlayGame(contractAddress, transactionManager.signer)
-  let lastPlayActionList = [] as number[][]
+  let lastPlayActionList = [] as GameActionListType
   let game = await getGameFull(gameContract)
   do {
     let turnData = getTurnData(game, userId)
-    const setTurnData = (_turnData: TurnDataType) => {
-      turnData = _turnData
-    }
-    const myTurn = isMyTurn(game.turn, game.userId1, userId)
-    expect(myTurn).toBe(1)
+    checkTurnData(game, userId, turnData, check)
 
-    let data
-    let nextPlayAction = [] as number[][]
-    do {
-      data = playRandomly(myTurn, turnData)
-      if (Array.isArray(data)) {
-        await playAction(myTurn, data, turnData, setTurnData)
-      }
-    } while (Array.isArray(data))
-    //console.log(userId1, game1.turn, turnData1.playActionList.length)
-    if (turnData.playActionList.length === 0 &&
-      lastPlayActionList.length === 0 &&
-      game.turn > 36
-    ) {
-      await leaveGame(gameContract, transactionManager)
-    } else {
-      const _addPlayAction = (payload: {
-        turn: number,
-        actionId: number,
-        data: number[]
-      }) => {
-        nextPlayAction.push(payload.data)
-      }
+    expect(turnData.myTurn).toBe(1)
 
-      const cardList = await endTurn(
-        gameContract,
-        transactionManager,
-        turnData.playActionList,
-        turnData.turn,
-        turnData.cardList[0].length,
-        turnData.cardList[1].length,
-        _addPlayAction,
-      )
+    const ret = await autoPlayTurn(
+      gameContract,
+      transactionManager,
+      userId,
+      lastPlayActionList,
+      turnData,
+    )
+    turnData = ret.turnData
+    lastPlayActionList = ret.lastPlayActionList
 
-      lastPlayActionList = turnData.playActionList
-
-      turnData.turn = turnData.turn++
-      turnData.mana = (turnData.turn + 1) % 2
-      turnData.cardList[1] = turnData.cardList[1].concat(cardList.cardList1)
-      turnData.playActionList = []
-      //turnData.life = turnData.life
-      for (let i = 0; i < nextPlayAction.length; i++) {
-        await playAction(1 - myTurn, nextPlayAction[i], turnData, setTurnData)
-      }
-      turnData.playActionList = []
-      turnData.cardList[0] = turnData.cardList[0].concat(cardList.cardList0)
-    }
     game = await getGameFull(gameContract)
     checkTurnData(game, userId, turnData, check)
   } while (!game.ended)
@@ -291,7 +268,7 @@ const testTransaction = () => {
         transactionManager2 = new TransactionManager(walletList[2])
         let useCache = false
         if (network.gameContract) {
-          contract = getContractCardAdmin(network.gameContract, transactionManager.signer)
+          contract = getContractCardAdmin(ethers.utils.getAddress(network.gameContract), transactionManager.signer)
           try {
             const owner = await contract.owner()
             if (owner === await transactionManager.getAddress()) {

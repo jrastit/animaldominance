@@ -11,6 +11,22 @@ declare global {
   }
 }
 
+export const switchNetwork = (network: NetworkType) => {
+  window.ethereum.request({
+    method: "wallet_addEthereumChain",
+    params: [{
+      chainId: "0x" + network.chainId.toString(16),
+      rpcUrls: [network.url],
+      chainName: network.name,
+      nativeCurrency: {
+        name: network.tokenName,
+        symbol: network.tokenName,
+        decimals: 18
+      },
+    }]
+  });
+}
+
 export const getNetworkList = async (): Promise<NetworkType[]> => {
   const networkList = require('../config/network.json').network as any
   return networkList.sort((a: any, b: any) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))

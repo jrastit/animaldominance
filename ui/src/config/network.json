@@ -12,8 +12,22 @@
       "url": "https://testnet.emerald.oasis.dev",
       "faucet" : "https://faucet.testnet.oasis.dev/",
       "chainId": 42261,
-      "gameContract": "",
+      "gameContract": "0x6D5f8d0CF5c450E68cb7C534B887d3126ccc04cA",
       "tokenName": "TEST"
+    },
+    {
+      "name" : "Arbitrum Testnet",
+      "url": "https://rinkeby.arbitrum.io/rpc",
+      "chainId": 421611,
+      "gameContract": "0xaacc46006f58fb18bdd6216c1d900061cdc8d64d",
+      "tokenName": "ETH"
+    },
+    {
+      "name" : "Matic Mumbai Testnet",
+      "url": "https://rpc-mumbai.maticvigil.com",
+      "chainId": 80001,
+      "gameContract": "",
+      "tokenName": "MATIC"
     }
   ]
 }

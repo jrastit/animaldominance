@@ -1,9 +1,32 @@
+export enum ActionType {
+  Draw,
+  Play,
+  Attack,
+}
+
+export type GameActionListType = (GameActionType | null)[]
+
+export type GameActionPayloadType = {
+  turn: number,
+  id: number,
+  gameAction: GameActionType,
+}
+
+export type GameActionType = {
+  gameCardId: number
+  actionTypeId: number
+  dest?: number,
+  result?: number,
+}
+
 export type TurnDataType = {
   turn: number
   mana: number
-  playActionList: number[][]
+  playActionList: GameActionListType
   cardList: GameCardType[][]
   life: number[]
+  userId: number[]
+  myTurn: number
 }
 
 export type GameCardPlaceType = {

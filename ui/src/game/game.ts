@@ -4,7 +4,10 @@ import { TransactionManager } from '../util/TransactionManager'
 
 import {
   GameCardType,
-  GameType
+  GameType,
+  GameActionType,
+  GameActionListType,
+  GameActionPayloadType,
 } from '../type/gameType'
 
 import {
@@ -52,6 +55,18 @@ export const getGameCardList = async (
   }) as GameCardType[]
 }
 
+export const getNewGameCardFromId = async (
+  gameContract: ethers.Contract,
+  userId: number,
+  gameCardId: number
+) => {
+  const gameCardListChain = await gameContract.getNewGameCardFromId(userId, gameCardId)
+  if (!gameCardListChain || !gameCardListChain.cardId) {
+    throw Error('Invalid card ' + gameCardId + '/' + userId)
+  }
+
+  return getGameCardFromChain(gameCardListChain, gameCardId)
+}
 
 export const getGameFull = async (
   gameContract: ethers.Contract,
@@ -101,51 +116,44 @@ export const getGameFull = async (
 export const endTurn = async (
   gameContract: ethers.Contract,
   transactionManager: TransactionManager,
-  playActionList: number[][],
+  playActionList: GameActionListType,
   turn: number,
-  cardNextId0: number,
-  cardNextId1: number,
-  addPlayAction?: (payload: {
-    turn: number,
-    actionId: number,
-    data: number[]
-  }) => void,
+  addPlayAction: (payload: GameActionPayloadType) => Promise<void>,
 ) => {
-  const cardList0 = [] as GameCardType[]
-  const cardList1 = [] as GameCardType[]
+  const _playActionList = (
+    playActionList.filter(
+      gameAction => gameAction &&
+        gameAction.actionTypeId
+    ) as GameActionType[]
+  ).map(
+    gameAction => [
+      gameAction.gameCardId,
+      gameAction.actionTypeId,
+      gameAction.dest,
+    ]
+  )
+  //console.log("endTurn", turn, _playActionList)
   const tx = await transactionManager.sendTx(
     await gameContract.populateTransaction.endTurn(
-      playActionList,
+      turn,
+      _playActionList,
     ), "Play turn " + turn
   )
 
   for (let i = 0; i < tx.result.logs.length; i++) {
     const log = gameContract.interface.parseLog(tx.result.logs[i])
     if (log.name === 'PlayAction' && addPlayAction) {
-      if (log.args.turn === turn + 1) {
-        addPlayAction({
-          turn: log.args.turn,
-          actionId: log.args.id,
-          data: [log.args.gameCard, log.args.dest, log.args.result]
-        })
-      }
+      await addPlayAction({
+        turn: log.args.turn,
+        id: log.args.id,
+        gameAction: {
+          gameCardId: log.args.gameCardId,
+          actionTypeId: log.args.actionTypeId,
+          dest: log.args.dest,
+          result: log.args.result
+        }
+      })
     }
-    if (log.name === 'DrawCard') {
-      if (log.args.turn === turn + 1) {
-        const gameCard = getGameCardFromChain(log.args.gameCard, cardNextId1)
-        cardNextId1++
-        cardList1.push(gameCard)
-      }
-      if (log.args.turn === turn + 2) {
-        const gameCard = getGameCardFromChain(log.args.gameCard, cardNextId0)
-        cardNextId0++
-        cardList0.push(gameCard)
-      }
-    }
-  }
-  return {
-    cardList0,
-    cardList1,
   }
 }
 

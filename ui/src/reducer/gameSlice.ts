@@ -1,6 +1,11 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
-import type { GameListItemType, GameType } from '../type/gameType'
+import type {
+  GameListItemType,
+    GameType,
+    GameActionListType,
+    GameActionPayloadType,
+} from '../type/gameType'
 import type { UserType } from '../type/userType'
 
 // Define a type for the slice state
@@ -9,7 +14,7 @@ interface GameState {
   gameList: GameListItemType[]
   gameVersion: number
   oponent: UserType | undefined
-  playActionList: number[][][],
+  playActionList: GameActionListType[],
 }
 
 // Define the initial state using that type
@@ -37,7 +42,6 @@ export const _endGame = (
   state: GameState,
   gameEnd: { id: number, winner: number }
 ) => {
-  console.log('endgame', gameEnd.id, gameEnd.winner)
   state.gameList = state.gameList.map(_game => {
     if (_game.id === gameEnd.id) {
       _game.winner = gameEnd.winner
@@ -94,18 +98,14 @@ export const gameSlice = createSlice({
     setGame: (state, action: PayloadAction<GameType>) => {
       state.game = action.payload
     },
-    addPlayAction: (state, action: PayloadAction<{
-      turn: number,
-      actionId: number,
-      data: number[]
-    }>) => {
-      for (let i = state.playActionList.length; i <= action.payload.turn; i++) {
+    addPlayAction: (state, action: PayloadAction<GameActionPayloadType>) => {
+      for (let i = state.playActionList.length; i < action.payload.turn; i++) {
         state.playActionList[i] = []
       }
-      for (let i = state.playActionList[action.payload.turn].length; i < action.payload.actionId; i++) {
-        state.playActionList[action.payload.turn][i] = []
+      for (let i = state.playActionList[action.payload.turn - 1].length; i < action.payload.id; i++) {
+        state.playActionList[action.payload.turn - 1][i] = null
       }
-      state.playActionList[action.payload.turn][action.payload.actionId] = action.payload.data
+      state.playActionList[action.payload.turn - 1][action.payload.id] = action.payload.gameAction
     },
     cleanGame: (state) => {
       state.game = undefined

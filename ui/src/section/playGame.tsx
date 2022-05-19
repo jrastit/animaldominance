@@ -21,16 +21,10 @@ import {
   setError,
 } from '../reducer/contractSlice'
 
-import {
-  addPlayAction,
-} from '../reducer/gameSlice'
-
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 import {
-  endTurn,
   leaveGame,
-  endGameByTime,
 } from '../game/game'
 
 import StepMessageNiceWidget from '../component/stepMessageNiceWidget'
@@ -48,38 +42,7 @@ const PlayGame = (props:{
   const game = useAppSelector((state) => state.gameSlice.game)
   const oponent = useAppSelector((state) => state.gameSlice.oponent)
 
-  const playActionList = useAppSelector((state) => state.gameSlice.playActionList)
-  const cardList = useAppSelector((state) => state.cardListSlice.cardList)
   const dispatch = useAppDispatch()
-
-  const _addPlayAction = (payload: {
-    turn: number,
-    actionId: number,
-    data: number[]
-  }) => {
-    console.log(payload)
-    dispatch(addPlayAction(payload))
-  }
-
-  const _playTurn = (playActionList : number[][], cardNextId0: number, cardNextId1 : number, turn : number) => {
-    if (gameContract){
-      dispatch(updateStep({id : stepId, step : Step.Refresh}))
-      endTurn(
-        gameContract,
-        props.transactionManager,
-        playActionList,
-        turn,
-        cardNextId0,
-        cardNextId1,
-        _addPlayAction
-      ).then(() => {
-        dispatch(updateStep({id : stepId, step : Step.Running}))
-      }).catch((err) => {
-        console.log(err)
-        dispatch(setError({id:stepId, catchError:err}))
-      })
-    }
-  }
 
   const _leaveGame = () => {
     if (gameContract){
@@ -89,13 +52,6 @@ const PlayGame = (props:{
       }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
     }
 
-  }
-
-  const _endGameByTime = () => {
-    if (gameContract){
-      endGameByTime(gameContract, props.transactionManager).then(() => {
-      }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
-    }
   }
 
   const render = () => {
@@ -120,17 +76,14 @@ const PlayGame = (props:{
         </DivNice>
       )
     } else if (isStep(stepId, Step.Running, step) || isStep(stepId, Step.Refresh, step)){
-      if (game && user && oponent){
+      if (game && user && oponent && gameContract){
         return (
           <GameBoard
+            gameContract={gameContract}
+            transactionManager={props.transactionManager}
+            game={game}
             user={user}
             oponent={oponent}
-            game={game}
-            cardList={cardList}
-            playActionList={playActionList}
-            endGameByTime={_endGameByTime}
-            endTurn={_playTurn}
-            isRefresh={isStep(stepId, Step.Refresh, step)}
           ><ButtonNice onClick={_leaveGame}>Leave game</ButtonNice>
           </GameBoard>
         )
@@ -148,6 +101,11 @@ const PlayGame = (props:{
         if (!oponent) {
           return (
             <DivNice>Error oponent not set</DivNice>
+          )
+        }
+        if (!gameContract) {
+          return (
+            <DivNice>Error gameContract not set</DivNice>
           )
         }
       }

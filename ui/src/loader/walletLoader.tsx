@@ -146,6 +146,7 @@ const loadWalletFromBroswer = async (
         const transactionManager = new TransactionManager(web3Wallet.signer)
         setTransactionManager(transactionManager)
         refreshBalance(dispatch, transactionManager)
+        web3Wallet.signer.provider.removeAllListeners()
         web3Wallet.signer.provider.on('block', () => {
           refreshBalance(dispatch, transactionManager)
         });

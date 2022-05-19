@@ -1,35 +1,70 @@
-import { GameType, GameCardType, TurnDataType } from '../type/gameType'
+import ethers from 'ethers'
 
-export const playCardTo3 = (
-  myTurn: number,
+import { GameType, GameCardType, TurnDataType, GameActionType, ActionType } from '../type/gameType'
+
+import { PlaceRefType } from '../component/placeHelper'
+
+import { getNewGameCardFromId } from '../game/game'
+
+export const playDrawCard = async (
+  gameContract: ethers.Contract,
   gameCardId: number,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
 ) => {
-  const cardList = turnData.cardList[1 - myTurn].map((_gameCard) => { return { ..._gameCard } })
+  if (gameCardId === turnData.cardList[1 - turnData.myTurn].length) {
+    const cardList = turnData.cardList[1 - turnData.myTurn].concat(
+      await getNewGameCardFromId(
+        gameContract,
+        turnData.userId[1 - turnData.myTurn],
+        gameCardId
+      )
+    )
+    setTurnData({
+      ...turnData,
+      cardList: turnData.myTurn ? [cardList, turnData.cardList[turnData.myTurn]] : [turnData.cardList[turnData.myTurn], cardList],
+      playActionList: turnData.playActionList.concat([{
+        gameCardId: gameCardId,
+        actionTypeId: ActionType.Draw,
+      }]),
+    })
+
+  } else {
+    throw Error('invalid gameCardId')
+  }
+}
+
+export const playCardTo3 = (
+  gameCardId: number,
+  turnData: TurnDataType,
+  setTurnData: (turnData: TurnDataType) => void,
+) => {
+  const cardList = turnData.cardList[1 - turnData.myTurn].map((_gameCard) => { return { ..._gameCard } })
   const gameCard = cardList.filter(_gameCard => _gameCard.id === gameCardId)[0]
   gameCard.position = 3
   gameCard.play = 1
   const newTurnData = {
-    turn: turnData.turn,
-    playActionList: turnData.playActionList.concat([[gameCard.id, 3]]),
+    ...turnData,
+    playActionList: turnData.playActionList.concat([{
+      gameCardId: gameCard.id,
+      actionTypeId: ActionType.Play,
+      dest: 3,
+    }]),
     mana: turnData.mana - gameCard.mana,
-    cardList: myTurn ? [cardList, turnData.cardList[myTurn]] : [turnData.cardList[myTurn], cardList],
-    life: turnData.life,
+    cardList: turnData.myTurn ? [cardList, turnData.cardList[turnData.myTurn]] : [turnData.cardList[turnData.myTurn], cardList],
   }
   setTurnData(newTurnData)
 }
 
 export const playAttack = (
-  myTurn: number,
   gameCardId1: number,
   gameCardId2: number,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
 ) => {
-  const cardList1 = turnData.cardList[1 - myTurn].map((_gameCard) => { return { ..._gameCard } })
+  const cardList1 = turnData.cardList[1 - turnData.myTurn].map((_gameCard) => { return { ..._gameCard } })
   const gameCard1 = cardList1.filter(_gameCard => _gameCard.id === gameCardId1)[0]
-  const cardList2 = turnData.cardList[myTurn].map((_gameCard) => { return { ..._gameCard } })
+  const cardList2 = turnData.cardList[turnData.myTurn].map((_gameCard) => { return { ..._gameCard } })
   const gameCard2 = cardList2.filter(_gameCard => _gameCard.id === gameCardId2)[0]
 
   gameCard1.play = 1
@@ -54,24 +89,25 @@ export const playAttack = (
     gameCard1.position = 4
   }
   const newTurnData = {
-    turn: turnData.turn,
-    playActionList: turnData.playActionList.concat([[gameCard1.id, gameCard2.id]]),
-    mana: turnData.mana,
-    cardList: myTurn ? [cardList1, cardList2] : [cardList2, cardList1],
-    life: turnData.life,
+    ...turnData,
+    playActionList: turnData.playActionList.concat([{
+      gameCardId: gameCard1.id,
+      actionTypeId: ActionType.Attack,
+      dest: gameCard2.id,
+    }]),
+    cardList: turnData.myTurn ? [cardList1, cardList2] : [cardList2, cardList1],
   }
   setTurnData(newTurnData)
 }
 
 export const playAttackOponent = (
-  myTurn: number,
   gameCardId: number,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
 ) => {
-  const cardList = turnData.cardList[1 - myTurn].map((_gameCard) => { return { ..._gameCard } })
+  const cardList = turnData.cardList[1 - turnData.myTurn].map((_gameCard) => { return { ..._gameCard } })
   const gameCard = cardList.filter(_gameCard => _gameCard.id === gameCardId)[0]
-  let life2 = turnData.life[myTurn]
+  let life2 = turnData.life[turnData.myTurn]
   gameCard.play = 1
   if (life2 > gameCard.attack) {
     gameCard.expWin += gameCard.attack * 5
@@ -81,50 +117,67 @@ export const playAttackOponent = (
     life2 = 0
   }
   const newTurnData = {
-    turn: turnData.turn,
-    playActionList: turnData.playActionList.concat([[gameCard.id, 255]]),
-    mana: turnData.mana,
-    cardList: myTurn ? [cardList, turnData.cardList[myTurn]] : [turnData.cardList[myTurn], cardList],
-    life: myTurn ? [turnData.life[1 - myTurn], life2] : [life2, turnData.life[1 - myTurn]],
+    ...turnData,
+    playActionList: turnData.playActionList.concat([{
+      gameCardId: gameCard.id,
+      actionTypeId: ActionType.Attack,
+      dest: 255,
+    }]),
+    cardList: turnData.myTurn ? [cardList, turnData.cardList[turnData.myTurn]] : [turnData.cardList[turnData.myTurn], cardList],
+    life: turnData.myTurn ? [turnData.life[1 - turnData.myTurn], life2] : [life2, turnData.life[1 - turnData.myTurn]],
   }
   setTurnData(newTurnData)
 }
 
 export const playRandomly = (
-  myTurn: number,
   turnData: TurnDataType,
   test?: boolean,
 ) => {
-  if (turnData.cardList[1 - myTurn].filter(card => card.position === 3).length < 8) {
-    for (let i = 0; i < turnData.cardList[1 - myTurn].length; i++) {
-      const gameCard = turnData.cardList[1 - myTurn][i]
+  if (turnData.cardList[1 - turnData.myTurn].filter(card => card.position === 3).length < 8) {
+    for (let i = 0; i < turnData.cardList[1 - turnData.myTurn].length; i++) {
+      const gameCard = turnData.cardList[1 - turnData.myTurn][i]
       if (gameCard.position === 1 && gameCard.mana <= turnData.mana && gameCard.play === 0) {
         if (!test) {
-          return ([gameCard.id, 3, 1])
+          return ({
+            gameCardId: gameCard.id,
+            actionTypeId: ActionType.Play,
+            dest: 3,
+            result: 1,
+          } as GameActionType)
         }
         return 1
       }
     }
   }
-  for (let i = 0; i < turnData.cardList[1 - myTurn].length; i++) {
-    const gameCard = turnData.cardList[1 - myTurn][i]
+  for (let i = 0; i < turnData.cardList[1 - turnData.myTurn].length; i++) {
+    const gameCard = turnData.cardList[1 - turnData.myTurn][i]
     if (gameCard.position === 3 && gameCard.play === 0) {
-      for (let j = 0; j < turnData.cardList[myTurn].length; j++) {
-        const gameCard2 = turnData.cardList[myTurn][j]
+      for (let j = 0; j < turnData.cardList[turnData.myTurn].length; j++) {
+        const gameCard2 = turnData.cardList[turnData.myTurn][j]
         if (gameCard2.position === 3) {
           if (!test) {
-            return ([gameCard.id, gameCard2.id, gameCard.attack])
+            return ({
+              gameCardId: gameCard.id,
+              actionTypeId: ActionType.Attack,
+              dest: gameCard2.id,
+              result: gameCard.attack,
+            } as GameActionType)
           }
           return 1
         }
       }
     }
   }
-  for (let i = 0; i < turnData.cardList[1 - myTurn].length; i++) {
-    const gameCard = turnData.cardList[1 - myTurn][i]
+  for (let i = 0; i < turnData.cardList[1 - turnData.myTurn].length; i++) {
+    const gameCard = turnData.cardList[1 - turnData.myTurn][i]
     if (gameCard.position === 3 && gameCard.play === 0) {
       if (!test) {
-        return ([gameCard.id, 255, gameCard.attack])
+        return ({
+          gameCardId: gameCard.id,
+          actionTypeId: ActionType.Attack,
+          dest: 255,
+          result: gameCard.attack,
+        } as GameActionType)
       }
       return 1
     }
@@ -133,51 +186,100 @@ export const playRandomly = (
 }
 
 export const playAction = async (
-  myTurn: number,
-  data: number[],
+  gameContract: ethers.Contract,
+  gameAction: GameActionType,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
+  annimate?: {
+    cardRefIdList: number[][],
+    current: (PlaceRefType | null)[],
+    annimatePlay: (
+      myTurn: number,
+      cardRefIdList: number[][],
+      current: (PlaceRefType | null)[],
+      gameCardId1: number,
+      gameCardId2?: number
+    ) => Promise<void>
+  }
 ) => {
-
-  if (data[2]) {
-    const gameCard = turnData.cardList[1 - myTurn].filter(_gameCard => {
-      return _gameCard.id === data[0]
-    })[0]
-    if (gameCard.position === 1 && data[1] === 3) {
-      playCardTo3(
-        myTurn,
-        gameCard.id,
+  if (gameAction.result) {
+    if (gameAction.actionTypeId === ActionType.Draw) {
+      await playDrawCard(
+        gameContract,
+        gameAction.gameCardId,
         turnData,
-        setTurnData
+        setTurnData,
       )
-    } else if (gameCard.position === 3) {
-      if (data[1] === 255) {
-        playAttackOponent(
-          myTurn,
-          gameCard.id,
-          turnData,
-          setTurnData
-        )
-      } else {
-        const gameCardId2 = data[1]
-        playAttack(
-          myTurn,
-          gameCard.id,
-          gameCardId2,
-          turnData,
-          setTurnData
-        )
-      }
     } else {
-      throw Error('invalid card' + gameCard.toString())
+      const gameCard = turnData.cardList[1 - turnData.myTurn].filter(_gameCard => {
+        return _gameCard.id === gameAction.gameCardId
+      })[0]
+      if (
+        gameAction.actionTypeId === ActionType.Play
+      ) {
+        if (gameCard.position === 1 && gameAction.dest === 3) {
+          annimate && await annimate.annimatePlay(
+            turnData.myTurn,
+            annimate.cardRefIdList,
+            annimate.current,
+            gameCard.id
+          )
+          playCardTo3(
+            gameCard.id,
+            turnData,
+            setTurnData
+          )
+        } else {
+          throw Error(
+            'Wrong position/dest for Play : ' +
+            gameCard.position +
+            '/' +
+            gameAction.dest
+          )
+        }
+      } else if (
+        gameCard.position === 3 &&
+        gameAction.actionTypeId === ActionType.Attack &&
+        gameAction.dest !== undefined
+      ) {
+        if (gameAction.dest === 255) {
+          annimate && await annimate.annimatePlay(
+            turnData.myTurn,
+            annimate.cardRefIdList,
+            annimate.current,
+            gameCard.id,
+            255,
+          )
+          playAttackOponent(
+            gameCard.id,
+            turnData,
+            setTurnData
+          )
+        } else {
+          const gameCardId2 = gameAction.dest
+          annimate && await annimate.annimatePlay(
+            turnData.myTurn,
+            annimate.cardRefIdList,
+            annimate.current,
+            gameCard.id,
+            gameCardId2,
+          )
+          playAttack(
+            gameCard.id,
+            gameCardId2,
+            turnData,
+            setTurnData
+          )
+        }
+      } else {
+        console.error('Invalid card', gameCard)
+        throw Error('invalid card' + gameCard.toString())
+      }
     }
   } else {
     setTurnData({
-      turn: turnData.turn,
-      mana: turnData.mana,
-      playActionList: turnData.playActionList.concat([data[0], data[1]]),
-      cardList: turnData.cardList,
-      life: turnData.life,
+      ...turnData,
+      playActionList: turnData.playActionList.concat([gameAction]),
     })
   }
 }
@@ -207,30 +309,55 @@ export const checkTurnData = (
   const cardList2 = userId === game.userId1 ? game.cardList2 : game.cardList1
   const life1 = userId === game.userId1 ? game.life1 : game.life2
   const life2 = userId === game.userId1 ? game.life2 : game.life1
-  check(turnData.cardList[0].length, cardList1.length, "cardlist[0].length")
+  /*
+  console.log(
+    turnData.cardList[0].length,
+    cardList1.length,
+    turnData.cardList[1].length,
+    cardList2.length
+  )
+  */
+  check(turnData.cardList[0].length, cardList1.length, "Check player 0 nb card")
   for (let i = 0; i < turnData.cardList[0].length; i++) {
     checkCard(turnData.cardList[0][i], cardList1[i], check)
   }
-  check(turnData.cardList[1].length, cardList2.length, "cardlist[1].length")
+  check(turnData.cardList[1].length, cardList2.length, "Check player 1 nb card")
   for (let i = 0; i < turnData.cardList[1].length; i++) {
     checkCard(turnData.cardList[1][i], cardList2[i], check)
   }
-  check(turnData.life[0], life1, "player life")
-  check(turnData.life[1], life2, "player life")
+  check(turnData.life[0], life1, "Check player life")
+  check(turnData.life[1], life2, "Check player life")
+  check(turnData.turn, game.turn, 'Check turn')
 }
 
 export const getTurnData = (game: GameType, userId: number) => {
   return {
     turn: game.turn,
+    userId: [userId, game.userId1 === userId ? game.userId2 : game.userId1],
+    myTurn: isMyTurn(game.turn, game.userId1, userId),
     mana: Math.floor((game.turn + 1) / 2),
     playActionList: [],
+    drawCardList: [],
     cardList: [userId === game.userId1 ? game.cardList1 : game.cardList2, userId === game.userId1 ? game.cardList2 : game.cardList1],
     life: [userId === game.userId1 ? game.life1 : game.life2, userId === game.userId1 ? game.life2 : game.life1],
     actionId: 0,
   } as TurnDataType
 }
 
-export const isMyTurn = (turn: number, userId1: number, userId: number) => {
+export const endTurnData = (
+  turnData: TurnDataType,
+  setTurnData: (turnData: TurnDataType) => void,
+) => {
+  setTurnData({
+    ...turnData,
+    turn: turnData.turn + 1,
+    mana: (turnData.turn + 2) % 2,
+    myTurn: 1 - turnData.myTurn,
+    playActionList: [],
+  })
+}
+
+const isMyTurn = (turn: number, userId1: number, userId: number) => {
   if (turn % 2 === 0 && userId1 === userId) {
     return 0
   }

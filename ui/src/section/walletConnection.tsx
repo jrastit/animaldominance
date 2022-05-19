@@ -5,6 +5,7 @@ import WalletDeleteAll from '../component/wallet/walletDeleteAll'
 import NetworkInfoWidget from '../component/wallet/networkInfoWidget'
 import WalletInfoWidget from '../component/wallet/walletInfoWidget'
 import NetworkSelectWidget from '../component/wallet/networkSelectWidget'
+import NetworkSwitchWidget from '../component/wallet/networkSwitchWidget'
 import WalletSelectWidget from '../component/wallet/walletSelectWidget'
 import CardWidget from '../game/component/cardWidget'
 import { TransactionManager } from '../util/TransactionManager'
@@ -225,6 +226,7 @@ const WalletConnection = (props: {
           return (
             <SpaceWidget>
               <BoxWidget title='Metamask'>
+              <NetworkSwitchWidget/>
               { network &&
                 <NetworkInfoWidget
                   network={network}

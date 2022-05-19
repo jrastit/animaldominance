@@ -62,8 +62,26 @@ contract CardAdmin {
 
     event GameUpdate(uint16 version);
 
-    event PlayAction(uint8 turn, uint8 id, uint8 gameCard, uint8 dest, uint16 result);
-    event DrawCard(uint8 turn, uint8 id, GameCard gameCard);
+    event PlayAction(uint8 turn, uint8 id, uint8 gameCardId, uint8 actionTypeId, uint8 dest, uint16 result);
+    event DrawCard(uint8 turn, uint8 id, uint8 gameCardId);
+
+    ///////////////////////// contract /////////////////////////////////////
+
+    address payable public owner;
+
+    modifier isOwner() {
+     require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    function withdraw (uint _amount) public isOwner {
+      owner.transfer(_amount);
+    }
+
+    constructor(PlayGameFactory _playGameFactory) {
+        _updatePlayGameFactory(_playGameFactory);
+        owner = payable( msg.sender);
+    }
 
     ///////////////////// Cards ////////////////////////////////////
 
@@ -116,24 +134,6 @@ contract CardAdmin {
         cardList[_cardId].level[_level].description = _description;
         cardList[_cardId].level[_level].life = _life;
         cardList[_cardId].level[_level].attack = _attack;
-    }
-
-    ///////////////////////// contract /////////////////////////////////////
-
-    address payable public owner;
-
-    modifier isOwner() {
-     require(msg.sender == owner, "Not owner");
-        _;
-    }
-
-    function withdraw (uint _amount) public isOwner {
-      owner.transfer(_amount);
-    }
-
-    constructor(PlayGameFactory _playGameFactory) {
-        _updatePlayGameFactory(_playGameFactory);
-        owner = payable( msg.sender);
     }
 
     ///////////////////////// Game Factory //////////////////////////////////

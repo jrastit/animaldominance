@@ -1,7 +1,8 @@
 import * as ethers from 'ethers'
-const networkName = "ganache"
-
-//const networkName = "EmeraldTestnet"
+//const networkName = "ganache"
+//const networkName = "Emerald Testnet"
+const networkName = "Arbitrum Testnet"
+//const networkName = "Matic Mumbai Testnet"
 
 import { TransactionManager } from '../util/TransactionManager'
 
@@ -10,7 +11,7 @@ import { NetworkType } from '../type/networkType'
 
 const network: NetworkType = networkList.filter((network) => network.name === networkName)[0]
 
-let privateKeys = require("../../key/" + networkName + "PrivateKeys.json")
+let privateKeys = require("../../key/" + networkName.replace(/ /g, "") + "PrivateKeys.json")
 const url = network.url
 const provider = new ethers.providers.JsonRpcProvider(url)
 
