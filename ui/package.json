@@ -36,7 +36,7 @@
     "util": "^0.12.4"
   },
   "scripts": {
-    "pm2": "pm2 --name ewallet serve build 5000 -spa",
+    "pm2": "pm2 --name animaldominance serve build 6897 -spa",
     "compile": "npx solc@0.7.6 --include-path ./node_modules/ --base-path ./node_modules/ -o src/contract/solidity/bin --optimize --optimize-runs=1 --bin --abi contract/solidity/*.sol",
     "start": "export PORT=3010 && react-scripts start",
     "build": "react-scripts build",
