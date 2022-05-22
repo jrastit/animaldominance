@@ -130,15 +130,15 @@ const loadWalletFromBroswer = async (
           dispatch(updateStep({ id: StepId.Wallet, step: Step.NoPassword }))
         }
         break
-      case 'Metamask':
+      case 'CoinbaseWallet':
         dispatch(setWallet({
-          type: 'Metamask',
+          type: 'CoinbaseWallet',
         }))
         const web3Wallet = await getWeb3Wallet()
         const address = await web3Wallet.signer.getAddress()
         dispatch(setNetwork(web3Wallet.network))
         dispatch(setWallet({
-          type: 'Metamask',
+          type: 'CoinbaseWallet',
           address,
         }))
         dispatch(resetAllStep())

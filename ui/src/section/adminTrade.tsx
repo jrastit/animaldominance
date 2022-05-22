@@ -29,7 +29,7 @@ const AdminTrade = ()=> {
         _tradeLevelList.forEach(_tradeList =>{
           _tradeList.forEach(trade => {
             _nbTrade ++
-            if (trade.userId == user?.id){
+            if (trade.userId === user?.id){
               _nbUserTrade++
             }
           })

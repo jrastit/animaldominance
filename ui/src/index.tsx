@@ -4,10 +4,18 @@ import { store } from "./store";
 import './index.css';
 import App from './App';
 import * as serviceWorker from "./serviceWorker";
+import { Web3ReactProvider } from '@web3-react/core'
+import { Web3Provider } from "@ethersproject/providers";
+
+function getLibrary(provider : any) {
+  return new Web3Provider(provider);
+}
 
 ReactDOM.render(
   <Provider store={store}>
-    <App />
+    <Web3ReactProvider getLibrary={getLibrary}>
+      <App />
+    </Web3ReactProvider>,
   </Provider>,
   document.getElementById('root')
 )

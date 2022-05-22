@@ -1,8 +1,9 @@
 import * as ethers from 'ethers'
-//const networkName = "ganache"
+const networkName = "ganache"
 //const networkName = "Emerald Testnet"
-const networkName = "Arbitrum Testnet"
+//const networkName = "Arbitrum Testnet"
 //const networkName = "Matic Mumbai Testnet"
+//const networkName = "Matic Mainnet"
 
 import { TransactionManager } from '../util/TransactionManager'
 

@@ -23,6 +23,13 @@
       "tokenName": "ETH"
     },
     {
+      "name" : "Matic Mainnet",
+      "url": "https://rpc-mainnet.matic.network",
+      "chainId": 137,
+      "gameContract": "",
+      "tokenName": "MATIC"
+    },
+    {
       "name" : "Matic Mumbai Testnet",
       "url": "https://rpc-mumbai.maticvigil.com",
       "chainId": 80001,
