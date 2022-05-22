@@ -51,7 +51,7 @@ export const getProvider = async (network: NetworkType | undefined, setError: (e
     }
   } catch (error: any) {
     console.error("error in get network ", error)
-    setError("Error in CoinbaseWallet : " + error.message)
+    setError("Error in Metamask : " + error.message)
   }
 }
 

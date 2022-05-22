@@ -116,14 +116,14 @@ const WalletConnection = (props: {
             <p>Chose your wallet to connect and start playing.</p>
           </DivNice>
           <SpaceWidget>
-            <BoxWidget title='CoinbaseWallet'>
-              <p>Use wallet and network configured within CoinbaseWallet</p>
-              <p><a href='https://metamask.io/' target='_blank' rel="noreferrer">get CoinbaseWallet here</a></p>
+            <BoxWidget title='Metamask'>
+              <p>Use wallet and network configured within Metamask</p>
+              <p><a href='https://metamask.io/' target='_blank' rel="noreferrer">get Metamask here</a></p>
               <SpaceWidget>
                 <Button onClick={() => {
-                   activate(Injected).then(() => {setWalletType('CoinbaseWallet')})
+                   activate(Injected).then(() => {setWalletType('Metamask')})
                 }}>
-                  Enter with CoinbaseWallet
+                  Enter with Metamask
                 </Button>
               </SpaceWidget>
             </BoxWidget>
@@ -198,7 +198,7 @@ const WalletConnection = (props: {
           return (
             <>
             <SpaceWidget>
-              <BoxWidget title='CoinbaseWallet Error'>
+              <BoxWidget title='Metamask Error'>
                 <p>Is your metamask connected?</p>
                 <Button size='sm' variant="warning" onClick={() => {
                   window.ethereum.enable().then()
@@ -225,12 +225,12 @@ const WalletConnection = (props: {
             {'Unknow step ' + Step[getStep(StepId.Wallet, step).step]}
           </BoxWidget>
         )
-      case 'CoinbaseWallet':
+      case 'Metamask':
       case 'WalletConnect':
         if (isStep(StepId.Wallet, Step.NoAddress, step)) {
           return (
             <SpaceWidget>
-              <BoxWidget title='CoinbaseWallet'>
+              <BoxWidget title='Metamask'>
                 <Button size='sm' variant="warning" onClick={() => {
                   window.ethereum.enable().then()
                 }}>Connect wallet</Button>
@@ -242,7 +242,7 @@ const WalletConnection = (props: {
         if (isStep(StepId.Wallet, Step.Ok, step)) {
           return (
             <SpaceWidget>
-              <BoxWidget title='CoinbaseWallet'>
+              <BoxWidget title='Metamask'>
               <NetworkSwitchWidget/>
               { network &&
                 <NetworkInfoWidget
@@ -267,7 +267,7 @@ const WalletConnection = (props: {
           return (
             <>
             <SpaceWidget>
-              <BoxWidget title='CoinbaseWallet Error'>
+              <BoxWidget title='Metamask Error'>
                 <p>Is your metamask connected?</p>
                 <Button size='sm' variant="warning" onClick={() => {
                   window.ethereum.enable().then()
@@ -291,7 +291,7 @@ const WalletConnection = (props: {
           )
         }
         return (
-          <BoxWidget title='CoinbaseWallet Error wallet step'>
+          <BoxWidget title='Metamask Error wallet step'>
             {'Unknow step ' + Step[getStep(StepId.Wallet, step).step]}
           </BoxWidget>
         )

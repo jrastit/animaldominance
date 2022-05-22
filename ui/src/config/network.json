@@ -26,12 +26,12 @@
       "name" : "Matic Mainnet",
       "url": "https://rpc-mainnet.matic.network",
       "chainId": 137,
-      "gameContract": "",
+      "gameContract": "0xAACC46006F58fb18Bdd6216C1d900061CDc8D64d",
       "tokenName": "MATIC"
     },
     {
       "name" : "Matic Mumbai Testnet",
-      "url": "https://rpc-mumbai.maticvigil.com",
+      "url": "https://rpc-mumbai.matic.today",
       "chainId": 80001,
       "gameContract": "",
       "tokenName": "MATIC"
