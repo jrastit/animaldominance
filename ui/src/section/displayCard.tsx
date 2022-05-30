@@ -1,7 +1,7 @@
-import * as ethers from 'ethers'
-import { TransactionManager } from '../util/TransactionManager'
+import { BigNumber } from 'ethers'
 import { useState } from 'react'
 import CardListWidget from '../game/component/cardListWidget'
+import {ContractCardAdmin} from '../contract/solidity/compiled/contractAutoFactory'
 
 import { buyNewCard, buyCard } from '../game/card'
 import { useAppSelector, useAppDispatch } from '../hooks'
@@ -19,8 +19,7 @@ import Alert from 'react-bootstrap/Alert'
 
 
 const DisplayCard = (props: {
-  contract?: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract?: ContractCardAdmin,
 }) => {
 
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
@@ -36,7 +35,7 @@ const DisplayCard = (props: {
   const _buyNewCard = (cardId: number, value: number) => {
     if (props.contract) {
       setLoading(true)
-      buyNewCard(props.contract, props.transactionManager, cardId, value).then(() => {
+      buyNewCard(props.contract, cardId, value).then(() => {
         setLoading(false)
         dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))
       }).catch((err) => {
@@ -46,10 +45,10 @@ const DisplayCard = (props: {
     }
   }
 
-  const _buyCard = (userId : number, userCardId: number, value: ethers.BigNumber) => {
+  const _buyCard = (userId : number, userCardId: number, value: BigNumber) => {
     if (props.contract) {
       setLoading(true)
-      buyCard(props.contract, props.transactionManager, userId, userCardId, value).then(() => {
+      buyCard(props.contract, userId, userCardId, value).then(() => {
         setLoading(false)
         dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))
       }).catch((err) => {

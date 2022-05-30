@@ -1,4 +1,4 @@
-import * as ethers from 'ethers'
+import {ContractCardAdmin} from '../contract/solidity/compiled/contractAutoFactory'
 import { TransactionManager } from '../util/TransactionManager'
 import { useState } from 'react'
 
@@ -46,9 +46,9 @@ import {
 } from '../game/user'
 
 const FindGame = (props: {
-  transactionManager: TransactionManager,
-  contract: ethers.Contract | undefined,
-  setContract: (contract: ethers.Contract | undefined) => void,
+  transactionManager : TransactionManager,
+  contract: ContractCardAdmin | undefined,
+  setContract: (contract: ContractCardAdmin | undefined) => void,
 }) => {
 
   const step = useAppSelector((state) => state.contractSlice.step)
@@ -67,7 +67,7 @@ const FindGame = (props: {
   const _registerUser = () => {
     if (name && props.contract) {
       dispatch(updateStep({ id: StepId.User, step: Step.Loading }))
-      registerUser(props.contract, props.transactionManager, name).then(() => {
+      registerUser(props.contract, name).then(() => {
         dispatch(clearError(StepId.User))
       }).catch((err) => {
         dispatch(setError({ id: StepId.User, catchError: err }))
@@ -132,7 +132,6 @@ const FindGame = (props: {
       if (userCardList){
         addUserDefaultDeck(
           props.contract,
-          props.transactionManager,
           userCardList,
         ).then((deck) => {
           let newUserDeckList = [] as UserDeckType[]
@@ -155,7 +154,6 @@ const FindGame = (props: {
       dispatch(updateStep({ id: StepId.Game, step: Step.Joining }))
       joinGame(
         props.contract,
-        props.transactionManager,
         gameId,
         deck.id
       ).then(() => {
@@ -174,7 +172,6 @@ const FindGame = (props: {
       dispatch(updateStep({ id: StepId.Game, step: Step.Creating }))
       createGame(
         props.contract,
-        props.transactionManager,
         deck.id
       ).then((_gameId) => {
         dispatch(setGameId(_gameId))
@@ -191,7 +188,6 @@ const FindGame = (props: {
       dispatch(updateStep({ id: StepId.Game, step: Step.Creating }))
       createGameBot(
         props.contract,
-        props.transactionManager,
         deck.id
       ).then((_gameId) => {
         dispatch(setGameId(_gameId))

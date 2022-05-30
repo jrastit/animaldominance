@@ -1,7 +1,7 @@
-import ethers from 'ethers'
+import { BigNumber } from 'ethers'
 
 export type TradeType = {
   userId: number,
   userCardId: number,
-  price: ethers.BigNumber,
+  price: BigNumber,
 }

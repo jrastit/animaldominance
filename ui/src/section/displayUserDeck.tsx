@@ -1,6 +1,4 @@
-import * as ethers from 'ethers'
-
-import { TransactionManager } from '../util/TransactionManager'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
 
 import UserCardListWidget from '../game/component/userCardListWidget'
 
@@ -36,8 +34,7 @@ import Alert from 'react-bootstrap/Alert'
 import DeckSelect from '../game/component/deckSelect'
 
 const DisplayUserDeck = (props : {
-  contract : ethers.Contract,
-  transactionManager : TransactionManager,
+  contract : ContractCardAdmin,
 }) => {
   const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const userDeckList = useAppSelector((state) => state.userSlice.userDeckList)
@@ -68,7 +65,7 @@ const DisplayUserDeck = (props : {
     setLoading(true)
     try{
       if (deck){
-        const newDeck = await updateUserDeck(props.contract, props.transactionManager, deck.id, userCardSubList)
+        const newDeck = await updateUserDeck(props.contract, deck.id, userCardSubList)
         if (userDeckList){
           dispatch(setUserDeckList(userDeckList.map(oldDeck => {
             if (oldDeck.id === newDeck.id) return newDeck
@@ -79,7 +76,7 @@ const DisplayUserDeck = (props : {
         }
         setDeck(newDeck)
       } else {
-        const newDeck = await addUserDeck(props.contract, props.transactionManager, userCardSubList)
+        const newDeck = await addUserDeck(props.contract, userCardSubList)
         if (userDeckList){
           dispatch(setUserDeckList(userDeckList.concat([newDeck])))
         } else {

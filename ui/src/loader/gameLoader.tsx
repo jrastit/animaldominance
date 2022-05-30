@@ -1,6 +1,6 @@
-import * as ethers from 'ethers'
 import { useEffect } from 'react'
-import { TransactionManager } from '../util/TransactionManager'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractPlayGame } from '../contract/solidity/compiled/contractAutoFactory'
 
 import { UserType } from '../type/userType'
 
@@ -35,7 +35,7 @@ import { useAppSelector, useAppDispatch } from '../hooks'
 
 const stepId = StepId.Game
 
-const addGameListener = (dispatch : any, _gameContract : ethers.Contract) => {
+const addGameListener = (dispatch : any, _gameContract : ContractPlayGame) => {
   if (_gameContract){
     if (_gameContract.listenerCount("PlayAction") === 0) {
       _gameContract.on("PlayAction", (turn : number, id : number, gameCardId : number, actionTypeId : number, dest : number, result : number) => {
@@ -60,8 +60,8 @@ const _cleanGame = (dispatch : any) => {
 
 const _getGameFull = (
   dispatch : any,
-  contract : ethers.Contract,
-  gameContract : ethers.Contract,
+  contract : ContractCardAdmin,
+  gameContract : ContractPlayGame,
   user : UserType | undefined,
   oponent : UserType | undefined,
   _setMessage ?: (message : string) => void,
@@ -101,15 +101,14 @@ const _getGameFull = (
 
 const loadGameFromId = (
   dispatch : any,
-  contract : ethers.Contract,
-  transactionManager : TransactionManager,
+  contract : ContractCardAdmin,
   user : UserType | undefined,
-  setGameContract : (contract : ethers.Contract) => void,
+  setGameContract : (contract : ContractPlayGame) => void,
   oponent : UserType | undefined,
 ) => {
   if (user && user.gameId){
     dispatch(updateStep({id : stepId, step: Step.Loading}))
-    getGameContract(contract, transactionManager, user.gameId).then((_gameContract) => {
+    getGameContract(contract, user.gameId).then((_gameContract) => {
       if (_gameContract){
         addGameListener(dispatch, _gameContract)
         setGameContract(_gameContract)
@@ -135,8 +134,8 @@ const loadGameFromId = (
 
 const updateGame = (
   dispatch : any,
-  contract : ethers.Contract,
-  gameContract : ethers.Contract | undefined,
+  contract : ContractCardAdmin,
+  gameContract : ContractPlayGame | undefined,
   user : UserType | undefined,
   oponent : UserType | undefined,
 ) => {
@@ -153,10 +152,9 @@ const updateGame = (
 }
 
 const GameLoader = (props : {
-  transactionManager : TransactionManager,
-  contract : ethers.Contract,
-  gameContract ?: ethers.Contract,
-  setGameContract : (contract : ethers.Contract) => void,
+  contract : ContractCardAdmin,
+  gameContract ?: ContractPlayGame,
+  setGameContract : (contract : ContractPlayGame) => void,
 }) => {
   const step = useAppSelector((state) => state.contractSlice.step)
   const version = useAppSelector((state) => state.contractSlice.version)
@@ -178,7 +176,6 @@ const GameLoader = (props : {
       loadGameFromId(
         dispatch,
         props.contract,
-        props.transactionManager,
         user,
         props.setGameContract,
         oponent,

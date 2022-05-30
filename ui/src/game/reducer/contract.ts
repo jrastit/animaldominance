@@ -1,4 +1,4 @@
-import * as ethers from 'ethers'
+import { ContractCardAdmin } from '../../contract/solidity/compiled/contractAutoFactory'
 import { TransactionManager } from '../../util/TransactionManager'
 
 import {
@@ -51,15 +51,14 @@ export const clearState = (
 
 export const fillContract = (
   dispatch: any,
-  transactionManager: TransactionManager,
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
 ) => {
   const _setMessage = (message: string | undefined) => {
     dispatch(setMessage({ id: stepId, message: message }))
   }
   _setMessage("Adding all cards...")
   dispatch(updateStep({ id: stepId, step: Step.Creating }))
-  createAllCard(contract, transactionManager, _setMessage).then(() => {
+  createAllCard(contract, _setMessage).then(() => {
     dispatch(updateStep({ id: stepId, step: Step.Ok }))
   }).catch((err) => {
     dispatch(setError({ id: stepId, catchError: err }))
@@ -69,7 +68,7 @@ export const fillContract = (
 export const createContract = (
   dispatch: any,
   transactionManager: TransactionManager,
-  setContract: (contract: ethers.Contract | undefined) => void,
+  setContract: (contract: ContractCardAdmin | undefined) => void,
 ) => {
   const _setMessage = (message: string | undefined) => {
     dispatch(setMessage({ id: stepId, message: message }))
@@ -86,7 +85,7 @@ export const createContract = (
         console.log('New game contract', contract.address)
         clearState(dispatch)
         dispatch(resetAllSubStep())
-        fillContract(dispatch, transactionManager, contract)
+        fillContract(dispatch, contract)
       }).catch((err) => {
         dispatch(setError({ id: stepId, catchError: err }))
       })

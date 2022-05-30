@@ -91,6 +91,7 @@ export const contractSlice = createSlice({
     updateStep: (state, action: PayloadAction<{ id: number, step: number }>) => {
       state.step.forEach((step) => {
         if (step.id === action.payload.id) {
+          console.log("updateStep", StepId[action.payload.id], Step[action.payload.step])
           step.step = action.payload.step
           step.message = undefined
           step.error = undefined
@@ -117,6 +118,7 @@ export const contractSlice = createSlice({
       console.error(error)
       state.step.forEach((step) => {
         if (step.id === action.payload.id) {
+          console.log("updateStep", StepId[action.payload.id], Step[Step.Error])
           step.step = Step.Error
           step.message = undefined
           step.error = error

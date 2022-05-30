@@ -1,4 +1,4 @@
-import * as ethers from 'ethers'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
 import { TransactionManager } from '../util/TransactionManager'
 import AddressWidget from '../component/addressWidget'
 import SpaceWidget from '../component/spaceWidget'
@@ -36,8 +36,8 @@ import { useAppSelector, useAppDispatch } from '../hooks'
 
 const AdminContract = (props : {
   transactionManager : TransactionManager,
-  contract ?: ethers.Contract,
-  setContract : (contract : ethers.Contract | undefined) => void,
+  contract ?: ContractCardAdmin,
+  setContract : (contract : ContractCardAdmin | undefined) => void,
 }) => {
   const stepId = StepId.Contract
   const step = useAppSelector((state) => state.contractSlice.step)
@@ -51,10 +51,9 @@ const AdminContract = (props : {
         async (contractFactory) => {
           if (props.contract){
             try {
-              await props.transactionManager.sendTx(
-                await props.contract.populateTransaction.updatePlayGameFactory(
-                  contractFactory.address
-                ), "Update play game contract")
+              await props.contract.updatePlayGameFactory(
+                contractFactory.address
+              )
               dispatch(updateStep({id: stepId, step: Step.Ok}))
             } catch (err : any) {
               dispatch(setError({id : stepId, catchError : err}))
@@ -126,7 +125,6 @@ const AdminContract = (props : {
         <SpaceWidget>
         <Button variant="warning" onClick={() => {props.contract && fillContract(
           dispatch,
-          props.transactionManager,
           props.contract,
         )}}>
           Fill new game contract on {network?.name}

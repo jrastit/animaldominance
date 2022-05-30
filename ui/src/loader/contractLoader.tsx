@@ -1,9 +1,11 @@
 import * as ethers from 'ethers'
 import { useEffect } from 'react'
 import { TransactionManager } from '../util/TransactionManager'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractTrading } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
-  getContractCardAdmin,
+  getWithManagerContractCardAdmin,
 } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
@@ -70,8 +72,8 @@ import {
 
 const _loadAllTread = (
   dispatch: any,
-  contract: ethers.Contract,
-  tradingContract : ethers.Contract,
+  contract: ContractCardAdmin,
+  tradingContract : ContractTrading,
 ) => {
   const stepId = StepId.Trading
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
@@ -88,7 +90,7 @@ const _loadAllTread = (
 
 const addTradingListener = (
   dispatch: any,
-  tradingContract: ethers.Contract,
+  tradingContract: ContractTrading,
 ) => {
   if (tradingContract.listenerCount("TradeAdd") === 0) {
     tradingContract.on("TradeAdd", (_cardId, _level, _chainUserId, _userCardId, _price) => {
@@ -119,8 +121,8 @@ const addTradingListener = (
 
 const loadTradingContract = (
   dispatch: any,
-  contract: ethers.Contract,
-  setTradingContract: (contract: ethers.Contract) => void,
+  contract: ContractTrading,
+  setTradingContract: (contract: ContractTrading) => void,
 ) => {
   const stepId = StepId.Trading
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
@@ -129,13 +131,14 @@ const loadTradingContract = (
       setTradingContract(_tradingContract)
       dispatch(updateStep({ id: stepId, step: Step.Ready }))
   }).catch((err) => {
+    console.error(err)
     dispatch(setError({ id: stepId, catchError: err }))
   })
 }
 
 const loadUser = (
   dispatch: any,
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
 ) => {
   const stepId = StepId.User
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
@@ -157,7 +160,7 @@ const loadUser = (
 
 const loadUserCardList = (
   dispatch: any,
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
   user: UserType,
 ) => {
   const stepId = StepId.UserCardList
@@ -176,7 +179,7 @@ const loadUserCardList = (
 
 const loadUserDeckList = (
   dispatch: any,
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
   user: UserType,
 ) => {
   const stepId = StepId.UserDeckList
@@ -195,7 +198,7 @@ const loadUserDeckList = (
 
 const loadCardList = (
   dispatch: any,
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
 ) => {
   const stepId = StepId.CardList
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
@@ -216,7 +219,7 @@ const loadCardList = (
 
 const loadGameList = (
   dispatch: any,
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
 ) => {
   const stepId = StepId.GameList
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
@@ -236,7 +239,7 @@ const loadGameList = (
 
 const addGameListener = (
   dispatch: any,
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
 ) => {
   if (contract.listenerCount("GameCreated") === 0) {
     contract.on("GameCreated", (_chainGameId, _chainUserId) => {
@@ -282,29 +285,36 @@ const addGameListener = (
 const loadContract = async (
   dispatch: any,
   transactionManager: TransactionManager,
-  setContract: (contract: ethers.Contract) => void,
+  setContract: (contract: ContractCardAdmin) => void,
   network: NetworkType
 ) => {
   const stepId = StepId.Contract
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
   dispatch(setMessage({ id: stepId, message: 'Loading contract...' }))
   if (network.gameContract) {
-    const _contract = getContractCardAdmin(
-      network.gameContract,
-      transactionManager.signer
-    )
     try {
-      //check if contract is working
-      if (await getCardLastId(_contract) > 0) {
-        setContract(_contract)
-        dispatch(updateStep({ id: stepId, step: Step.Ok }))
-      } else {
-        dispatch(updateStep({ id: stepId, step: Step.Empty }))
+      const _contract = getWithManagerContractCardAdmin(
+        network.gameContract,
+        transactionManager
+      )
+      try {
+        //check if contract is working
+        if (await getCardLastId(_contract) > 0) {
+          setContract(_contract)
+          dispatch(updateStep({ id: stepId, step: Step.Ok }))
+        } else {
+          dispatch(updateStep({ id: stepId, step: Step.Empty }))
+        }
       }
-    }
-    catch (err: any) {
+      catch (err: any) {
+        console.error(err)
+        dispatch(setError({ id: stepId, error: "Contract error" }))
+      }
+    }catch (err: any) {
+      console.error(err)
       dispatch(setError({ id: stepId, error: "Contract error" }))
     }
+
   } else {
     //no game contract set
     dispatch(updateStep({ id: stepId, step: Step.NotSet }))
@@ -313,10 +323,10 @@ const loadContract = async (
 
 const ContractLoader = (props: {
   transactionManager: TransactionManager,
-  contract?: ethers.Contract,
-  setContract: (contract: ethers.Contract) => void,
-  tradingContract?: ethers.Contract,
-  setTradingContract: (contract: ethers.Contract) => void,
+  contract?: ContractCardAdmin,
+  setContract: (contract: ContractCardAdmin) => void,
+  tradingContract?: ContractTrading,
+  setTradingContract: (contract: ContractTrading) => void,
 }) => {
 
   const step = useAppSelector((state) => state.contractSlice.step)

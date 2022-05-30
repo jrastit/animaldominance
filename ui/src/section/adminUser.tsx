@@ -1,7 +1,5 @@
-import * as ethers from 'ethers'
 import { useState } from 'react'
-
-import { TransactionManager } from '../util/TransactionManager'
+import {ContractCardAdmin} from '../contract/solidity/compiled/contractAutoFactory'
 
 import UserWidget from '../game/component/userWidget'
 import SpaceWidget from '../component/spaceWidget'
@@ -29,8 +27,7 @@ import {
 } from '../reducer/contractSlice'
 
 const AdminUser = (props : {
-  contract : ethers.Contract,
-  transactionManager : TransactionManager,
+  contract : ContractCardAdmin,
 }) => {
   const stepId = StepId.User
   const user = useAppSelector((state) => state.userSlice.user)
@@ -42,7 +39,7 @@ const AdminUser = (props : {
   const _registerUser = () => {
     if (name){
       dispatch(updateStep({id : stepId, step : Step.Loading}))
-      registerUser(props.contract, props.transactionManager, name).then(() => {
+      registerUser(props.contract, name).then(() => {
         dispatch(clearError(stepId))
       }).catch((err) => {
         dispatch(setError({id : stepId, catchError : err}))

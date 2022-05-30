@@ -1,6 +1,4 @@
-import * as ethers from 'ethers'
-
-import { TransactionManager } from '../util/TransactionManager'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
 
 import UserCardListWidget from '../game/component/userCardListWidget'
 
@@ -33,8 +31,7 @@ import ButtonNice from '../component/buttonNice'
 import DivFullNice from '../component/divFullNice'
 
 const DisplayUserCard = (props: {
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
 }) => {
   const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
@@ -64,7 +61,6 @@ const DisplayUserCard = (props: {
       setLoading(true)
       listCard(
         props.contract,
-        props.transactionManager,
         _userCardId,
         sellCard.price
       ).then(() => {
@@ -87,7 +83,6 @@ const DisplayUserCard = (props: {
     setLoading(true)
     cancelListCard(
       props.contract,
-      props.transactionManager,
       _userCardId
     ).then(() => {
       dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))

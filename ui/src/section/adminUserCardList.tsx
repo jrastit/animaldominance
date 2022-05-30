@@ -1,6 +1,4 @@
-import * as ethers from 'ethers'
-
-import { TransactionManager } from '../util/TransactionManager'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
 
 import Button from 'react-bootstrap/Button'
 
@@ -25,8 +23,7 @@ import {
 } from '../reducer/contractSlice'
 
 const AdminUserCardList = (props : {
-  contract : ethers.Contract,
-  transactionManager : TransactionManager,
+  contract : ContractCardAdmin,
 }) => {
   const stepId = StepId.UserCardList
   const step = useAppSelector((state) => state.contractSlice.step)
@@ -39,7 +36,6 @@ const AdminUserCardList = (props : {
       dispatch(updateStep({id : stepId, step : Step.Loading}))
       addUserStarterCard(
         props.contract,
-        props.transactionManager,
         user.id
       ).then(() => {
         dispatch(clearError(stepId))

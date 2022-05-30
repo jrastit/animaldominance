@@ -1,7 +1,5 @@
-import * as ethers from 'ethers'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
 import { useState } from 'react'
-
-import { TransactionManager } from '../util/TransactionManager'
 
 import Button from 'react-bootstrap/Button'
 
@@ -31,8 +29,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 const GameJoin = (props : {
-  contract : ethers.Contract,
-  transactionManager : TransactionManager,
+  contract : ContractCardAdmin,
 }) => {
   const stepId = StepId.Game
   const user = useAppSelector((state) => state.userSlice.user)
@@ -49,7 +46,6 @@ const GameJoin = (props : {
       dispatch(updateStep({id : stepId, step: Step.Joining}))
       joinGame(
         props.contract,
-        props.transactionManager,
         gameId,
         deck.id
       ).then(() => {
@@ -68,7 +64,6 @@ const GameJoin = (props : {
       dispatch(updateStep({id : stepId, step: Step.Creating}))
       createGame(
         props.contract,
-        props.transactionManager,
         deck.id
       ).then((_gameId) => {
         dispatch(setGameId(_gameId))

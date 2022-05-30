@@ -1,6 +1,4 @@
-import * as ethers from 'ethers'
-
-import { TransactionManager } from '../util/TransactionManager'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
 
 import Button from 'react-bootstrap/Button'
 
@@ -33,8 +31,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 const AdminUserDeckList = (props : {
-  contract : ethers.Contract,
-  transactionManager : TransactionManager,
+  contract : ContractCardAdmin,
 }) => {
   const stepId = StepId.UserDeckList
   const step = useAppSelector((state) => state.contractSlice.step)
@@ -47,7 +44,6 @@ const AdminUserDeckList = (props : {
     if (userCardList){
       addUserDefaultDeck(
         props.contract,
-        props.transactionManager,
         userCardList,
       ).then((deck) => {
         let newUserDeckList = [] as UserDeckType[]

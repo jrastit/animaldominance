@@ -1,6 +1,7 @@
-import * as ethers from 'ethers'
+import { utils as ethersUtils, BigNumber } from 'ethers'
 
 import { TransactionManager, TransactionItem } from '../util/TransactionManager'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
   CardType,
@@ -11,8 +12,6 @@ import {
   createWithManagerContractTrading,
 } from '../contract/solidity/compiled/contractAutoFactory'
 
-
-
 const DEF_DELAY = 1000;
 
 function sleep(ms: number) {
@@ -20,8 +19,7 @@ function sleep(ms: number) {
 }
 
 export const createAllCard = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   setMessage?: (msg: string | undefined) => void,
   speed?: number,
 ) => {
@@ -37,7 +35,7 @@ export const createAllCard = async (
         attack.push(level.attack)
         life.push(level.life)
       });
-      const _tx = transactionManager.sendTx(await contract.populateTransaction.createCardFull(
+      const tx = await contract.createCardFull(
         card.name,
         card.mana,
         card.family,
@@ -45,30 +43,29 @@ export const createAllCard = async (
         description,
         life,
         attack,
-      ), "Create card " + card.name)
-      const tx = await _tx;
+      );
       if (setMessage) setMessage(tx.log)
     } else {
-      const tx = await transactionManager.sendTx(await contract.populateTransaction.createCard(
+      const tx = await contract.createCard(
         card.name,
         card.mana,
         card.family,
         card.starter
-      ), "Create card " + card.name)
+      )
       if (setMessage) setMessage(tx.log)
-      await Promise.all(tx.result.logs.map(async (log) => {
+      await Promise.all(tx.result.logs.map(async (log: any) => {
         const log2 = contract.interface.parseLog(log)
         if (log2.name === 'CardCreated') {
           const promise = [] as Array<Promise<TransactionItem>>
           for (let l = 0; l < card.level.length; l++) {
             const level = card.level[l]
-            const tx2 = transactionManager.sendTx(await contract.populateTransaction.setCardLevel(
+            const tx2 = await contract.setCardLevel(
               log2.args.id,
               level.desc,
               l,
               level.life,
               level.attack,
-            ), "Add level " + card.name + " : " + l + " => " + level.desc)
+            )
             await tx2
             if (speed) {
               promise.push(tx2)
@@ -76,7 +73,6 @@ export const createAllCard = async (
             } else {
               if (setMessage) setMessage((await tx2).log)
             }
-
           }
           await Promise.all(promise)
         }
@@ -87,83 +83,71 @@ export const createAllCard = async (
 }
 
 export const registerTrading = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
   transactionManager: TransactionManager,
 ) => {
   const tradingContract = await createWithManagerContractTrading(
     contract,
     transactionManager
   )
-  const tx = await transactionManager.sendTx(await contract.populateTransaction.updateTrading(
+  const tx = await contract.updateTrading(
     tradingContract.address
-  ), "Update trading contract " + tradingContract.address)
+  )
   return tx
 }
 
 export const buyNewCard = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   cardId: number,
   value: number,
 ) => {
-  const ptx = await contract.populateTransaction.buyNewCard(
-    cardId
+  return await contract.buyNewCard(
+    cardId,
+    { value: ethersUtils.formatEther(value) }
   )
-  ptx.value = ethers.utils.parseEther(value.toString())
-  const tx = await transactionManager.sendTx(ptx, "Buy new card " + cardId + " for " + value)
-  return tx
 }
 
 export const buyCard = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   userId: number,
   userCardId: number,
-  value: ethers.BigNumber,
+  value: BigNumber,
 ) => {
-  const ptx = await contract.populateTransaction.buyCard(
+  return await contract.buyCard(
     userId,
     userCardId,
+    { value }
   )
-  ptx.value = value
-  const tx = await transactionManager.sendTx(ptx, "Buy card " + userId + ' ' + userCardId + " for " + value)
-  return tx
 }
 
 export const listCard = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   cardId: number,
   price: number,
 ) => {
-  const ptx = await contract.populateTransaction.sellCardSelf(
+  return await contract.sellCardSelf(
     cardId,
-    ethers.utils.parseEther(price.toString()),
+    ethersUtils.parseEther(price.toString()),
   )
-  const tx = await transactionManager.sendTx(ptx, "List card " + cardId)
-  return tx
 }
 
 export const cancelListCard = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   cardId: number,
 ) => {
-  const ptx = await contract.populateTransaction.cancelSellCardSelf(
+  return await contract.cancelSellCardSelf(
     cardId,
   )
-  const tx = await transactionManager.sendTx(ptx, "Cancel list card " + cardId)
-  return tx
 }
 
 export const getCardLastId = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
 ) => {
   return (await contract.cardLastId())
 }
 
 export const loadAllCard = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
   setMessage?: (message: string | undefined) => void,
 ) => {
   const cardLastId = await getCardLastId(contract)

@@ -1,10 +1,44 @@
 import { ethers } from 'ethers'
 import { TransactionManager } from '../../../util/TransactionManager'
+import { ContractGeneric, initContract, ContractFunction } from '../../../util/ContractGeneric'
 
 import jsonCardAdmin from './CardAdmin.json'
 import jsonPlayGame from './PlayGame.json'
 import jsonPlayGameFactory from './PlayGameFactory.json'
 import jsonTrading from './Trading.json'
+
+export class ContractCardAdmin extends ContractGeneric {
+	readonly [key: string]: ContractFunction | any
+	constructor(contract: ethers.Contract, transactionManager: TransactionManager) {
+		super(contract, transactionManager)
+		initContract(this, jsonCardAdmin.abi)
+	}
+}
+
+export class ContractPlayGame extends ContractGeneric {
+	readonly [key: string]: ContractFunction | any
+	constructor(contract: ethers.Contract, transactionManager: TransactionManager) {
+		super(contract, transactionManager)
+		initContract(this, jsonPlayGame.abi)
+	}
+}
+
+export class ContractPlayGameFactory extends ContractGeneric {
+	readonly [key: string]: ContractFunction | any
+	constructor(contract: ethers.Contract, transactionManager: TransactionManager) {
+		super(contract, transactionManager)
+		initContract(this, jsonPlayGameFactory.abi)
+	}
+}
+
+export class ContractTrading extends ContractGeneric {
+	readonly [key: string]: ContractFunction | any
+	constructor(contract: ethers.Contract, transactionManager: TransactionManager) {
+		super(contract, transactionManager)
+		initContract(this, jsonTrading.abi)
+	}
+}
+
 
 export const createContractCardAdmin = async (
 	_playGameFactory : {address : string},
@@ -78,11 +112,11 @@ export const createWithManagerContractCardAdmin = async (
 	const utx = factory.getDeployTransaction(
 		_playGameFactory.address,
 	)
-	return await transactionManager.sendContractTx(
+	return new ContractCardAdmin(await transactionManager.sendContractTx(
 		utx,
 		getContractCardAdmin,
 		 'Create contract CardAdmin',
-	)
+	), transactionManager)
 }
 
 export const createWithManagerContractPlayGame = async (
@@ -94,11 +128,11 @@ export const createWithManagerContractPlayGame = async (
 	)
 	const utx = factory.getDeployTransaction(
 	)
-	return await transactionManager.sendContractTx(
+	return new ContractPlayGame(await transactionManager.sendContractTx(
 		utx,
 		getContractPlayGame,
 		 'Create contract PlayGame',
-	)
+	), transactionManager)
 }
 
 export const createWithManagerContractPlayGameFactory = async (
@@ -110,11 +144,11 @@ export const createWithManagerContractPlayGameFactory = async (
 	)
 	const utx = factory.getDeployTransaction(
 	)
-	return await transactionManager.sendContractTx(
+	return new ContractPlayGameFactory(await transactionManager.sendContractTx(
 		utx,
 		getContractPlayGameFactory,
 		 'Create contract PlayGameFactory',
-	)
+	), transactionManager)
 }
 
 export const createWithManagerContractTrading = async (
@@ -128,11 +162,11 @@ export const createWithManagerContractTrading = async (
 	const utx = factory.getDeployTransaction(
 		_cardAdmin.address,
 	)
-	return await transactionManager.sendContractTx(
+	return new ContractTrading(await transactionManager.sendContractTx(
 		utx,
 		getContractTrading,
 		 'Create contract Trading',
-	)
+	), transactionManager)
 }
 
 
@@ -178,6 +212,51 @@ export const getContractTrading = (
 		jsonTrading.abi,
 		signer,
 	)
+}
+
+
+export const getWithManagerContractCardAdmin = (
+	contractAddress: string,
+	transactionManager: TransactionManager
+) => {
+	return new ContractCardAdmin(new ethers.Contract(
+		contractAddress,
+		jsonCardAdmin.abi,
+		transactionManager.signer,
+	), transactionManager)
+}
+
+export const getWithManagerContractPlayGame = (
+	contractAddress: string,
+	transactionManager: TransactionManager
+) => {
+	return new ContractPlayGame(new ethers.Contract(
+		contractAddress,
+		jsonPlayGame.abi,
+		transactionManager.signer,
+	), transactionManager)
+}
+
+export const getWithManagerContractPlayGameFactory = (
+	contractAddress: string,
+	transactionManager: TransactionManager
+) => {
+	return new ContractPlayGameFactory(new ethers.Contract(
+		contractAddress,
+		jsonPlayGameFactory.abi,
+		transactionManager.signer,
+	), transactionManager)
+}
+
+export const getWithManagerContractTrading = (
+	contractAddress: string,
+	transactionManager: TransactionManager
+) => {
+	return new ContractTrading(new ethers.Contract(
+		contractAddress,
+		jsonTrading.abi,
+		transactionManager.signer,
+	), transactionManager)
 }
 
 

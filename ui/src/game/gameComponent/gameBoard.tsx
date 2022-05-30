@@ -1,4 +1,4 @@
-import * as ethers from 'ethers'
+import { ContractPlayGame } from '../../contract/solidity/compiled/contractAutoFactory'
 import { useEffect, useState, useRef, ReactElement } from 'react'
 import {
   GameType,
@@ -16,7 +16,6 @@ import GameCardWidget from './gameCardWidget'
 import UserGameWidget from './userGameWidget'
 import DropHelper from '../../component/dropHelper'
 import PlaceHelper, { PlaceRefType } from '../../component/placeHelper'
-import { TransactionManager } from '../../util/TransactionManager'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -95,7 +94,7 @@ const annimatePlay = async (
 }
 
 const _playAction = async (
-  gameContract: ethers.Contract,
+  gameContract: ContractPlayGame,
   gameAction: GameActionType,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
@@ -121,7 +120,7 @@ const _playAction = async (
 }
 
 const _playNextAction = async (
-  gameContract: ethers.Contract,
+  gameContract: ContractPlayGame,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
   setPlay: (play: number) => void,
@@ -166,8 +165,7 @@ const _playNextAction = async (
 }
 
 const GameBoard = (props: {
-  gameContract: ethers.Contract,
-  transactionManager: TransactionManager,
+  gameContract: ContractPlayGame,
   game: GameType,
   user: UserType,
   oponent: UserType,
@@ -219,7 +217,7 @@ const GameBoard = (props: {
   }
 
   const _endGameByTime = () => {
-    endGameByTime(props.gameContract, props.transactionManager).then(() => {
+    endGameByTime(props.gameContract).then(() => {
     }).catch((err) => { dispatch(setError({ id: stepId, catchError: err })) })
   }
 
@@ -227,7 +225,6 @@ const GameBoard = (props: {
     setPlay(Play.EndTurn)
     endTurn(
       props.gameContract,
-      props.transactionManager,
       turnData.playActionList,
       turn,
       _addPlayAction,
@@ -270,7 +267,7 @@ const GameBoard = (props: {
         }, 1000)
       }
     }
-  }, [play, props.game, props.user.id, props.gameContract, turnData, playActionList, cardRefIdList, turn])
+  }, [play, props.game, props.user.id, props.gameContract, turnData, playActionList, cardRefIdList, turn, dispatch])
 
   const displayUser = (
     pos: number,

@@ -1,4 +1,4 @@
-import ethers from 'ethers'
+import { ContractPlayGame } from '../contract/solidity/compiled/contractAutoFactory'
 
 import { GameType, GameCardType, TurnDataType, GameActionType, ActionType } from '../type/gameType'
 
@@ -7,7 +7,7 @@ import { PlaceRefType } from '../component/placeHelper'
 import { getNewGameCardFromId } from '../game/game'
 
 export const playDrawCard = async (
-  gameContract: ethers.Contract,
+  gameContract: ContractPlayGame,
   gameCardId: number,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
@@ -186,7 +186,7 @@ export const playRandomly = (
 }
 
 export const playAction = async (
-  gameContract: ethers.Contract,
+  gameContract: ContractPlayGame,
   gameAction: GameActionType,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,

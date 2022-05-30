@@ -1,4 +1,4 @@
-import ethers from 'ethers'
+import { BigNumber } from 'ethers'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
 import type { CardType } from '../type/cardType'
@@ -24,7 +24,7 @@ export const cardListSlice = createSlice({
     setTradeList: (state, action: PayloadAction<TradeType[][][]>) => {
       state.tradeList = action.payload
     },
-    addTrade: (state, action: PayloadAction<{ cardId: number, level: number, userId: number, userCardId: number, price: ethers.BigNumber }>) => {
+    addTrade: (state, action: PayloadAction<{ cardId: number, level: number, userId: number, userCardId: number, price: BigNumber }>) => {
       if (state.tradeList) {
         const _tradeList = state.tradeList[action.payload.cardId - 1][action.payload.level]
         const trade = _tradeList.filter(_trade => _trade.userId === action.payload.userId && _trade.userCardId === action.payload.userCardId)[0]

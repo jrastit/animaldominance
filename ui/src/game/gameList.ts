@@ -1,6 +1,5 @@
-import * as ethers from 'ethers'
-
-import { TransactionManager } from '../util/TransactionManager'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { BigNumber } from 'ethers'
 
 import {
   GameListItemType,
@@ -8,13 +7,13 @@ import {
 
 
 export const getGameLastId = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
 ) => {
-  return ethers.BigNumber.from(await contract.gameLastId()).toNumber()
+  return BigNumber.from(await contract.gameLastId()).toNumber()
 }
 
 export const getGame = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
   gameId: number
 ) => {
   const gameChain = await contract.gameList(gameId)
@@ -31,7 +30,7 @@ export const getGame = async (
 }
 
 export const getGameList = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
 ) => {
   const lastId = await getGameLastId(contract)
   const gameList = [] as GameListItemType[]
@@ -42,13 +41,12 @@ export const getGameList = async (
 }
 
 export const createGame = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   userDeckId: number,
 ) => {
-  const tx = await transactionManager.sendTx(await contract.populateTransaction.createGameSelf(
+  const tx = await contract.createGameSelf(
     userDeckId
-  ), "Create game")
+  )
   for (let i = 0; i < tx.result.logs.length; i++) {
     const log = contract.interface.parseLog(tx.result.logs[i])
     if (log.name === 'GameCreated') {
@@ -59,13 +57,12 @@ export const createGame = async (
 }
 
 export const createGameBot = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   userDeckId: number,
 ) => {
-  const tx = await transactionManager.sendTx(await contract.populateTransaction.createGameBotSelf(
+  const tx = await contract.createGameBotSelf(
     userDeckId
-  ), "Create game bot")
+  )
   for (let i = 0; i < tx.result.logs.length; i++) {
     try {
       const log = contract.interface.parseLog(tx.result.logs[i])
@@ -80,27 +77,18 @@ export const createGameBot = async (
 }
 
 export const joinGame = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   gameId: number,
   userDeckId: number,
 ) => {
-  const tx = await transactionManager.sendTx(
-    await contract.populateTransaction.joinGameSelf(
-      gameId,
-      userDeckId,
-    ), "Join game"
+  return contract.joinGameSelf(
+    gameId,
+    userDeckId,
   )
-  return tx
 }
 
 export const cancelGame = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
 ) => {
-  const tx = await transactionManager.sendTx(
-    await contract.populateTransaction.cancelGame(
-    ), "Cancel game"
-  )
-  return tx
+  return await await contract.cancelGame()
 }

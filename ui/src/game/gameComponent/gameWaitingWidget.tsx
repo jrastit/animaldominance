@@ -1,8 +1,7 @@
-import * as ethers from 'ethers'
 import { useEffect } from 'react'
-import { TransactionManager } from '../../util/TransactionManager'
 import Button from 'react-bootstrap/Button'
 import DivNice from '../../component/divNice'
+import { ContractCardAdmin } from '../../contract/solidity/compiled/contractAutoFactory'
 
 import { useAppSelector, useAppDispatch } from '../../hooks'
 
@@ -28,8 +27,7 @@ import {
 const stepId = StepId.Game
 
 const GameWaitingWidget = (props:{
-  transactionManager : TransactionManager,
-  contract : ethers.Contract,
+  contract : ContractCardAdmin,
 }) => {
 
   const gameList = useAppSelector((state) => state.gameSlice.gameList)
@@ -53,7 +51,7 @@ const GameWaitingWidget = (props:{
 
   const _cancelGame = () => {
     dispatch(updateStep({id : stepId, step : Step.Loading}))
-    cancelGame(props.contract, props.transactionManager).then(() => {
+    cancelGame(props.contract).then(() => {
       dispatch(setGameId(0))
       dispatch(clearGame())
       dispatch(updateStep({id : stepId, step : Step.Init}))

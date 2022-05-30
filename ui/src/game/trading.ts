@@ -1,11 +1,12 @@
-import * as ethers from 'ethers'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractTrading } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
   getCardLastId
 } from './card'
 
 import {
-  getContractTrading,
+  getWithManagerContractTrading,
 } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
@@ -13,15 +14,15 @@ import {
 } from '../type/tradeType'
 
 export const getTradingContract = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
 ) => {
   const tradeContractAddress = await contract.trading()
-  return getContractTrading(tradeContractAddress, contract.signer)
+  return getWithManagerContractTrading(tradeContractAddress, contract.transactionManager)
 }
 
 export const loadAllTrade = async (
-  contract: ethers.Contract,
-  tradingContract: ethers.Contract,
+  contract: ContractCardAdmin,
+  tradingContract: ContractTrading,
   setMessage?: (message: string | undefined) => void,
 ) => {
   const tradeList = [] as TradeType[][][]

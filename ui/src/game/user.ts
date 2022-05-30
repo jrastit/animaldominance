@@ -1,6 +1,5 @@
-import * as ethers from 'ethers'
-
-import { TransactionManager } from '../util/TransactionManager'
+import { utils as ethersUtils, BigNumber } from 'ethers'
+import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
   UserType,
@@ -9,18 +8,17 @@ import {
 } from '../type/userType'
 
 export const registerUser = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   name: string,
 ) => {
-  const tx = await transactionManager.sendTx(await contract.populateTransaction.registerUserSelf(
+  const tx = await contract.registerUserSelf(
     name
-  ), "Register user as " + name)
+  )
   return tx
 }
 
 export const getUserId = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
   address?: string,
 ) => {
   if (!address) {
@@ -29,11 +27,11 @@ export const getUserId = async (
   const idBG = await contract.userAddressList(address)
   //console.log(ethers.BigNumber.from(idBG).toNumber())
 
-  return ethers.BigNumber.from(idBG).toNumber()
+  return BigNumber.from(idBG).toNumber()
 }
 
 export const getUser = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
   userId: number,
 ) => {
   const userChain = await contract.userIdList(userId)
@@ -47,7 +45,7 @@ export const getUser = async (
 }
 
 export const getUserCardList = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
   userId: number,
 ) => {
   const cardListChain = await contract.getUserCardList(userId)
@@ -57,14 +55,14 @@ export const getUserCardList = async (
       cardId: userCardChain.cardId,
       exp: userCardChain.exp.toNumber(),
       expWin: userCardChain.expWin.toNumber(),
-      price: parseFloat(ethers.utils.formatEther(userCardChain.price)),
+      price: parseFloat(ethersUtils.formatEther(userCardChain.price)),
       sold: userCardChain.sold,
     } as UserCardType
   })
 }
 
 export const getUserDeckList = async (
-  contract: ethers.Contract,
+  contract: ContractCardAdmin,
   userId: number,
 ) => {
   const deckLength = await contract.getUserDeckLength(userId)
@@ -80,31 +78,29 @@ export const getUserDeckList = async (
 }
 
 export const addUserDefaultDeck = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   userCardList: UserCardType[],
 ) => {
   if (userCardList.length < 20) {
     throw new Error("Not enought card")
   }
   const deckCardList = userCardList.slice(0, 20)
-  return await addUserDeck(contract, transactionManager, deckCardList)
+  return await addUserDeck(contract, deckCardList)
 }
 
 export const addUserDeck = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   userCardList: UserCardType[],
 ) => {
   if (userCardList.length !== 20) {
     throw new Error("Should have 20 cards")
   }
   const deckCardIdList = userCardList.map(userCard => userCard.id)
-  const tx = await transactionManager.sendTx(await contract.populateTransaction.addGameDeckSelf(
+  const tx = await contract.addGameDeckSelf(
     deckCardIdList,
-  ), "Add default deck")
+  )
   let deckId = 0
-  await Promise.all(tx.result.logs.map(async (log) => {
+  await Promise.all(tx.result.logs.map(async (log: any) => {
     const log2 = contract.interface.parseLog(log)
     if (log2.name === 'DeckUpdated') {
       deckId = log2.args.deckId
@@ -117,8 +113,7 @@ export const addUserDeck = async (
 }
 
 export const updateUserDeck = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   deckId: number,
   userCardList: UserCardType[],
 ) => {
@@ -126,10 +121,10 @@ export const updateUserDeck = async (
     throw new Error("Should have 20 cards")
   }
   const deckCardIdList = userCardList.map(userCard => userCard.id)
-  await transactionManager.sendTx(await contract.populateTransaction.updateGameDeckSelf(
+  await contract.updateGameDeckSelf(
     deckId,
     deckCardIdList,
-  ), "Update deck " + deckId)
+  )
   return {
     id: deckId,
     userCardIdList: deckCardIdList,
@@ -137,13 +132,10 @@ export const updateUserDeck = async (
 }
 
 export const addUserStarterCard = async (
-  contract: ethers.Contract,
-  transactionManager: TransactionManager,
+  contract: ContractCardAdmin,
   userId: number,
 ) => {
-  const tx = await transactionManager.sendTx(
-    await contract.populateTransaction.addUserStarterCard(
-      userId
-    ), "Add user starter cards")
-  return tx
+  return await contract.addUserStarterCard(
+    userId
+  )
 }

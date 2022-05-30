@@ -1,7 +1,7 @@
-import * as ethers from 'ethers'
+import {ContractCardAdmin} from '../contract/solidity/compiled/contractAutoFactory'
+import {ContractPlayGame} from '../contract/solidity/compiled/contractAutoFactory'
 import { useState } from 'react'
 
-import { TransactionManager } from '../util/TransactionManager'
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
 import DivNice from '../component/divNice'
@@ -30,11 +30,10 @@ import {
 import StepMessageNiceWidget from '../component/stepMessageNiceWidget'
 
 const PlayGame = (props:{
-  transactionManager : TransactionManager,
-  contract : ethers.Contract,
+  contract : ContractCardAdmin,
 }) => {
 
-  const [gameContract, setGameContract] = useState<ethers.Contract>()
+  const [gameContract, setGameContract] = useState<ContractPlayGame>()
 
   const stepId = StepId.Game
   const step = useAppSelector((state) => state.contractSlice.step)
@@ -47,7 +46,7 @@ const PlayGame = (props:{
   const _leaveGame = () => {
     if (gameContract){
       dispatch(updateStep({id : stepId, step : Step.Loading}))
-      leaveGame(gameContract, props.transactionManager).then(() => {
+      leaveGame(gameContract).then(() => {
         dispatch(updateStep({id : stepId, step : Step.Ended}))
       }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
     }
@@ -58,7 +57,6 @@ const PlayGame = (props:{
     if (isStep(stepId, Step.Waiting, step)){
       return (<GameWaitingWidget
       contract={props.contract}
-      transactionManager={props.transactionManager}
       />)
     } else if (
       isStep(stepId, Step.Creating, step) ||
@@ -80,7 +78,6 @@ const PlayGame = (props:{
         return (
           <GameBoard
             gameContract={gameContract}
-            transactionManager={props.transactionManager}
             game={game}
             user={user}
             oponent={oponent}
@@ -126,7 +123,6 @@ const PlayGame = (props:{
       <Col>
         <GameLoader
           contract={props.contract}
-          transactionManager={props.transactionManager}
           setGameContract={setGameContract}
           gameContract={gameContract}
         />
