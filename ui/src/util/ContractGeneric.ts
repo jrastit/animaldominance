@@ -36,7 +36,7 @@ function initContract(contractClass: any, abi: any[]) {
       Object.defineProperty(contractClass, functionName, {
         value: async (...args: any[]) => {
           console.log("call view ", functionName)
-          return await contractClass.contract[functionName](...args)
+          return await contractClass.contract.functions[functionName](...args)
         },
         writable: false,
         enumerable: true,

@@ -1,5 +1,4 @@
 import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
-import { BigNumber } from 'ethers'
 
 import {
   GameListItemType,
@@ -9,7 +8,8 @@ import {
 export const getGameLastId = async (
   contract: ContractCardAdmin,
 ) => {
-  return BigNumber.from(await contract.gameLastId()).toNumber()
+  const result = await contract.gameLastId()
+  return result[0].toNumber()
 }
 
 export const getGame = async (

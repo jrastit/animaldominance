@@ -18,6 +18,22 @@ const UserCardWidget = (props: {
   const level = getLevel(props.userCard.exp)
   const card = cardList.filter(card => card.id === props.userCard.cardId)[0]
 
+  if (!card) {
+    return (
+      <CardWidget
+        family={0}
+        mana={0}
+        name={'Loading...'}
+        level={level}
+        attack={0}
+        life={0}
+        description={'Loading...'}
+        exp={props.userCard.exp}
+      />
+    )
+
+  }
+
   return (
         <CardWidget
           family={card.family}

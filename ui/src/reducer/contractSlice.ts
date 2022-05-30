@@ -114,8 +114,11 @@ export const contractSlice = createSlice({
       let error = action.payload.error
       if (action.payload.catchError) {
         error = action.payload.catchError.message
+        console.error(action.payload.catchError)
+      } else {
+        console.error(error)
       }
-      console.error(error)
+
       state.step.forEach((step) => {
         if (step.id === action.payload.id) {
           console.log("updateStep", StepId[action.payload.id], Step[Step.Error])

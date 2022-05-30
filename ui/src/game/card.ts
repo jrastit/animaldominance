@@ -166,7 +166,7 @@ export const loadAllCard = async (
     } as CardType
     for (let j = 0; j < 6; j++) {
       if (setMessage) setMessage("Loading card " + ((i - 1) * 6 + j + 1) + "/" + (cardLastId * 6) + " " + card.name)
-      const levelChain = (await contract.getCardLevel(i, j))
+      const levelChain = (await contract.getCardLevel(i, j))[0]
       const level = {
         description: levelChain.description,
         life: levelChain.life,

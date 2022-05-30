@@ -117,7 +117,7 @@ const CardListWidget = (props : {
 
   const editCard = (card : CardType) => {
     return (
-      <div>
+      <div key={card.id}>
       <Row>
       <Col>
       <CardEditFrom
@@ -189,6 +189,7 @@ const CardListWidget = (props : {
   const displayCard = (card : CardType) => {
     const price = card.starter ? 1 : 10
     return (
+      <div key={card.id}>
       <DivFullNice>
       <Row key={card.id}>
         <Col xs={3}>
@@ -246,6 +247,7 @@ const CardListWidget = (props : {
         </Col>
       </Row>
       </DivFullNice>
+      </div>
     )
   }
 

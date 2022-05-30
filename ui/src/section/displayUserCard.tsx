@@ -163,7 +163,7 @@ const DisplayUserCard = (props: {
                       return (
                         <div key={userCard.id} style={{margin : '.25em'}}>
                           <ButtonNice onClick={() => { setSellCard({ userCardId: userCard.id }) }}>
-                            Sell {card.name} level {level} ({userCard.exp})
+                            Sell {card?.name} level {level} ({userCard.exp})
                           </ButtonNice>
                         </div>
                       )
@@ -182,11 +182,11 @@ const DisplayUserCard = (props: {
                         </div>
                       )
                     } else{
-                      return (<div  style={{margin : '.25em'}}>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} {tokenName}</div>)
+                      return (<div  key={userCard.id} style={{margin : '.25em'}}>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} {tokenName}</div>)
                     }
                   }
 
-                  return (<div></div>)
+                  return (<div  key={userCard.id} ></div>)
                 })
                 }
                 {!!sellCard &&

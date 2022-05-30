@@ -1,4 +1,4 @@
-import { utils as ethersUtils, BigNumber } from 'ethers'
+import { utils as ethersUtils } from 'ethers'
 import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
@@ -25,9 +25,7 @@ export const getUserId = async (
     address = await contract.signer.getAddress()
   }
   const idBG = await contract.userAddressList(address)
-  //console.log(ethers.BigNumber.from(idBG).toNumber())
-
-  return BigNumber.from(idBG).toNumber()
+  return idBG[0].toNumber()
 }
 
 export const getUser = async (
@@ -49,7 +47,7 @@ export const getUserCardList = async (
   userId: number,
 ) => {
   const cardListChain = await contract.getUserCardList(userId)
-  return cardListChain.map((userCardChain: any, id: number) => {
+  return cardListChain.userCard.map((userCardChain: any, id: number) => {
     return {
       id: id + 1,
       cardId: userCardChain.cardId,
@@ -68,7 +66,7 @@ export const getUserDeckList = async (
   const deckLength = await contract.getUserDeckLength(userId)
   const userDeckList = [] as UserDeckType[]
   for (let i = 1; i <= deckLength; i++) {
-    const gameDeckCardChain = await contract.getUserDeckCard(userId, i)
+    const gameDeckCardChain = (await contract.getUserDeckCard(userId, i))[0]
     userDeckList.push({
       id: i,
       userCardIdList: gameDeckCardChain,

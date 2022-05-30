@@ -17,7 +17,7 @@ export const getTradingContract = async (
   contract: ContractCardAdmin,
 ) => {
   const tradeContractAddress = await contract.trading()
-  return getWithManagerContractTrading(tradeContractAddress, contract.transactionManager)
+  return getWithManagerContractTrading(tradeContractAddress[0], contract.transactionManager)
 }
 
 export const loadAllTrade = async (

@@ -49,7 +49,7 @@ export const getGameCardList = async (
   gameContract: ContractPlayGame,
   pos: number
 ) => {
-  return (await gameContract.getGameCardList(pos)).map((gameCardListChain: any, id: number) => {
+  return ((await gameContract.getGameCardList(pos))[0]).map((gameCardListChain: any, id: number) => {
     return getGameCardFromChain(gameCardListChain, id)
   }) as GameCardType[]
 }
@@ -59,7 +59,7 @@ export const getNewGameCardFromId = async (
   userId: number,
   gameCardId: number
 ) => {
-  const gameCardListChain = await gameContract.getNewGameCardFromId(userId, gameCardId)
+  const gameCardListChain = (await gameContract.getNewGameCardFromId(userId, gameCardId))[0]
   if (!gameCardListChain || !gameCardListChain.cardId) {
     throw Error('Invalid card ' + gameCardId + '/' + userId)
   }
@@ -72,7 +72,7 @@ export const getGameFull = async (
   setMessage?: (message: string) => void
 ) => {
   setMessage && setMessage('Load id ')
-  const id = BigNumber.from(await gameContract.gameId()).toNumber()
+  const id = (await gameContract.gameId())[0].toNumber()
   setMessage && setMessage('Load user1 id ')
   const gameUser1 = await gameContract.gameUser(0)
   const userId1 = BigNumber.from(gameUser1.userId).toNumber()
@@ -86,15 +86,15 @@ export const getGameFull = async (
   setMessage && setMessage('Load user2 card ')
   const cardList2 = await getGameCardList(gameContract, 1)
   setMessage && setMessage('Load latest time ')
-  const latestTime = BigNumber.from(await gameContract.latestTime()).toNumber()
+  const latestTime = (await gameContract.latestTime())[0].toNumber()
   setMessage && setMessage('Load version ')
-  const version = await gameContract.version()
+  const version = (await gameContract.version())[0]
   setMessage && setMessage('Load turn ')
-  const turn = await gameContract.turn()
+  const turn = (await gameContract.turn())[0]
   setMessage && setMessage('Load winner ')
-  const winner = BigNumber.from(await gameContract.winner()).toNumber()
+  const winner = (await gameContract.winner())[0].toNumber()
   setMessage && setMessage('Load ended ')
-  const ended = await gameContract.ended()
+  const ended = (await gameContract.ended())[0]
   const game = {
     id,
     userId1,

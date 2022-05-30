@@ -131,7 +131,6 @@ const loadTradingContract = (
       setTradingContract(_tradingContract)
       dispatch(updateStep({ id: stepId, step: Step.Ready }))
   }).catch((err) => {
-    console.error(err)
     dispatch(setError({ id: stepId, catchError: err }))
   })
 }
@@ -307,11 +306,9 @@ const loadContract = async (
         }
       }
       catch (err: any) {
-        console.error(err)
         dispatch(setError({ id: stepId, error: "Contract error" }))
       }
     }catch (err: any) {
-      console.error(err)
       dispatch(setError({ id: stepId, error: "Contract error" }))
     }
 
