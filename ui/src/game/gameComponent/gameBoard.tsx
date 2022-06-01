@@ -26,15 +26,18 @@ import {
 } from '../../game/card'
 
 import {
-  endTurnData,
-  getTurnData,
-  playRandomly,
-  playCardTo3,
-  playAttack,
-  playAttackOponent,
-  checkTurnData,
   playAction,
 } from '../../game/playGame'
+
+import {
+  endTurnData,
+  getTurnData,
+  checkTurnData,
+} from '../../game/turnData'
+
+import {
+  playRandomly,
+} from '../../game/gameBot'
 
 import {
   addPlayAction,
@@ -69,26 +72,35 @@ const annimatePlay = async (
   myTurn: number,
   cardRefIdList: number[][],
   current: (PlaceRefType | null)[],
+  actionId : number,
   gameCardId1: number,
-  gameCardId2?: number
+  gameCardId2: number,
 ) => {
   //console.log(gameCardId1, current, cardRefIdList[1 - myTurn])
+  console.log(actionId, gameCardId1, gameCardId2)
+  if (!gameCardId2) console.error('error!')
   const place1 = current[cardRefIdList[1 - myTurn][gameCardId1]]?.getPlace()
   //console.log(place1)
   if (place1) {
     if (gameCardId2 !== undefined) {
-      const place2 = current[cardRefIdList[myTurn][gameCardId2]]?.getPlace()
-      if (place2) {
-        await current[cardRefIdList[1 - myTurn][gameCardId1]]?.doTranslate2({
-          x: place2.x - place1.x,
-          y: place2.y - place1.y,
-        })
+      let place2 = undefined
+      if (actionId === ActionType.Attack){
+        place2 = current[cardRefIdList[myTurn][gameCardId2]]?.getPlace()
+        if (place2) {
+          await current[cardRefIdList[1 - myTurn][gameCardId1]]?.doTranslate2({
+            x: place2.x - place1.x,
+            y: place2.y - place1.y,
+          })
+        }
+      } else if (actionId === ActionType.Play){
+        place2 = current[cardRefIdList[1 - myTurn][gameCardId2]]?.getPlace()
+        if (place2) {
+          await current[cardRefIdList[1 - myTurn][gameCardId1]]?.doTranslate({
+            x: place2.x - place1.x,
+            y: place2.y - place1.y,
+          })
+        }
       }
-    } else {
-      await current[cardRefIdList[1 - myTurn][gameCardId1]]?.doTranslate({
-        x: 0,
-        y: myTurn ? -220 : 220,
-      })
     }
   }
 }
@@ -105,8 +117,9 @@ const _playAction = async (
       myTurn: number,
       cardRefIdList: number[][],
       current: (PlaceRefType | null)[],
+      actionId: number,
       gameCardId1: number,
-      gameCardId2?: number
+      gameCardId2: number
     ) => Promise<void>
   }
 ) => {
@@ -295,38 +308,57 @@ const GameBoard = (props: {
 
   const displayGameCardList = (
     pos: number,
-    position: number,
-    max:number,
+    start: number,
+    stop: number,
     draggable?: boolean,
-    onDrop?: (data: string, gameCard: GameCardType,) => void
+    onDrop?: (data: string, gameCard: GameCardType,) => void,
+    onDropEmpty?: (data: string, id: number) => void,
   ) => {
-    const xs = Math.floor(12 / max)
-    const padding = Math.floor((12 - (max * xs)) / 2)
-    const gameCardList = turnData.cardList[pos].filter(
-      _gameCard => _gameCard.position === position
-    )
+    const xs = Math.floor(12 / (stop - start))
+    const padding = Math.floor((12 - ((stop - start) * xs)) / 2)
+    const gameCardList = turnData.cardList[pos].slice(start, stop)
     return (
       <Row>
-        {padding && <Col xs={padding}></Col>}
-        {gameCardList.map((_card) => {
+        {!!padding && <Col xs={padding}></Col>}
+        {gameCardList.map((_card, _id) => {
+          const id = start + _id
           return (
-            <Col xs={xs} key={_card.id} style={{ paddingTop: '1em' }}>
+            <Col xs={xs} key={id} style={{ paddingTop: '1em' }}>
+              <div style={{
+                width:"12em",
+                height:"18em",
+                backgroundColor : '#ffffff40',
+                borderRadius:"1.2em",
+              }}>
               <PlaceHelper ref={el => {
                 if (el) {
-                  cardRefList.current[getRefId(pos, _card.id)] = el
+                  cardRefList.current[getRefId(pos, id)] = el
                 }
-              }}>
+              }} disable={!_card}>
+              { !!_card &&
                 <GameCardWidget
                   cardList={cardList}
                   gameCard={_card}
                   draggable={draggable ?
-                    (_card.position === 1 && _card.mana <= turnData.mana) ||
-                    (_card.position === 3 && _card.play === 0)
+                    (_card.id < 6 && _card.mana <= turnData.mana) ||
+                    (_card.id > 8 && _card.id < 16 && _card.play === 0)
                     :
                     false}
                   onDrop={onDrop}
                 />
+              }
+              { !_card &&
+                <DropHelper
+                  onDrop={(data : string) => onDropEmpty && onDropEmpty(data, id)}
+                  style={{
+                    width:"12em",
+                    height:"18em",
+                  }}
+                >
+                </DropHelper>
+              }
               </PlaceHelper>
+              </div>
             </Col>
           )
         })}
@@ -334,52 +366,67 @@ const GameBoard = (props: {
     )
   }
 
-  const _playCardTo3 = async (data: string) => {
+  const _playCardTo3 = async (data: string, dest: number) => {
     const gameCardId = parseInt(data)
-    await annimatePlay(
-      turnData.myTurn,
-      cardRefIdList,
-      cardRefList.current,
+    const gameAction = {
       gameCardId,
-    )
-    playCardTo3(
-      gameCardId,
+      actionTypeId : ActionType.Play,
+      dest,
+      self : true,
+    }
+    await _playAction(
+      props.gameContract,
+      gameAction,
       turnData,
-      setTurnData
+      setTurnData,
+      {
+        cardRefIdList,
+        current : cardRefList.current,
+        annimatePlay,
+      }
     )
   }
 
   const _playAttack = async (data: string, gameCard2: GameCardType) => {
     const gameCardId1 = parseInt(data)
     const gameCardId2 = gameCard2.id
-    await annimatePlay(
-      turnData.myTurn,
-      cardRefIdList,
-      cardRefList.current,
-      gameCardId1,
-      gameCardId2,
-    )
-    playAttack(
-      gameCardId1,
-      gameCardId2,
+    const gameAction = {
+      gameCardId : gameCardId1,
+      actionTypeId : ActionType.Attack,
+      dest : gameCardId2,
+      self : true,
+    }
+    await _playAction(
+      props.gameContract,
+      gameAction,
       turnData,
-      setTurnData
+      setTurnData,
+      {
+        cardRefIdList,
+        current : cardRefList.current,
+        annimatePlay,
+      }
     )
   }
 
   const _playAttackOponent = async (data: string) => {
     const gameCardId = parseInt(data)
-    await annimatePlay(
-      turnData.myTurn,
-      cardRefIdList,
-      cardRefList.current,
+    const gameAction = {
       gameCardId,
-      255,
-    )
-    playAttackOponent(
-      gameCardId,
+      actionTypeId : ActionType.Attack,
+      dest : 255,
+      self : true,
+    }
+    await _playAction(
+      props.gameContract,
+      gameAction,
       turnData,
-      setTurnData
+      setTurnData,
+      {
+        cardRefIdList,
+        current : cardRefList.current,
+        annimatePlay,
+      }
     )
   }
 
@@ -431,7 +478,7 @@ const GameBoard = (props: {
         <Col xs={6}>
           {displayGameCardList(
             1,
-            1,
+            0,
             6,
           )}
         </Col>
@@ -447,8 +494,8 @@ const GameBoard = (props: {
         <Col xs={2}>
           {displayGameCardList(
             1,
-            2,
-            2,
+            6,
+            8,
           )}
         </Col>
         <Col xs={2} style={{
@@ -461,8 +508,8 @@ const GameBoard = (props: {
       <Row style={{ height: "20em", backgroundColor: "#00000080" }}>
         {displayGameCardList(
           1,
-          3,
           8,
+          16,
           false,
           _playAttack,
         )}
@@ -477,23 +524,25 @@ const GameBoard = (props: {
       </div>
       <Row
         style={{ height: "20em", backgroundColor: "#00000080" }}
-      ><DropHelper onDrop={_playCardTo3}>
+      >
           {displayGameCardList(
             0,
-            3,
             8,
-            !!turnData.myTurn && play === Play.Ready
+            16,
+            !!turnData.myTurn && play === Play.Ready,
+            undefined,
+            _playCardTo3,
           )}
-        </DropHelper></Row>
+        </Row>
       <Row style={{ height: "20em" }}>
         <Col xs={6}>
           {displayGameCardList(
             0,
-            1,
+            0,
             6,
             !!turnData.myTurn &&
             play === Play.Ready &&
-            turnData.cardList[0].filter(card => card.position === 3).length < 8,
+            turnData.cardList[0].filter(card => card === undefined).length > 0,
           )}
         </Col>
         <Col xs={2} style={{
@@ -506,8 +555,8 @@ const GameBoard = (props: {
         <Col xs={2}>
           {displayGameCardList(
             0,
-            2,
-            2,
+            6,
+            8,
           )}
         </Col>
         <Col xs={2} style={{

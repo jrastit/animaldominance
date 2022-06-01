@@ -1,4 +1,4 @@
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 import { TransactionManager } from '../util/TransactionManager'
 import AddressWidget from '../component/addressWidget'
 import SpaceWidget from '../component/spaceWidget'
@@ -36,8 +36,8 @@ import { useAppSelector, useAppDispatch } from '../hooks'
 
 const AdminContract = (props : {
   transactionManager : TransactionManager,
-  contract ?: ContractCardAdmin,
-  setContract : (contract : ContractCardAdmin | undefined) => void,
+  contract ?: ContractGameManager,
+  setContract : (contract : ContractGameManager | undefined) => void,
 }) => {
   const stepId = StepId.Contract
   const step = useAppSelector((state) => state.contractSlice.step)
@@ -69,7 +69,7 @@ const AdminContract = (props : {
   const updateContractTrading = () => {
     if (props.contract){
       dispatch(updateStep({id: stepId, step: Step.Creating}))
-      registerTrading(props.contract, props.transactionManager).then(() => {
+      registerTrading(props.contract).then(() => {
           dispatch(updateStep({id: stepId, step: Step.Ok}))
           dispatch(updateStep({id: StepId.Trading, step: Step.Init}))
       }).catch((err) => {

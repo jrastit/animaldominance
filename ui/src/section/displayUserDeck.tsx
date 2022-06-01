@@ -1,4 +1,4 @@
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 
 import UserCardListWidget from '../game/component/userCardListWidget'
 
@@ -34,7 +34,7 @@ import Alert from 'react-bootstrap/Alert'
 import DeckSelect from '../game/component/deckSelect'
 
 const DisplayUserDeck = (props : {
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
 }) => {
   const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const userDeckList = useAppSelector((state) => state.userSlice.userDeckList)

@@ -1,4 +1,4 @@
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 import { useState } from 'react'
 
 import Button from 'react-bootstrap/Button'
@@ -29,7 +29,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 const GameJoin = (props : {
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
 }) => {
   const stepId = StepId.Game
   const user = useAppSelector((state) => state.userSlice.user)

@@ -1,4 +1,4 @@
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 import { ContractTrading } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
@@ -14,14 +14,14 @@ import {
 } from '../type/tradeType'
 
 export const getTradingContract = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   const tradeContractAddress = await contract.trading()
   return getWithManagerContractTrading(tradeContractAddress[0], contract.transactionManager)
 }
 
 export const loadAllTrade = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   tradingContract: ContractTrading,
   setMessage?: (message: string | undefined) => void,
 ) => {

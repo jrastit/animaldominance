@@ -1,4 +1,4 @@
-import { ContractCardAdmin } from '../../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../../contract/solidity/compiled/contractAutoFactory'
 import { TransactionManager } from '../../util/TransactionManager'
 
 import {
@@ -16,10 +16,8 @@ import {
 } from '../../game/card'
 
 import {
-  createWithManagerContractCardAdmin,
-  createWithManagerContractPlayGameFactory,
-} from '../../contract/solidity/compiled/contractAutoFactory'
-
+  createContract as _createContract,
+} from '../../game/contract'
 
 import {
   clearCardList
@@ -51,7 +49,7 @@ export const clearState = (
 
 export const fillContract = (
   dispatch: any,
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   const _setMessage = (message: string | undefined) => {
     dispatch(setMessage({ id: stepId, message: message }))
@@ -68,27 +66,21 @@ export const fillContract = (
 export const createContract = (
   dispatch: any,
   transactionManager: TransactionManager,
-  setContract: (contract: ContractCardAdmin | undefined) => void,
+  setContract: (contract: ContractGameManager | undefined) => void,
 ) => {
   const _setMessage = (message: string | undefined) => {
     dispatch(setMessage({ id: stepId, message: message }))
   }
 
   dispatch(updateStep({ id: stepId, step: Step.Creating }))
-  _setMessage("Creating contract game factory...")
-  createWithManagerContractPlayGameFactory(transactionManager).then(async (contractFactory) => {
-    _setMessage("Creating contract card admin...")
-    createWithManagerContractCardAdmin(contractFactory, transactionManager).then(async (contract) => {
-      _setMessage("Creating trading contract...")
-      registerTrading(contract, transactionManager).then(() => {
-        setContract(contract)
-        console.log('New game contract', contract.address)
-        clearState(dispatch)
-        dispatch(resetAllSubStep())
-        fillContract(dispatch, contract)
-      }).catch((err) => {
-        dispatch(setError({ id: stepId, catchError: err }))
-      })
+  _createContract(undefined, transactionManager, _setMessage).then(async (contract) => {
+    _setMessage("Creating contract trading...")
+    registerTrading(contract).then(() => {
+      setContract(contract)
+      console.log('New game contract', contract.address)
+      clearState(dispatch)
+      dispatch(resetAllSubStep())
+      fillContract(dispatch, contract)
     }).catch((err) => {
       dispatch(setError({ id: stepId, catchError: err }))
     })

@@ -2,16 +2,26 @@ import { ethers } from 'ethers'
 import { TransactionManager } from '../../../util/TransactionManager'
 import { ContractGeneric, initContract, ContractFunction } from '../../../util/ContractGeneric'
 
-import jsonCardAdmin from './CardAdmin.json'
+import jsonAnimalDominance from './AnimalDominance.json'
+import jsonGameManager from './GameManager.json'
 import jsonPlayGame from './PlayGame.json'
 import jsonPlayGameFactory from './PlayGameFactory.json'
 import jsonTrading from './Trading.json'
+import jsonPlayActionLib from './PlayActionLib.json'
 
-export class ContractCardAdmin extends ContractGeneric {
+export class ContractAnimalDominance extends ContractGeneric {
 	readonly [key: string]: ContractFunction | any
 	constructor(contract: ethers.Contract, transactionManager: TransactionManager) {
 		super(contract, transactionManager)
-		initContract(this, jsonCardAdmin.abi)
+		initContract(this, jsonAnimalDominance.abi)
+	}
+}
+
+export class ContractGameManager extends ContractGeneric {
+	readonly [key: string]: ContractFunction | any
+	constructor(contract: ethers.Contract, transactionManager: TransactionManager) {
+		super(contract, transactionManager)
+		initContract(this, jsonGameManager.abi)
 	}
 }
 
@@ -39,18 +49,44 @@ export class ContractTrading extends ContractGeneric {
 	}
 }
 
+export class ContractPlayActionLib extends ContractGeneric {
+	readonly [key: string]: ContractFunction | any
+	constructor(contract: ethers.Contract, transactionManager: TransactionManager) {
+		super(contract, transactionManager)
+		initContract(this, jsonPlayActionLib.abi)
+	}
+}
 
-export const createContractCardAdmin = async (
-	_playGameFactory : {address : string},
+
+export const createContractAnimalDominance = async (
+	_contractHash : ethers.BigNumber,
 	signer: ethers.Signer
 ) => {
 	const factory = new ethers.ContractFactory(
-		jsonCardAdmin.abi,
-		jsonCardAdmin.bytecode,
+		jsonAnimalDominance.abi,
+		jsonAnimalDominance.bytecode,
+		signer
+	)
+	const contract = await factory.deploy(
+		_contractHash,
+	)
+	await contract.deployed()
+	return contract
+}
+
+export const createContractGameManager = async (
+	_playGameFactory : {address : string},
+	_playActionLib : {address : string},
+	signer: ethers.Signer
+) => {
+	const factory = new ethers.ContractFactory(
+		jsonGameManager.abi,
+		jsonGameManager.bytecode,
 		signer
 	)
 	const contract = await factory.deploy(
 		_playGameFactory.address,
+		_playActionLib.address,
 	)
 	await contract.deployed()
 	return contract
@@ -85,7 +121,7 @@ export const createContractPlayGameFactory = async (
 }
 
 export const createContractTrading = async (
-	_cardAdmin : {address : string},
+	_gameManager : {address : string},
 	signer: ethers.Signer
 ) => {
 	const factory = new ethers.ContractFactory(
@@ -94,28 +130,62 @@ export const createContractTrading = async (
 		signer
 	)
 	const contract = await factory.deploy(
-		_cardAdmin.address,
+		_gameManager.address,
+	)
+	await contract.deployed()
+	return contract
+}
+
+export const createContractPlayActionLib = async (
+	signer: ethers.Signer
+) => {
+	const factory = new ethers.ContractFactory(
+		jsonPlayActionLib.abi,
+		jsonPlayActionLib.bytecode,
+		signer
+	)
+	const contract = await factory.deploy(
 	)
 	await contract.deployed()
 	return contract
 }
 
 
-export const createWithManagerContractCardAdmin = async (
-	_playGameFactory : {address : string},
+export const createWithManagerContractAnimalDominance = async (
+	_contractHash : ethers.BigNumber,
 	transactionManager: TransactionManager
 ) => {
 	const factory = new ethers.ContractFactory(
-		jsonCardAdmin.abi,
-		jsonCardAdmin.bytecode,
+		jsonAnimalDominance.abi,
+		jsonAnimalDominance.bytecode,
+	)
+	const utx = factory.getDeployTransaction(
+		_contractHash,
+	)
+	return new ContractAnimalDominance(await transactionManager.sendContractTx(
+		utx,
+		getContractAnimalDominance,
+		 'Create contract AnimalDominance',
+	), transactionManager)
+}
+
+export const createWithManagerContractGameManager = async (
+	_playGameFactory : {address : string},
+	_playActionLib : {address : string},
+	transactionManager: TransactionManager
+) => {
+	const factory = new ethers.ContractFactory(
+		jsonGameManager.abi,
+		jsonGameManager.bytecode,
 	)
 	const utx = factory.getDeployTransaction(
 		_playGameFactory.address,
+		_playActionLib.address,
 	)
-	return new ContractCardAdmin(await transactionManager.sendContractTx(
+	return new ContractGameManager(await transactionManager.sendContractTx(
 		utx,
-		getContractCardAdmin,
-		 'Create contract CardAdmin',
+		getContractGameManager,
+		 'Create contract GameManager',
 	), transactionManager)
 }
 
@@ -152,7 +222,7 @@ export const createWithManagerContractPlayGameFactory = async (
 }
 
 export const createWithManagerContractTrading = async (
-	_cardAdmin : {address : string},
+	_gameManager : {address : string},
 	transactionManager: TransactionManager
 ) => {
 	const factory = new ethers.ContractFactory(
@@ -160,7 +230,7 @@ export const createWithManagerContractTrading = async (
 		jsonTrading.bytecode,
 	)
 	const utx = factory.getDeployTransaction(
-		_cardAdmin.address,
+		_gameManager.address,
 	)
 	return new ContractTrading(await transactionManager.sendContractTx(
 		utx,
@@ -169,14 +239,41 @@ export const createWithManagerContractTrading = async (
 	), transactionManager)
 }
 
+export const createWithManagerContractPlayActionLib = async (
+	transactionManager: TransactionManager
+) => {
+	const factory = new ethers.ContractFactory(
+		jsonPlayActionLib.abi,
+		jsonPlayActionLib.bytecode,
+	)
+	const utx = factory.getDeployTransaction(
+	)
+	return new ContractPlayActionLib(await transactionManager.sendContractTx(
+		utx,
+		getContractPlayActionLib,
+		 'Create contract PlayActionLib',
+	), transactionManager)
+}
 
-export const getContractCardAdmin = (
+
+export const getContractAnimalDominance = (
 	contractAddress: string,
 	signer: ethers.Signer,
 ) => {
 	return new ethers.Contract(
 		contractAddress,
-		jsonCardAdmin.abi,
+		jsonAnimalDominance.abi,
+		signer,
+	)
+}
+
+export const getContractGameManager = (
+	contractAddress: string,
+	signer: ethers.Signer,
+) => {
+	return new ethers.Contract(
+		contractAddress,
+		jsonGameManager.abi,
 		signer,
 	)
 }
@@ -214,14 +311,36 @@ export const getContractTrading = (
 	)
 }
 
+export const getContractPlayActionLib = (
+	contractAddress: string,
+	signer: ethers.Signer,
+) => {
+	return new ethers.Contract(
+		contractAddress,
+		jsonPlayActionLib.abi,
+		signer,
+	)
+}
 
-export const getWithManagerContractCardAdmin = (
+
+export const getWithManagerContractAnimalDominance = (
 	contractAddress: string,
 	transactionManager: TransactionManager
 ) => {
-	return new ContractCardAdmin(new ethers.Contract(
+	return new ContractAnimalDominance(new ethers.Contract(
 		contractAddress,
-		jsonCardAdmin.abi,
+		jsonAnimalDominance.abi,
+		transactionManager.signer,
+	), transactionManager)
+}
+
+export const getWithManagerContractGameManager = (
+	contractAddress: string,
+	transactionManager: TransactionManager
+) => {
+	return new ContractGameManager(new ethers.Contract(
+		contractAddress,
+		jsonGameManager.abi,
 		transactionManager.signer,
 	), transactionManager)
 }
@@ -257,6 +376,46 @@ export const getWithManagerContractTrading = (
 		jsonTrading.abi,
 		transactionManager.signer,
 	), transactionManager)
+}
+
+export const getWithManagerContractPlayActionLib = (
+	contractAddress: string,
+	transactionManager: TransactionManager
+) => {
+	return new ContractPlayActionLib(new ethers.Contract(
+		contractAddress,
+		jsonPlayActionLib.abi,
+		transactionManager.signer,
+	), transactionManager)
+}
+export const getHashContractAnimalDominance = (
+) => {
+	return ethers.utils.id(JSON.stringify(jsonAnimalDominance))
+}
+
+export const getHashContractGameManager = (
+) => {
+	return ethers.utils.id(JSON.stringify(jsonGameManager))
+}
+
+export const getHashContractPlayGame = (
+) => {
+	return ethers.utils.id(JSON.stringify(jsonPlayGame))
+}
+
+export const getHashContractPlayGameFactory = (
+) => {
+	return ethers.utils.id(JSON.stringify(jsonPlayGameFactory))
+}
+
+export const getHashContractTrading = (
+) => {
+	return ethers.utils.id(JSON.stringify(jsonTrading))
+}
+
+export const getHashContractPlayActionLib = (
+) => {
+	return ethers.utils.id(JSON.stringify(jsonPlayActionLib))
 }
 
 

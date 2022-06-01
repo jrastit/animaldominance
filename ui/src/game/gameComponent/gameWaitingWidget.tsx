@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import Button from 'react-bootstrap/Button'
 import DivNice from '../../component/divNice'
-import { ContractCardAdmin } from '../../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../../contract/solidity/compiled/contractAutoFactory'
 
 import { useAppSelector, useAppDispatch } from '../../hooks'
 
@@ -27,7 +27,7 @@ import {
 const stepId = StepId.Game
 
 const GameWaitingWidget = (props:{
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
 }) => {
 
   const gameList = useAppSelector((state) => state.gameSlice.gameList)

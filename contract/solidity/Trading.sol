@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import { CardAdmin, UserCard } from "./CardAdmin.sol";
+import { GameManager, UserCard } from "./GameManager.sol";
 
 struct TradeUserCard {
     uint64 userId;
@@ -16,12 +16,12 @@ struct TradeUserCardLevel {
 contract Trading {
     ///////////////////////////////// contract ///////////////////////////////////////
     address payable private owner;
-    CardAdmin cardAdmin;
+    GameManager gameManager;
 
     constructor(
-        CardAdmin _cardAdmin
+        GameManager _gameManager
     ) {
-        _updateCardAdmin(_cardAdmin);
+        _updateGameManager(_gameManager);
         owner = payable( msg.sender);
     }
 
@@ -30,18 +30,18 @@ contract Trading {
         _;
     }
 
-    modifier isCardAdmin() {
-     require(address(msg.sender) == address(cardAdmin));
+    modifier isGameManager() {
+     require(address(msg.sender) == address(gameManager));
         _;
     }
 
-    function updateCardAdmin(CardAdmin _cardAdmin) public isOwner {
-        _updateCardAdmin(_cardAdmin);
+    function updateGameManager(GameManager _gameManager) public isOwner {
+        _updateGameManager(_gameManager);
     }
 
-    function _updateCardAdmin(CardAdmin _cardAdmin) private {
-        require(address(_cardAdmin) != address(0), "cardAdmin is null");
-        cardAdmin = _cardAdmin;
+    function _updateGameManager(GameManager _gameManager) private {
+        require(address(_gameManager) != address(0), "gameManager is null");
+        gameManager = _gameManager;
     }
 
     //////////////////////////////// Trade ////////////////////////////////////////////////
@@ -59,19 +59,19 @@ contract Trading {
         return tradeCartList[cardId][level].tradeUserCardList[tradeId];
     }
 
-    function addUserCard(uint64 _userId, uint32 _userCardId, uint _price) public isCardAdmin {
-        UserCard memory userCard = cardAdmin.getUserCard(_userId, _userCardId);
+    function addUserCard(uint64 _userId, uint32 _userCardId, uint _price) public isGameManager {
+        UserCard memory userCard = gameManager.getUserCard(_userId, _userCardId);
         uint32 cardId = userCard.cardId;
-        uint8 level = cardAdmin.getLevel(userCard.exp);
+        uint8 level = gameManager.getLevel(userCard.exp);
         require(cardId > 0, 'Wrong card');
         tradeCartList[cardId][level].tradeUserCardList.push(TradeUserCard(_userId, _userCardId, _price));
         emit TradeAdd(cardId, level, _userId, _userCardId, _price);
     }
 
-    function removeUserCard(uint64 _userId, uint32 _userCardId) public isCardAdmin {
-        UserCard memory userCard = cardAdmin.getUserCard(_userId, _userCardId);
+    function removeUserCard(uint64 _userId, uint32 _userCardId) public isGameManager {
+        UserCard memory userCard = gameManager.getUserCard(_userId, _userCardId);
         uint32 cardId = userCard.cardId;
-        uint8 level = cardAdmin.getLevel(userCard.exp);
+        uint8 level = gameManager.getLevel(userCard.exp);
         TradeUserCard[] storage tradeUserCardList = tradeCartList[cardId][level].tradeUserCardList;
         for (uint32 i; i < tradeUserCardList.length; i++){
             if (tradeUserCardList[i].userId == _userId && tradeUserCardList[i].userCardId == _userCardId){

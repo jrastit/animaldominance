@@ -1,4 +1,4 @@
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
   GameListItemType,
@@ -6,14 +6,14 @@ import {
 
 
 export const getGameLastId = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   const result = await contract.gameLastId()
   return result[0].toNumber()
 }
 
 export const getGame = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   gameId: number
 ) => {
   const gameChain = await contract.gameList(gameId)
@@ -30,7 +30,7 @@ export const getGame = async (
 }
 
 export const getGameList = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   const lastId = await getGameLastId(contract)
   const gameList = [] as GameListItemType[]
@@ -41,7 +41,7 @@ export const getGameList = async (
 }
 
 export const createGame = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   userDeckId: number,
 ) => {
   const tx = await contract.createGameSelf(
@@ -57,7 +57,7 @@ export const createGame = async (
 }
 
 export const createGameBot = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   userDeckId: number,
 ) => {
   const tx = await contract.createGameBotSelf(
@@ -77,7 +77,7 @@ export const createGameBot = async (
 }
 
 export const joinGame = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   gameId: number,
   userDeckId: number,
 ) => {
@@ -88,7 +88,7 @@ export const joinGame = async (
 }
 
 export const cancelGame = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   return await await contract.cancelGame()
 }

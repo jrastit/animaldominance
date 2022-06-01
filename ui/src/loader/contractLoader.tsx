@@ -1,12 +1,8 @@
 import * as ethers from 'ethers'
 import { useEffect } from 'react'
 import { TransactionManager } from '../util/TransactionManager'
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 import { ContractTrading } from '../contract/solidity/compiled/contractAutoFactory'
-
-import {
-  getWithManagerContractCardAdmin,
-} from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
   UserType
@@ -49,6 +45,10 @@ import {
 } from '../game/card'
 
 import {
+  getContract,
+} from '../game/contract'
+
+import {
   getTradingContract,
   loadAllTrade,
 } from '../game/trading'
@@ -72,7 +72,7 @@ import {
 
 const _loadAllTread = (
   dispatch: any,
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   tradingContract : ContractTrading,
 ) => {
   const stepId = StepId.Trading
@@ -137,7 +137,7 @@ const loadTradingContract = (
 
 const loadUser = (
   dispatch: any,
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   const stepId = StepId.User
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
@@ -159,7 +159,7 @@ const loadUser = (
 
 const loadUserCardList = (
   dispatch: any,
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   user: UserType,
 ) => {
   const stepId = StepId.UserCardList
@@ -178,7 +178,7 @@ const loadUserCardList = (
 
 const loadUserDeckList = (
   dispatch: any,
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   user: UserType,
 ) => {
   const stepId = StepId.UserDeckList
@@ -197,7 +197,7 @@ const loadUserDeckList = (
 
 const loadCardList = (
   dispatch: any,
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   const stepId = StepId.CardList
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
@@ -218,7 +218,7 @@ const loadCardList = (
 
 const loadGameList = (
   dispatch: any,
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   const stepId = StepId.GameList
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
@@ -238,7 +238,7 @@ const loadGameList = (
 
 const addGameListener = (
   dispatch: any,
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   if (contract.listenerCount("GameCreated") === 0) {
     contract.on("GameCreated", (_chainGameId, _chainUserId) => {
@@ -284,34 +284,34 @@ const addGameListener = (
 const loadContract = async (
   dispatch: any,
   transactionManager: TransactionManager,
-  setContract: (contract: ContractCardAdmin) => void,
+  setContract: (contract: ContractGameManager) => void,
   network: NetworkType
 ) => {
   const stepId = StepId.Contract
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
   dispatch(setMessage({ id: stepId, message: 'Loading contract...' }))
   if (network.gameContract) {
-    try {
-      const _contract = getWithManagerContractCardAdmin(
-        network.gameContract,
-        transactionManager
-      )
-      try {
-        //check if contract is working
-        if (await getCardLastId(_contract) > 0) {
-          setContract(_contract)
-          dispatch(updateStep({ id: stepId, step: Step.Ok }))
-        } else {
-          dispatch(updateStep({ id: stepId, step: Step.Empty }))
+    getContract(
+      network,
+      transactionManager
+    ).then(async (_contract) => {
+      if (_contract) {
+        try {
+          //check if contract is working
+          if (await getCardLastId(_contract) > 0) {
+            setContract(_contract)
+            dispatch(updateStep({ id: stepId, step: Step.Ok }))
+          } else {
+            dispatch(updateStep({ id: stepId, step: Step.Empty }))
+          }
         }
+        catch (err: any) {
+          dispatch(setError({ id: stepId, error: "Contract error" }))
+        }
+      } else {
+        dispatch(updateStep({ id: stepId, step: Step.NotSet }))
       }
-      catch (err: any) {
-        dispatch(setError({ id: stepId, error: "Contract error" }))
-      }
-    }catch (err: any) {
-      dispatch(setError({ id: stepId, error: "Contract error" }))
-    }
-
+    })
   } else {
     //no game contract set
     dispatch(updateStep({ id: stepId, step: Step.NotSet }))
@@ -320,8 +320,8 @@ const loadContract = async (
 
 const ContractLoader = (props: {
   transactionManager: TransactionManager,
-  contract?: ContractCardAdmin,
-  setContract: (contract: ContractCardAdmin) => void,
+  contract?: ContractGameManager,
+  setContract: (contract: ContractGameManager) => void,
   tradingContract?: ContractTrading,
   setTradingContract: (contract: ContractTrading) => void,
 }) => {

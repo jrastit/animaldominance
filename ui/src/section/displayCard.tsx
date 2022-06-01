@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers'
 import { useState } from 'react'
 import CardListWidget from '../game/component/cardListWidget'
-import {ContractCardAdmin} from '../contract/solidity/compiled/contractAutoFactory'
+import {ContractGameManager} from '../contract/solidity/compiled/contractAutoFactory'
 
 import { buyNewCard, buyCard } from '../game/card'
 import { useAppSelector, useAppDispatch } from '../hooks'
@@ -19,7 +19,7 @@ import Alert from 'react-bootstrap/Alert'
 
 
 const DisplayCard = (props: {
-  contract?: ContractCardAdmin,
+  contract?: ContractGameManager,
 }) => {
 
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)

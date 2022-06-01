@@ -1,14 +1,15 @@
 import * as ethers from 'ethers'
-const networkName = "ganache"
-//const networkName = "Emerald Testnet"
-//const networkName = "Arbitrum Testnet"
-//const networkName = "Matic Mumbai Testnet"
-//const networkName = "Matic Mainnet"
 
 import { TransactionManager } from '../util/TransactionManager'
 
 import { network as networkList } from '../config/network.json'
 import { NetworkType } from '../type/networkType'
+
+const networkName = "ganache"
+//const networkName = "Emerald Testnet"
+//const networkName = "Arbitrum Testnet"
+//const networkName = "Matic Mumbai Testnet"
+//const networkName = "Matic Mainnet"
 
 const network: NetworkType = networkList.filter((network) => network.name === networkName)[0]
 
@@ -36,6 +37,5 @@ const constant = {
   token2Symbol: "TST2",
   token2Decimals: 10,
 }
-
 
 export { network, networkName, provider, privateKeys, getWalletList, getTransactionManegerList, constant }

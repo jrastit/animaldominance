@@ -5,10 +5,23 @@
   "TransactionManager" : "../../../util/TransactionManager",
   "file": [
     {
-      "contract": "CardAdmin",
+      "contract": "AnimalDominance",
+      "arg": [
+        {
+          "name": "_contractHash",
+          "type": "ethers.BigNumber"
+        }
+      ]
+    },
+    {
+      "contract": "GameManager",
       "arg": [
         {
           "name": "_playGameFactory",
+          "type": "ethers.Contract"
+        },
+        {
+          "name": "_playActionLib",
           "type": "ethers.Contract"
         }
       ]
@@ -23,10 +36,13 @@
       "contract": "Trading",
       "arg": [
         {
-          "name": "_cardAdmin",
+          "name": "_gameManager",
           "type": "ethers.Contract"
         }
       ]
+    },
+    {
+      "contract": "PlayActionLib"
     }
   ]
 }

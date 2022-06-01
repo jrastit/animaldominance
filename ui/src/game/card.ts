@@ -1,7 +1,7 @@
 import { utils as ethersUtils, BigNumber } from 'ethers'
 
-import { TransactionManager, TransactionItem } from '../util/TransactionManager'
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { TransactionItem } from '../util/TransactionManager'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
   CardType,
@@ -19,7 +19,7 @@ function sleep(ms: number) {
 }
 
 export const createAllCard = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   setMessage?: (msg: string | undefined) => void,
   speed?: number,
 ) => {
@@ -78,17 +78,17 @@ export const createAllCard = async (
         }
       }))
     }
-
   }
+  const cardHash = BigNumber.from(ethersUtils.id(JSON.stringify(cardFile)))
+  await contract.setCardHash(cardHash)
 }
 
 export const registerTrading = async (
-  contract: ContractCardAdmin,
-  transactionManager: TransactionManager,
+  contract: ContractGameManager,
 ) => {
   const tradingContract = await createWithManagerContractTrading(
     contract,
-    transactionManager
+    contract.transactionManager
   )
   const tx = await contract.updateTrading(
     tradingContract.address
@@ -97,7 +97,7 @@ export const registerTrading = async (
 }
 
 export const buyNewCard = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   cardId: number,
   value: number,
 ) => {
@@ -108,7 +108,7 @@ export const buyNewCard = async (
 }
 
 export const buyCard = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   userId: number,
   userCardId: number,
   value: BigNumber,
@@ -121,7 +121,7 @@ export const buyCard = async (
 }
 
 export const listCard = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   cardId: number,
   price: number,
 ) => {
@@ -132,7 +132,7 @@ export const listCard = async (
 }
 
 export const cancelListCard = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   cardId: number,
 ) => {
   return await contract.cancelSellCardSelf(
@@ -141,15 +141,23 @@ export const cancelListCard = async (
 }
 
 export const getCardLastId = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 ) => {
   return (await contract.cardLastId())
 }
 
 export const loadAllCard = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   setMessage?: (message: string | undefined) => void,
 ) => {
+  const _cardHash = (await contract.cardHash())[0]
+  if (_cardHash) {
+    let cardFile = require("../card/card.json")
+    const cardHash = BigNumber.from(ethersUtils.id(JSON.stringify(cardFile)))
+    if (cardHash.eq(_cardHash)) {
+      return loadAllCardFromFile()
+    }
+  }
   const cardLastId = await getCardLastId(contract)
   //console.log(cardId)
   const cardList = [] as Array<CardType>

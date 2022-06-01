@@ -1,5 +1,5 @@
 import { utils as ethersUtils } from 'ethers'
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
   UserType,
@@ -8,7 +8,7 @@ import {
 } from '../type/userType'
 
 export const registerUser = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   name: string,
 ) => {
   const tx = await contract.registerUserSelf(
@@ -18,7 +18,7 @@ export const registerUser = async (
 }
 
 export const getUserId = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   address?: string,
 ) => {
   if (!address) {
@@ -29,7 +29,7 @@ export const getUserId = async (
 }
 
 export const getUser = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   userId: number,
 ) => {
   const userChain = await contract.userIdList(userId)
@@ -43,7 +43,7 @@ export const getUser = async (
 }
 
 export const getUserCardList = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   userId: number,
 ) => {
   const cardListChain = await contract.getUserCardList(userId)
@@ -60,7 +60,7 @@ export const getUserCardList = async (
 }
 
 export const getUserDeckList = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   userId: number,
 ) => {
   const deckLength = await contract.getUserDeckLength(userId)
@@ -76,7 +76,7 @@ export const getUserDeckList = async (
 }
 
 export const addUserDefaultDeck = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   userCardList: UserCardType[],
 ) => {
   if (userCardList.length < 20) {
@@ -87,7 +87,7 @@ export const addUserDefaultDeck = async (
 }
 
 export const addUserDeck = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   userCardList: UserCardType[],
 ) => {
   if (userCardList.length !== 20) {
@@ -111,7 +111,7 @@ export const addUserDeck = async (
 }
 
 export const updateUserDeck = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   deckId: number,
   userCardList: UserCardType[],
 ) => {
@@ -130,7 +130,7 @@ export const updateUserDeck = async (
 }
 
 export const addUserStarterCard = async (
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
   userId: number,
 ) => {
   return await contract.addUserStarterCard(

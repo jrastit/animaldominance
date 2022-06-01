@@ -7,6 +7,17 @@ export interface TransactionItem {
   log?: string
 }
 
+export function getErrorMessage(err: any) {
+  //console.error(err)
+  let message
+  try {
+    message = JSON.parse(err.error.body).error.message
+  } catch {
+    message = err.error
+  }
+  return message
+}
+
 export class TransactionManager {
   signer: ethers.Signer
 
@@ -60,13 +71,7 @@ export class TransactionManager {
       return transactionItem
     } catch (e: any) {
       this.nextNonce = -1
-      console.error(e)
-      let message
-      try {
-        message = JSON.parse(e.error.body).error.message
-      } catch {
-        message = e.error
-      }
+      const message = getErrorMessage(e)
       throw new Error(log + ' : ' + message)
     }
 

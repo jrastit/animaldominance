@@ -2,9 +2,8 @@ import * as ethers from 'ethers'
 import { getWalletList } from '../__test_util__/testConfig'
 
 import {
-  createWithManagerContractCardAdmin,
-  createWithManagerContractPlayGameFactory,
-} from '../contract/solidity/compiled/contractAutoFactory'
+  createContract,
+} from '../game/contract'
 
 import { TransactionManager } from '../util/TransactionManager'
 
@@ -42,11 +41,8 @@ const testTransaction = () => {
     })
 
     it('Test transaction token', async () => {
-      const factory = await createWithManagerContractPlayGameFactory(
-        transactionManager
-      )
-      const contract = await createWithManagerContractCardAdmin(
-        factory,
+      const contract = await createContract(
+        undefined,
         transactionManager,
       )
 

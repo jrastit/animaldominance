@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { TransactionManager } from '../util/TransactionManager'
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 import { ContractTrading } from '../contract/solidity/compiled/contractAutoFactory'
 import AdminCard from './adminCard'
 import AdminTrade from './adminTrade'
@@ -37,7 +37,7 @@ const AdminSection = (props: {
   section : string | undefined,
   transactionManager : TransactionManager,
 })=> {
-  const [contract, setContract] = useState<ContractCardAdmin>()
+  const [contract, setContract] = useState<ContractGameManager>()
   const [tradingContract, setTradingContract] = useState<ContractTrading>()
   const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)

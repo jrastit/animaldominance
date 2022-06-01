@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import {ContractCardAdmin} from '../contract/solidity/compiled/contractAutoFactory'
+import {ContractGameManager} from '../contract/solidity/compiled/contractAutoFactory'
 
 import UserWidget from '../game/component/userWidget'
 import SpaceWidget from '../component/spaceWidget'
@@ -27,7 +27,7 @@ import {
 } from '../reducer/contractSlice'
 
 const AdminUser = (props : {
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
 }) => {
   const stepId = StepId.User
   const user = useAppSelector((state) => state.userSlice.user)

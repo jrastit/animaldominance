@@ -17,13 +17,14 @@ export type GameActionType = {
   actionTypeId: number
   dest?: number,
   result?: number,
+  self?: boolean,
 }
 
 export type TurnDataType = {
   turn: number
   mana: number
   playActionList: GameActionListType
-  cardList: GameCardType[][]
+  cardList: (GameCardType | undefined)[][]
   life: number[]
   userId: number[]
   myTurn: number
@@ -44,7 +45,6 @@ export type GameCardType = {
   life: number
   attack: number
   mana: number
-  position: number
   exp: number
   expWin: number
   play: number
@@ -56,8 +56,8 @@ export type GameType = {
   userId2: number
   life1: number
   life2: number
-  cardList1: GameCardType[]
-  cardList2: GameCardType[]
+  cardList1: (GameCardType | undefined)[]
+  cardList2: (GameCardType | undefined)[]
   latestTime: number
   version: number
   turn: number

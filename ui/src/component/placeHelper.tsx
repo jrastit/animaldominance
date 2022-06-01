@@ -13,6 +13,8 @@ const sleep = (milliseconds : number) => {
 const PlaceHelper = forwardRef<PlaceRefType, {
   children?: React.ReactNode | null
   selectedIndex?: number
+  style?: any
+  disable?: boolean
 }>((props, ref) => {
 
   const [translate, setTranslate] = useState({
@@ -33,6 +35,10 @@ const PlaceHelper = forwardRef<PlaceRefType, {
       async doTranslate(t : {x : number, y : number }) {
         setTranslate(t)
         await sleep(1000)
+        setTranslate({
+          x : 0,
+          y : 0
+        })
       },
       async doTranslate2(t : {x : number, y : number }) {
         setTranslate(t)
@@ -48,15 +54,27 @@ const PlaceHelper = forwardRef<PlaceRefType, {
 
   const inputRef = { current: null } as { current: any };
 
-  return (
-    <div ref={ref => inputRef.current = ref} style={{
-      transition: 'transform 1s',
-      transform: `translateX(${translate.x}px) translateY(${translate.y}px)`,
-      /* border: 'thin solid red', */
+  let style = {
+    ...props.style,
+    transition: 'transform 1s',
+    transform: `translateX(${translate.x}px) translateY(${translate.y}px)`,
+    /* border: 'thin solid red', */
+    width: '12em',
+    marginLeft:"auto",
+    marginRight:"auto",
+  }
+
+  if (props.disable) {
+    style = {
+      ...props.style,
       width: '12em',
       marginLeft:"auto",
       marginRight:"auto",
-    }}
+    }
+  }
+
+  return (
+    <div ref={ref => inputRef.current = ref} style={style}
     >
       {props.children}
     </div>

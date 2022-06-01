@@ -1,4 +1,4 @@
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 
 import Button from 'react-bootstrap/Button'
 
@@ -31,7 +31,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 const AdminUserDeckList = (props : {
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
 }) => {
   const stepId = StepId.UserDeckList
   const step = useAppSelector((state) => state.contractSlice.step)

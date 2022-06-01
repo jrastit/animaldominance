@@ -1,0 +1,77 @@
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.8.0;
+
+import { PlayGame, GameCard } from "./PlayGame.sol";
+import { GameManager, UserCard, Card } from './GameManager.sol';
+
+contract PlayActionLib {
+
+  function getGameCard(GameManager gameManager, uint64 _userId, uint32 _userCardId) public view returns (GameCard memory){
+      UserCard memory userCard = gameManager.getUserCard(_userId, _userCardId);
+      uint8 level = gameManager.getLevel(userCard.exp);
+      Card memory card = gameManager.getCard(userCard.cardId);
+      GameCard memory gameCard = GameCard(
+          _userId,
+          _userCardId,
+          userCard.cardId,
+          card.level[level].life,
+          card.level[level].attack,
+          userCard.exp,
+          0,
+          card.mana,
+          0
+      );
+      return gameCard;
+  }
+
+    function playActionAttack(GameCard memory gameCard1, GameCard memory gameCard2, uint8 turn) public pure returns (
+        uint16 result,
+        GameCard memory,
+        GameCard memory
+    ){
+        if (gameCard1.cardId != 0 && gameCard2.cardId != 0){
+            if (gameCard1.attack < gameCard2.life){
+                result = gameCard1.attack;
+                gameCard1.expWin += (gameCard1.attack * 5);
+                gameCard2.expWin += gameCard1.attack;
+                gameCard2.life -= gameCard1.attack;
+            } else {
+                result = gameCard2.life;
+                gameCard1.expWin += (gameCard2.life * 10);
+                gameCard2.expWin += gameCard2.life;
+                gameCard2.life = 0;
+            }
+            if (gameCard2.attack < gameCard1.life){
+                gameCard2.expWin += (gameCard2.attack * 2);
+                gameCard1.expWin += gameCard2.attack;
+                gameCard1.life -= gameCard2.attack;
+            } else {
+                gameCard2.expWin += (gameCard1.life * 4);
+                gameCard1.expWin += gameCard1.life;
+                gameCard1.life = 0;
+            }
+            gameCard1.turn = turn;
+        }
+        return (result, gameCard1, gameCard2);
+    }
+    
+    function playActionAttackOponent(GameCard memory gameCard, uint16 life, uint8 turn) public pure returns (
+        uint16 result,
+        uint16,
+        GameCard memory
+    ){
+        if (gameCard.cardId != 0){
+            if (gameCard.attack < life){
+                gameCard.expWin += (gameCard.attack * 5);
+                life = life - gameCard.attack;
+                result = gameCard.attack;
+            } else {
+                result = life;
+                gameCard.expWin += (life * 10);
+                life = 0;
+            }
+            gameCard.turn = turn;
+        }
+        return (result, life, gameCard);
+    }
+}

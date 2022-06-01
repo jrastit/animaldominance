@@ -1,4 +1,4 @@
-import {ContractCardAdmin} from '../contract/solidity/compiled/contractAutoFactory'
+import {ContractGameManager} from '../contract/solidity/compiled/contractAutoFactory'
 import {ContractPlayGame} from '../contract/solidity/compiled/contractAutoFactory'
 import { useState } from 'react'
 
@@ -30,7 +30,7 @@ import {
 import StepMessageNiceWidget from '../component/stepMessageNiceWidget'
 
 const PlayGame = (props:{
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
 }) => {
 
   const [gameContract, setGameContract] = useState<ContractPlayGame>()

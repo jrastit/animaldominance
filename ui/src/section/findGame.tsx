@@ -1,4 +1,4 @@
-import {ContractCardAdmin} from '../contract/solidity/compiled/contractAutoFactory'
+import {ContractGameManager} from '../contract/solidity/compiled/contractAutoFactory'
 import { TransactionManager } from '../util/TransactionManager'
 import { useState } from 'react'
 
@@ -47,8 +47,8 @@ import {
 
 const FindGame = (props: {
   transactionManager : TransactionManager,
-  contract: ContractCardAdmin | undefined,
-  setContract: (contract: ContractCardAdmin | undefined) => void,
+  contract: ContractGameManager | undefined,
+  setContract: (contract: ContractGameManager | undefined) => void,
 }) => {
 
   const step = useAppSelector((state) => state.contractSlice.step)

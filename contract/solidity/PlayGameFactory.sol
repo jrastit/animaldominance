@@ -2,11 +2,11 @@
 pragma solidity ^0.8.0;
 
 import { PlayGame } from "./PlayGame.sol";
-import { CardAdmin } from "./CardAdmin.sol";
+import { GameManager } from "./GameManager.sol";
 
 contract PlayGameFactory {
     function newGame(
-        CardAdmin _cardAdmin,
+        GameManager _gameManager,
         uint64 _userId1,
         uint16 _gameDeckId1,
         uint64 _userId2,
@@ -14,7 +14,7 @@ contract PlayGameFactory {
         uint64 _gameId
     ) public returns(PlayGame){
         return new PlayGame(
-            _cardAdmin,
+            _gameManager,
             _userId1,
             _gameDeckId1,
             _userId2,

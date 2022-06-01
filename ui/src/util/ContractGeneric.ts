@@ -1,16 +1,16 @@
 import { Contract, EventFilter } from 'ethers'
 import { Listener } from '@ethersproject/abstract-provider'
-import { TransactionManager } from '../util/TransactionManager'
+import { TransactionManager, getErrorMessage } from '../util/TransactionManager'
 
 export type ContractFunction<T = any> = (...args: Array<any>) => Promise<T>;
 
 function initContract(contractClass: any, abi: any[]) {
-  console.log('init contract')
+  //console.log('init contract')
   //test(contract)
-  //console.log(jsonCardAdmin.abi)
-  //const functionList = jsonCardAdmin.abi.filter(obj => obj.type === "function" && (obj.stateMutability === "payable" || obj.stateMutability === "nonpayable"))
+  //console.log(jsonGameManager.abi)
+  //const functionList = jsonGameManager.abi.filter(obj => obj.type === "function" && (obj.stateMutability === "payable" || obj.stateMutability === "nonpayable"))
   //console.log(functionList)
-  //ContractCardAdmin.prototype
+  //ContractGameManager.prototype
   //console.log(getClassMethodNames(contract))
   const functionList = abi.filter(obj => obj.type === "function" && (obj.stateMutability === "payable" || obj.stateMutability === "nonpayable"))
   functionList.forEach(obj => {
@@ -18,7 +18,7 @@ function initContract(contractClass: any, abi: any[]) {
       const functionName = obj.name as string
       Object.defineProperty(contractClass, functionName, {
         value: async (...args: any[]) => {
-          console.log("call function ", functionName)
+          //console.log("call function ", functionName)
           return await contractClass.transactionManager.sendTx(await contractClass.contract.populateTransaction[functionName](...args), functionName)
         },
         writable: false,
@@ -32,11 +32,16 @@ function initContract(contractClass: any, abi: any[]) {
   viewList.forEach(obj => {
     if (typeof obj.name === 'string') {
       const functionName = obj.name as string
-      console.log("define view ", functionName)
+      //console.log("define view ", functionName)
       Object.defineProperty(contractClass, functionName, {
         value: async (...args: any[]) => {
-          console.log("call view ", functionName)
-          return await contractClass.contract.functions[functionName](...args)
+          //console.log("call view ", functionName)
+          try {
+            return await contractClass.contract.functions[functionName](...args)
+          } catch (err: any) {
+            throw Error(getErrorMessage(err))
+          }
+
         },
         writable: false,
         enumerable: true,

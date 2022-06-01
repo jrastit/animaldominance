@@ -1,5 +1,6 @@
 export default function DropHelper(props: {
   onDrop: any
+  style?: any
   children: any
 }) {
   function dragOver(e: any) {
@@ -16,7 +17,7 @@ export default function DropHelper(props: {
   }
 
   return (
-    <div onDragOver={dragOver} onDrop={drop} >
+    <div onDragOver={dragOver} onDrop={drop} style={props.style}>
       {props.children}
     </div>
   );

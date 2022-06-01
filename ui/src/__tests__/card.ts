@@ -1,16 +1,17 @@
 import * as ethers from 'ethers'
 import { getWalletList } from '../__test_util__/testConfig'
 
-import {
-  createWithManagerContractCardAdmin,
-  createWithManagerContractPlayGameFactory,
-} from '../contract/solidity/compiled/contractAutoFactory'
+
 
 import { TransactionManager } from '../util/TransactionManager'
 import {
   createAllCard,
   loadAllCard
 } from '../game/card'
+
+import {
+  createContract,
+} from '../game/contract'
 
 const testTransaction = () => {
 
@@ -36,15 +37,10 @@ const testTransaction = () => {
 
   describe('Test card', () => {
     it('Test card', async () => {
-      const factory = await createWithManagerContractPlayGameFactory(
-        transactionManager
-      )
-      const contract = await createWithManagerContractCardAdmin(
-        factory,
-        transactionManager,
-      )
 
-      await createAllCard(contract, transactionManager)
+      const contract = await createContract(undefined, transactionManager)
+
+      await createAllCard(contract)
       //console.log(transactionManager.transactionList.map(transactionManager.gasInfo))
       console.log(transactionManager.transactionList.map(transactionManager.log))
       await loadAllCard(contract)

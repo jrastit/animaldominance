@@ -12,6 +12,7 @@ interface FileTs {
   createWithManager: string[],
   get: string[],
   getWithManager: string[],
+  getHash: string[],
 }
 
 const solidityPath = 'solidity/'
@@ -188,7 +189,13 @@ const compileInput = (contractConfig: any, outputPath: string, fileTs: FileTs) =
         "\t\ttransactionManager.signer,\n" +
         "\t), transactionManager)\n" +
         "}\n")
+      fileTs.getHash.push(
+        "export const getHashContract" + contractName + " = (\n" +
+        ") => {\n" +
+        "\treturn ethers.utils.id(JSON.stringify(json" + contractName + "))\n" +
+        "}\n")
     }
+
   }
 }
 
@@ -208,7 +215,7 @@ const buildContractConfig = (contractConfig: { contract: string, input?: any }) 
     }
   }
   config.sources[contractConfig.contract + ".sol"] = loadContract(contractConfig.contract + ".sol")
-  config.settings.outputSelection['*'][contractConfig.contract.slice(contractConfig.contract.lastIndexOf('/') + 1)] = ['evm.bytecode.object', 'abi']
+  config.settings.outputSelection['*'][contractConfig.contract.slice(contractConfig.contract.lastIndexOf('/') + 1)] = ['evm.bytecode.object', 'abi', 'linkReferences']
   contractConfig.input = config
   return contractConfig;
 }
@@ -232,6 +239,7 @@ const main = async () => {
     createWithManager: [],
     get: [],
     getWithManager: [],
+    getHash: [],
   }
 
 
@@ -254,7 +262,8 @@ const main = async () => {
     fileTs.create.map((str: string) => str).join('\n') + "\n\n" +
     fileTs.createWithManager.map((str: string) => str).join('\n') + "\n\n" +
     fileTs.get.map((str: string) => str).join('\n') + "\n\n" +
-    fileTs.getWithManager.map((str: string) => str).join('\n') + "\n\n"
+    fileTs.getWithManager.map((str: string) => str).join('\n') +
+    fileTs.getHash.map((str: string) => str).join('\n') + "\n\n"
   fs.writeFileSync(defineSource.outputPath + fileTs.name, fileTsOutput)
 
 

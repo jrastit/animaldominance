@@ -4,6 +4,7 @@ pragma solidity ^0.8.0;
 import { Trading } from "./Trading.sol";
 import { PlayGame, GameCard } from "./PlayGame.sol";
 import { PlayGameFactory } from "./PlayGameFactory.sol";
+import { PlayActionLib } from "./PlayActionLib.sol";
 
 struct User {
     uint64 id;
@@ -56,7 +57,7 @@ struct Game {
     PlayGame playGame;
 }
 
-contract CardAdmin {
+contract GameManager {
 
     /////////////////// imported event //////////////////////////////
 
@@ -78,8 +79,12 @@ contract CardAdmin {
       owner.transfer(_amount);
     }
 
-    constructor(PlayGameFactory _playGameFactory) {
+    constructor(
+      PlayGameFactory _playGameFactory,
+      PlayActionLib _playActionLib
+    ) {
         _updatePlayGameFactory(_playGameFactory);
+        _updatePlayActionLib(_playActionLib);
         owner = payable( msg.sender);
     }
 
@@ -88,6 +93,8 @@ contract CardAdmin {
     event CardCreated(uint32 id);
 
     uint32 public cardLastId;
+    uint256 public cardHash;
+
     mapping(uint32 => Card) public cardList;
 
     function getCardLevel(uint32 _cardId, uint8 _level) public view returns (CardLevel memory) {
@@ -122,23 +129,42 @@ contract CardAdmin {
         }
     }
 
+    function setCardHash(uint256 _cardHash) public isOwner {
+      cardHash = _cardHash;
+    }
+
     function updateCard(uint32 _cardId, string memory _name, uint8 _mana, uint8 _family, uint8 _starter) public isOwner {
         cardList[_cardId].name = _name;
         cardList[_cardId].mana = _mana;
         cardList[_cardId].family = _family;
         cardList[_cardId].starter = _starter;
         emit CardCreated(_cardId);
+        cardHash = 0;
     }
 
     function setCardLevel(uint32 _cardId, string memory _description, uint8 _level, uint16 _life, uint16 _attack) public isOwner {
         cardList[_cardId].level[_level].description = _description;
         cardList[_cardId].level[_level].life = _life;
         cardList[_cardId].level[_level].attack = _attack;
+        cardHash = 0;
+    }
+
+    ///////////////////////// ActionLib //////////////////////////////////
+
+    PlayActionLib public playActionLib;
+
+    function _updatePlayActionLib(PlayActionLib _playActionLib) private {
+        require(address(_playActionLib) != address(0), "playActionLib is null");
+        playActionLib = _playActionLib;
+    }
+
+    function updatePlayActionLib(PlayActionLib _playActionLib) public isOwner {
+        _updatePlayActionLib(_playActionLib);
     }
 
     ///////////////////////// Game Factory //////////////////////////////////
 
-    PlayGameFactory playGameFactory;
+    PlayGameFactory private playGameFactory;
 
     function _updatePlayGameFactory(PlayGameFactory _playGameFactory) private {
         require(address(_playGameFactory) != address(0), "playGameFactory is null");

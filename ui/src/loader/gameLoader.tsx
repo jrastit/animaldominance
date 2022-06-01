@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 import { ContractPlayGame } from '../contract/solidity/compiled/contractAutoFactory'
 
 import { UserType } from '../type/userType'
@@ -60,7 +60,7 @@ const _cleanGame = (dispatch : any) => {
 
 const _getGameFull = (
   dispatch : any,
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
   gameContract : ContractPlayGame,
   user : UserType | undefined,
   oponent : UserType | undefined,
@@ -101,7 +101,7 @@ const _getGameFull = (
 
 const loadGameFromId = (
   dispatch : any,
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
   user : UserType | undefined,
   setGameContract : (contract : ContractPlayGame) => void,
   oponent : UserType | undefined,
@@ -134,7 +134,7 @@ const loadGameFromId = (
 
 const updateGame = (
   dispatch : any,
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
   gameContract : ContractPlayGame | undefined,
   user : UserType | undefined,
   oponent : UserType | undefined,
@@ -152,7 +152,7 @@ const updateGame = (
 }
 
 const GameLoader = (props : {
-  contract : ContractCardAdmin,
+  contract : ContractGameManager,
   gameContract ?: ContractPlayGame,
   setGameContract : (contract : ContractPlayGame) => void,
 }) => {

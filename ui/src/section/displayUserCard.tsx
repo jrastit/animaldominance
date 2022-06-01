@@ -1,4 +1,4 @@
-import { ContractCardAdmin } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 
 import UserCardListWidget from '../game/component/userCardListWidget'
 
@@ -31,7 +31,7 @@ import ButtonNice from '../component/buttonNice'
 import DivFullNice from '../component/divFullNice'
 
 const DisplayUserCard = (props: {
-  contract: ContractCardAdmin,
+  contract: ContractGameManager,
 }) => {
   const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
