@@ -355,7 +355,7 @@ const testTransaction = () => {
 
   describe('Test game', () => {
     it('Test game bot', async () => {
-      for (let i = 0; i < 1; i++) {
+      for (let i = 0; i < 10; i++) {
         await autoPlayGameBot(
           contract,
           deckList[0].id,

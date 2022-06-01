@@ -9,32 +9,32 @@
         {
           "life": 3,
           "attack": 5,
-          "desc": "So cute!"
+          "description": "So cute!"
         },
         {
           "life": 5,
           "attack": 10,
-          "desc": "So cute! But can still kill a bee"
+          "description": "So cute! But can still kill a bee"
         },
         {
           "life": 10,
           "attack": 15,
-          "desc": "Getting better"
+          "description": "Getting better"
         },
         {
           "life": 12,
           "attack": 18,
-          "desc": "Getting stronger"
+          "description": "Getting stronger"
         },
         {
           "life": 15,
           "attack": 20,
-          "desc": "nearly adult"
+          "description": "nearly adult"
         },
         {
           "life": 20,
           "attack": 25,
-          "desc": "Exeptional!"
+          "description": "Exeptional!"
         }
       ]
     },
@@ -47,32 +47,32 @@
         {
           "life": 8,
           "attack": 8,
-          "desc": "Miaou!"
+          "description": "Miaou!"
         },
         {
           "life": 10,
           "attack": 10,
-          "desc": "Will defend his chair"
+          "description": "Will defend his chair"
         },
         {
           "life": 10,
           "attack": 15,
-          "desc": "Will attack at night"
+          "description": "Will attack at night"
         },
         {
           "life": 15,
           "attack": 20,
-          "desc": "Will fight other cats"
+          "description": "Will fight other cats"
         },
         {
           "life": 20,
           "attack": 30,
-          "desc": "Training all day"
+          "description": "Training all day"
         },
         {
           "life": 30,
           "attack": 40,
-          "desc": "Nija!"
+          "description": "Nija!"
         }
       ]
     },
@@ -85,32 +85,32 @@
         {
           "life": 8,
           "attack": 15,
-          "desc": "Grrr!"
+          "description": "Grrr!"
         },
         {
           "life": 10,
           "attack": 20,
-          "desc": "Jungle beat!"
+          "description": "Jungle beat!"
         },
         {
           "life": 20,
           "attack": 40,
-          "desc": "Jump from the tree"
+          "description": "Jump from the tree"
         },
         {
           "life": 30,
           "attack": 60,
-          "desc": "Monkey eater"
+          "description": "Monkey eater"
         },
         {
           "life": 35,
           "attack": 70,
-          "desc": "Run faster than you"
+          "description": "Run faster than you"
         },
         {
           "life": 40,
           "attack": 80,
-          "desc": "killer princess"
+          "description": "killer princess"
         }
       ]
     },
@@ -123,32 +123,32 @@
         {
           "life": 20,
           "attack": 20,
-          "desc": "Splash!"
+          "description": "Splash!"
         },
         {
           "life": 30,
           "attack": 30,
-          "desc": "Don't get close"
+          "description": "Don't get close"
         },
         {
           "life": 40,
           "attack": 40,
-          "desc": "I'll get you in sec"
+          "description": "I'll get you in sec"
         },
         {
           "life": 50,
           "attack": 50,
-          "desc": "Life treatning"
+          "description": "Life treatning"
         },
         {
           "life": 55,
           "attack": 55,
-          "desc": "Hidden and ready to bite"
+          "description": "Hidden and ready to bite"
         },
         {
           "life": 60,
           "attack": 60,
-          "desc": "Too late!"
+          "description": "Too late!"
         }
       ]
     },
@@ -161,32 +161,32 @@
         {
           "life": 3,
           "attack": 5,
-          "desc": "Already white"
+          "description": "Already white"
         },
         {
           "life": 5,
           "attack": 10,
-          "desc": "Yelling to friends"
+          "description": "Yelling to friends"
         },
         {
           "life": 7,
           "attack": 15,
-          "desc": "Has eaten all the fruits"
+          "description": "Has eaten all the fruits"
         },
         {
           "life": 10,
           "attack": 20,
-          "desc": "Jump on your shoulder"
+          "description": "Jump on your shoulder"
         },
         {
           "life": 15,
           "attack": 30,
-          "desc": "Joking of you"
+          "description": "Joking of you"
         },
         {
           "life": 20,
           "attack": 40,
-          "desc": "Best friend"
+          "description": "Best friend"
         }
       ]
     },
@@ -199,32 +199,32 @@
         {
           "life": 3,
           "attack": 8,
-          "desc": "In the tree"
+          "description": "In the tree"
         },
         {
           "life": 5,
           "attack": 10,
-          "desc": "Attack a butterfly"
+          "description": "Attack a butterfly"
         },
         {
           "life": 7,
           "attack": 15,
-          "desc": "Eating bananas"
+          "description": "Eating bananas"
         },
         {
           "life": 10,
           "attack": 15,
-          "desc": "With close friends"
+          "description": "With close friends"
         },
         {
           "life": 15,
           "attack": 20,
-          "desc": "Noisy noisy"
+          "description": "Noisy noisy"
         },
         {
           "life": 20,
           "attack": 20,
-          "desc": "Faster to get you"
+          "description": "Faster to get you"
         }
       ]
     },
@@ -237,32 +237,32 @@
         {
           "life": 10,
           "attack": 15,
-          "desc": "Under the snow"
+          "description": "Under the snow"
         },
         {
           "life": 15,
           "attack": 20,
-          "desc": "Looking for hot water"
+          "description": "Looking for hot water"
         },
         {
           "life": 25,
           "attack": 30,
-          "desc": "Hidding under the snow"
+          "description": "Hidding under the snow"
         },
         {
           "life": 30,
           "attack": 35,
-          "desc": "Whatch your back"
+          "description": "Whatch your back"
         },
         {
           "life": 35,
           "attack": 40,
-          "desc": "Ready to bite"
+          "description": "Ready to bite"
         },
         {
           "life": 40,
           "attack": 40,
-          "desc": "Old monkey wisdom"
+          "description": "Old monkey wisdom"
         }
       ]
     },
@@ -275,32 +275,32 @@
         {
           "life": 10,
           "attack": 20,
-          "desc": "Just here"
+          "description": "Just here"
         },
         {
           "life": 15,
           "attack": 25,
-          "desc": "Climbing tree"
+          "description": "Climbing tree"
         },
         {
           "life": 25,
           "attack": 30,
-          "desc": "Grimace"
+          "description": "Grimace"
         },
         {
           "life": 30,
           "attack": 40,
-          "desc": "Not a cloon"
+          "description": "Not a cloon"
         },
         {
           "life": 35,
           "attack": 50,
-          "desc": "Strong joke"
+          "description": "Strong joke"
         },
         {
           "life": 40,
           "attack": 60,
-          "desc": "Break your bones"
+          "description": "Break your bones"
         }
       ]
     },
@@ -313,32 +313,32 @@
         {
           "life": 3,
           "attack": 15,
-          "desc": "Touk Touk"
+          "description": "Touk Touk"
         },
         {
           "life": 5,
           "attack": 20,
-          "desc": "Get a nice nut"
+          "description": "Get a nice nut"
         },
         {
           "life": 7,
           "attack": 30,
-          "desc": "Your bones are nuts"
+          "description": "Your bones are nuts"
         },
         {
           "life": 10,
           "attack": 40,
-          "desc": "Will break you in pieces"
+          "description": "Will break you in pieces"
         },
         {
           "life": 15,
           "attack": 50,
-          "desc": "Nuts rain"
+          "description": "Nuts rain"
         },
         {
           "life": 20,
           "attack": 60,
-          "desc": "Head nuts"
+          "description": "Head nuts"
         }
       ]
     },
@@ -351,32 +351,32 @@
         {
           "life": 3,
           "attack": 10,
-          "desc": "Eat red alga"
+          "description": "Eat red alga"
         },
         {
           "life": 5,
           "attack": 15,
-          "desc": "Eat shrimp"
+          "description": "Eat shrimp"
         },
         {
           "life": 7,
           "attack": 20,
-          "desc": "Flying!"
+          "description": "Flying!"
         },
         {
           "life": 10,
           "attack": 30,
-          "desc": "Escaping to the lake"
+          "description": "Escaping to the lake"
         },
         {
           "life": 15,
           "attack": 40,
-          "desc": "Fliying over the ocean"
+          "description": "Fliying over the ocean"
         },
         {
           "life": 20,
           "attack": 50,
-          "desc": "Pink forever!"
+          "description": "Pink forever!"
         }
       ]
     },
@@ -389,32 +389,32 @@
         {
           "life": 8,
           "attack": 15,
-          "desc": "Big egg"
+          "description": "Big egg"
         },
         {
           "life": 10,
           "attack": 20,
-          "desc": "Start running"
+          "description": "Start running"
         },
         {
           "life": 15,
           "attack": 25,
-          "desc": "Not able to fly"
+          "description": "Not able to fly"
         },
         {
           "life": 20,
           "attack": 35,
-          "desc": "kick kick"
+          "description": "kick kick"
         },
         {
           "life": 25,
           "attack": 45,
-          "desc": "Head under soil"
+          "description": "Head under soil"
         },
         {
           "life": 30,
           "attack": 55,
-          "desc": "Jump ahead!"
+          "description": "Jump ahead!"
         }
       ]
     },
@@ -427,32 +427,32 @@
         {
           "life": 4,
           "attack": 20,
-          "desc": "Born at night"
+          "description": "Born at night"
         },
         {
           "life": 5,
           "attack": 30,
-          "desc": "I See you"
+          "description": "I See you"
         },
         {
           "life": 10,
           "attack": 40,
-          "desc": "Jump from the tree"
+          "description": "Jump from the tree"
         },
         {
           "life": 15,
           "attack": 50,
-          "desc": "HooH"
+          "description": "HooH"
         },
         {
           "life": 20,
           "attack": 60,
-          "desc": "Dark is my game"
+          "description": "Dark is my game"
         },
         {
           "life": 25,
           "attack": 70,
-          "desc": "Killer eyes"
+          "description": "Killer eyes"
         }
       ]
     },
@@ -465,32 +465,32 @@
         {
           "life": 15,
           "attack": 30,
-          "desc": "Eaglet"
+          "description": "Eaglet"
         },
         {
           "life": 20,
           "attack": 40,
-          "desc": "Eating worms"
+          "description": "Eating worms"
         },
         {
           "life": 30,
           "attack": 60,
-          "desc": "On top of the tree"
+          "description": "On top of the tree"
         },
         {
           "life": 40,
           "attack": 80,
-          "desc": "Have eaten all mouses"
+          "description": "Have eaten all mouses"
         },
         {
           "life": 50,
           "attack": 100,
-          "desc": "Taking you to the air"
+          "description": "Taking you to the air"
         },
         {
           "life": 60,
           "attack": 120,
-          "desc": "Attaking buffalows"
+          "description": "Attaking buffalows"
         }
       ]
     },
@@ -503,32 +503,32 @@
         {
           "life": 20,
           "attack": 30,
-          "desc": "Born to eat meat"
+          "description": "Born to eat meat"
         },
         {
           "life": 30,
           "attack": 40,
-          "desc": "Flying circus"
+          "description": "Flying circus"
         },
         {
           "life": 40,
           "attack": 60,
-          "desc": "Going with friends"
+          "description": "Going with friends"
         },
         {
           "life": 50,
           "attack": 80,
-          "desc": "Impresivce stance"
+          "description": "Impresivce stance"
         },
         {
           "life": 60,
           "attack": 100,
-          "desc": "Waiting for yout to die"
+          "description": "Waiting for yout to die"
         },
         {
           "life": 70,
           "attack": 120,
-          "desc": "You see then when it is too late!"
+          "description": "You see then when it is too late!"
         }
       ]
     }

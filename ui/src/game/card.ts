@@ -31,7 +31,7 @@ export const createAllCard = async (
       const attack = [] as number[]
       const life = [] as number[]
       card.level.forEach((level: any) => {
-        description.push(level.desc)
+        description.push(level.description)
         attack.push(level.attack)
         life.push(level.life)
       });
@@ -44,7 +44,7 @@ export const createAllCard = async (
         life,
         attack,
       );
-      if (setMessage) setMessage(tx.log)
+      if (setMessage) setMessage(tx.log + ' ' + card.name)
     } else {
       const tx = await contract.createCard(
         card.name,
@@ -61,7 +61,7 @@ export const createAllCard = async (
             const level = card.level[l]
             const tx2 = await contract.setCardLevel(
               log2.args.id,
-              level.desc,
+              level.description,
               l,
               level.life,
               level.attack,

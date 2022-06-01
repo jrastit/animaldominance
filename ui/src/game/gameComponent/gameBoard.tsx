@@ -64,6 +64,7 @@ enum Play {
   Playing,
   Ready,
   Loading,
+  AutoPlay,
 }
 
 const stepId = StepId.Game
@@ -203,6 +204,8 @@ const GameBoard = (props: {
 
   const [play, setPlay] = useState(Play.Init)
 
+  const [ autoPlay, setAutoPlay] = useState(false)
+
   const turn = props.game.turn
 
   const cardRefList = useRef<(PlaceRefType | null)[]>([])
@@ -271,16 +274,40 @@ const GameBoard = (props: {
         dispatch(setError({ id: stepId, catchError: err }))
       })
     }
-    if (play === Play.Ready || play === Play.EndTurn) {
-      if (turnData.turn < turn) {
-        setPlay(Play.Loading)
-        endTurnData(turnData, setTurnData)
-        setTimeout(async () => {
-          setPlay(Play.Replay)
-        }, 1000)
-      }
+    if ((play === Play.Ready || play === Play.EndTurn) && turnData.turn < turn) {
+      setPlay(Play.Loading)
+      endTurnData(turnData, setTurnData)
+      setTimeout(async () => {
+        setPlay(Play.Replay)
+      }, 1000)
+    }
+    if (play === Play.Ready && turnData.turn === turn && autoPlay && turnData.myTurn) {
+      setPlay(Play.Loading)
+      setTimeout(async () => {
+        setPlay(Play.AutoPlay)
+      }, 500)
+    }
+    if (play === Play.AutoPlay) {
+      setPlay(Play.Loading)
+      _autoPlay()
     }
   }, [play, props.game, props.user.id, props.gameContract, turnData, playActionList, cardRefIdList, turn, dispatch])
+
+  const _autoPlay = async () => {
+    if (turnData.myTurn){
+      if (playRandomly(turnData, true)){
+        await _playRandomly()
+        setTimeout(async () => {
+          setPlay(Play.AutoPlay)
+        }, 500)
+      } else {
+        await _endTurn()
+      }
+    } else {
+      setPlay(Play.Ready)
+    }
+
+  }
 
   const displayUser = (
     pos: number,
@@ -297,7 +324,7 @@ const GameBoard = (props: {
           userName={"#" + user.id}
           family={family}
           name={name}
-          mana={turnData.mana}
+          mana={(pos ? !turnData.myTurn : !!turnData.myTurn) ? turnData.mana : 0}
           level={level}
           attack={0}
           life={life}
@@ -428,6 +455,24 @@ const GameBoard = (props: {
         annimatePlay,
       }
     )
+  }
+
+  const _playRandomly = async () => {
+    const gameAction = playRandomly(turnData)
+    if (gameAction !== 0 && gameAction !== 1) {
+      await _playAction(
+        props.gameContract,
+        gameAction,
+        turnData,
+        setTurnData,
+        {
+          cardRefIdList,
+          current: cardRefList.current,
+          annimatePlay,
+        }
+
+      )
+    }
   }
 
   const _displayAction = () => {
@@ -564,33 +609,28 @@ const GameBoard = (props: {
           paddingTop: '1em',
         }}>
           <div style={{ height: '10em', textAlign: 'center' }}>
-            {!!turnData.myTurn &&
+            {
               <div>
                 <div style={{ height: '4em' }}>
-                  {play === Play.Ready &&
-                    playRandomly(turnData, true) === 1 &&
+
+                    <span>
+                    {!autoPlay && play === Play.Ready &&
+                      playRandomly(turnData, true) === 1 &&
+                      !!turnData.myTurn &&
+                      (<Button
+                      onClick={() => {
+                        _playRandomly()
+                      }}
+                    >Play randomly</Button>)}&nbsp;&nbsp;
                     <Button
                       onClick={() => {
-                        const gameAction = playRandomly(turnData)
-                        if (gameAction !== 0 && gameAction !== 1) {
-                          _playAction(
-                            props.gameContract,
-                            gameAction,
-                            turnData,
-                            setTurnData,
-                            {
-                              cardRefIdList,
-                              current: cardRefList.current,
-                              annimatePlay,
-                            }
-
-                          )
-                        }
+                        setAutoPlay(!autoPlay)
                       }}
-                    >Play randomly</Button>
-                  }
+                    >{autoPlay ? "Stop" : "Auto play"}</Button>
+                    </span>
+
                 </div>
-                {play === Play.Ready &&
+                {!autoPlay && play === Play.Ready && !!turnData.myTurn &&
                   <Button
                     onClick={() => {
                       _endTurn()

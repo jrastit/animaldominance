@@ -12,7 +12,7 @@
       "url": "https://testnet.emerald.oasis.dev",
       "faucet" : "https://faucet.testnet.oasis.dev/",
       "chainId": 42261,
-      "gameContract": "0x6D5f8d0CF5c450E68cb7C534B887d3126ccc04cA",
+      "gameContract": "0x3242b28F8Dc81D7bD06C0e4c2BAC580776aB5F42",
       "tokenName": "TEST"
     },
     {

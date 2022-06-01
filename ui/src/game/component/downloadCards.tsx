@@ -35,7 +35,7 @@ const DownloadCardList = (props : {
                 { return  {
                     life : level.life,
                     attack : level.attack,
-                    desc : level.description,
+                    description : level.description,
                 }}
               )
             }
