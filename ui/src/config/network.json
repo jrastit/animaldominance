@@ -5,36 +5,49 @@
       "url": "http://localhost:8545",
       "chainId": 1337,
       "gameContract": "0x8CdaF0CD259887258Bc13a92C0a6dA92698644C0",
-      "tokenName": "TEST"
+      "tokenName": "TEST",
+      "timeBetweenRequest" : 1000,
+      "retry" : 2,
+      "refreshBalance" : 10000
     },
     {
       "name" : "Emerald Testnet",
       "url": "https://testnet.emerald.oasis.dev",
       "faucet" : "https://faucet.testnet.oasis.dev/",
       "chainId": 42261,
-      "gameContract": "0x3242b28F8Dc81D7bD06C0e4c2BAC580776aB5F42",
-      "tokenName": "TEST"
+      "gameContract": "0xf3F203b4bF2ad583beBF7f0A8448ad0782B47Ebb",
+      "tokenName": "TEST",
+      "timeBetweenRequest" : 10,
+      "retry" : 2,
+      "refreshBalance" : 10000
     },
     {
       "name" : "Arbitrum Testnet",
       "url": "https://rinkeby.arbitrum.io/rpc",
       "chainId": 421611,
-      "gameContract": "0xaacc46006f58fb18bdd6216c1d900061cdc8d64d",
-      "tokenName": "ETH"
+      "gameContract": "0xf0AD345770C2425a96241e968976f590D7b4FB9f",
+      "tokenName": "ETH",
+      "timeBetweenRequest" : 1000,
+      "retry" : 2,
+      "refreshBalance" : 10000
     },
     {
       "name" : "Matic Mainnet",
       "url": "https://rpc-mainnet.matic.network",
       "chainId": 137,
-      "gameContract": "0xAACC46006F58fb18Bdd6216C1d900061CDc8D64d",
-      "tokenName": "MATIC"
+      "gameContract": "0x5818F16D20f6b4Ba84b186C8b8911E0133Eddd84",
+      "tokenName": "MATIC",
+      "timeBetweenRequest" : 1000,
+      "retry" : 2
     },
     {
       "name" : "Matic Mumbai Testnet",
       "url": "https://rpc-mumbai.matic.today",
       "chainId": 80001,
-      "gameContract": "",
-      "tokenName": "MATIC"
+      "gameContract": "0x220f47ffB54A314488e461391e3616F464bA4c1d",
+      "tokenName": "MATIC",
+      "timeBetweenRequest" : 1000,
+      "retry" : 2
     }
   ]
 }

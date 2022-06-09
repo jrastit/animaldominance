@@ -1,8 +1,6 @@
 import { useState } from 'react'
 
 import { TransactionManager } from '../util/TransactionManager'
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
-import { ContractTrading } from '../contract/solidity/compiled/contractAutoFactory'
 import AdminCard from './adminCard'
 import AdminTrade from './adminTrade'
 import AdminUser from '../section/adminUser'
@@ -27,6 +25,8 @@ import DivNice from '../component/divNice'
 
 import { useAppSelector } from '../hooks'
 
+import { ContractHandlerType, newContractHandler } from '../type/contractType'
+
 import {
   isStep,
   StepId,
@@ -37,21 +37,22 @@ const AdminSection = (props: {
   section : string | undefined,
   transactionManager : TransactionManager,
 })=> {
-  const [contract, setContract] = useState<ContractGameManager>()
-  const [tradingContract, setTradingContract] = useState<ContractTrading>()
+  const [contractHandler, _setContractHandler] = useState<ContractHandlerType>(
+    newContractHandler(props.transactionManager)
+  )
   const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)
   const deckList = useAppSelector((state) => state.userSlice.userDeckList)
   const game = useAppSelector((state) => state.gameSlice.game)
+
+  const contract = contractHandler.gameManager.contract
 
   const displayAdmin = () => {
     return (
       <Row>
         <Col>
           <AdminContract
-            contract={contract}
-            transactionManager={props.transactionManager}
-            setContract={setContract}
+            contractHandler={contractHandler}
           />
         </Col>
           {!!contract &&
@@ -102,9 +103,7 @@ const AdminSection = (props: {
     if (isStep(StepId.Game, Step.Init, step)){
       return (
         <FindGame
-        contract={contract}
-        setContract={setContract}
-        transactionManager={props.transactionManager}
+        contractHandler={contractHandler}
         />
       )
     }else{
@@ -162,11 +161,7 @@ const AdminSection = (props: {
     <Row>
       <Col>
         <ContractLoader
-          contract={contract}
-          transactionManager={props.transactionManager}
-          setContract={setContract}
-          tradingContract={tradingContract}
-          setTradingContract={setTradingContract}
+          contractHandler={contractHandler}
         />
       </Col>
     </Row>

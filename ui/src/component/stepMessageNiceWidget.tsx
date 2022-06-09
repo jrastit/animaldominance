@@ -43,6 +43,10 @@ const StepMessageNiceWidget = (props : {
     color=colorCarrot
     stepCaption = 'Not set'
     break
+    case Step.NotFound :
+    color=colorCarrot
+    stepCaption = 'Not found'
+    break
     case Step.Ok :
     color=colorEmerald
     stepCaption = 'Ok'

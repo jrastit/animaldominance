@@ -37,8 +37,12 @@ function initContract(contractClass: any, abi: any[]) {
         value: async (...args: any[]) => {
           //console.log("call view ", functionName)
           try {
-            return await contractClass.contract.functions[functionName](...args)
+            return await contractClass.transactionManager.callView(
+              contractClass.contract.functions[functionName],
+              ...args
+            )
           } catch (err: any) {
+            console.error(err)
             throw Error(getErrorMessage(err))
           }
 

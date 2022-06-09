@@ -32,6 +32,7 @@ function App() {
     <div className="App">
       <Container fluid>
         <WalletLoader
+          transactionManager={transactionManager}
           setTransactionManager={setTransactionManager}
         />
         {!isWallet && <AppNav

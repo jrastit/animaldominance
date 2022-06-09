@@ -9,10 +9,13 @@ type NetworkType = {
   entityRegistryAddress?: string
   tokenName?: string
   contractDomainChainlink?: {
-    linkAddress: string,
-    oracle: string,
-    jobId: string,
+    linkAddress: string
+    oracle: string
+    jobId: string
   }
+  timeBetweenRequest?: number
+  retry?: number
+  refreshBalance?: number
 }
 
 export type { NetworkType }

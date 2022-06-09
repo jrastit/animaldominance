@@ -13,13 +13,17 @@ contract AnimalDominance {
     //////////////////////////// Owner ///////////////////////////
     address payable public owner;
 
-    modifier isOwner() {
+    modifier _isOwner() {
         require(msg.sender == owner, "Not owner");
         _;
     }
 
-    function withdraw (uint _amount) public isOwner {
+    function withdraw (uint _amount) public _isOwner {
         owner.transfer(_amount);
+    }
+
+    function isOwner() public view returns (bool) {
+        return (msg.sender == owner);
     }
 
     ////////////////////////// address ////////////////////
@@ -28,10 +32,10 @@ contract AnimalDominance {
     function getGameManager(uint256 _contractHash) public view returns (address) {
       address gameManager = gameManagerList[_contractHash];
       require(address(gameManager) != address(0), "Game manager not found");
-      return gameManagerList[_contractHash];
+      return gameManager;
     }
 
-    function addGameManager(uint256 _contractHash, address _gameManager) public isOwner() {
+    function addGameManager(uint256 _contractHash, address _gameManager) public _isOwner() {
       gameManagerList[_contractHash] = _gameManager;
     }
 
@@ -39,7 +43,7 @@ contract AnimalDominance {
     //////////////////////// Hash //////////////////////////
     uint256 public contractHash;
 
-    function setContractHash(uint256 _contractHash) public isOwner() {
+    function setContractHash(uint256 _contractHash) public _isOwner() {
         contractHash = _contractHash;
     }
 

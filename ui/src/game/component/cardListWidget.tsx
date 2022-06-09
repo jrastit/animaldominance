@@ -1,4 +1,4 @@
-import {ethers} from 'ethers'
+import {utils as ethersUtils, BigNumber} from 'ethers'
 
 import type {
   CardType,
@@ -44,8 +44,8 @@ const CardEditFrom = (props : {
 const CardListWidget = (props : {
   cardList : Array<CardType>
   tradeList : TradeType[][][] | undefined
-  buyNewCard ?: (cardId : number, value : number) => void
-  buyCard ?: (userdId : number, userCardId : number, value : ethers.BigNumber) => void
+  buyNewCard ?: (cardId : number, value : BigNumber) => void
+  buyCard ?: (userdId : number, userCardId : number, value : BigNumber) => void
   setCard ?: (card : {
     cardId: number,
     mana: number,
@@ -187,12 +187,12 @@ const CardListWidget = (props : {
   }
 
   const displayCard = (card : CardType) => {
-    const price = card.starter ? 1 : 10
+    const price = card.starter ? ethersUtils.parseEther('1') : ethersUtils.parseEther('10')
     return (
       <div key={card.id}>
       <DivFullNice>
       <Row key={card.id}>
-        <Col xs={3}>
+        <Col xs={props.setCard && props.setCardLevel ? 3 : 2}>
 
             {props.buyNewCard &&
               <SpaceWidget>
@@ -201,7 +201,7 @@ const CardListWidget = (props : {
                     props.buyNewCard(card.id, price)
                   }
                 >
-                  Buy a {card.name} level 0 for {price} {props.tokenName}
+                  Buy a {card.name} level 0 for {ethersUtils.formatEther(price)} {props.tokenName}
                 </ButtonNice>
               </SpaceWidget>
             }
@@ -218,7 +218,7 @@ const CardListWidget = (props : {
                           props.buyCard(minTrade.userId, minTrade.userCardId, minTrade.price)
                         }
                       >
-                        Buy {card.name} level {level} for {ethers.utils.formatEther(minTrade.price)} {props.tokenName}
+                        Buy {card.name} level {level} for {ethersUtils.formatEther(minTrade.price)} {props.tokenName}
                       </ButtonNice>
                     </SpaceWidget>
                     )
@@ -240,7 +240,7 @@ const CardListWidget = (props : {
 
             }
         </Col>
-        <Col xs={9}>
+        <Col xs={props.setCard && props.setCardLevel ? 9 : 10}>
           <Row>
             {card.level.map((_cardLevel, level : number) => displayCardLevel(card, level))}
           </Row>
@@ -273,8 +273,30 @@ const CardListWidget = (props : {
       exp = 1000000
       break;
     }
+
+    let price = level == 0 ? (card.starter ?
+      ethersUtils.parseEther('1') :
+      ethersUtils.parseEther('10')
+    ) : undefined
+    let minTrade = undefined as {
+      userId : number,
+      userCardId : number,
+      price : BigNumber
+    } | undefined
+    if (level > 0 && props.tradeList && props.tradeList[card.id - 1] && props.tradeList[card.id - 1][level]){
+      const tradeLevelList = props.tradeList[card.id - 1][level]
+      if (tradeLevelList.length){
+        minTrade = tradeLevelList.reduce((prev, current) => {
+          return (prev.price.lte(current.price) && prev.userId !== props.userId) ? prev : current
+        })
+        if (minTrade.userId === props.userId){
+          minTrade = undefined
+        }
+      }
+    }
     return (
       <Col xs={2} key={level}>
+      <div>Level {level + 1}</div>
       <div style={{padding:".5em"}}>
         <CardWidget
           family={card.family}
@@ -287,6 +309,28 @@ const CardListWidget = (props : {
           exp={exp}
         />
       </div>
+      {!!props.buyNewCard && level == 0 && price &&
+        <SpaceWidget>
+          <ButtonNice
+            onClick={() => props.buyNewCard && price &&
+              props.buyNewCard(card.id, price)
+            }
+          >
+            Buy for {ethersUtils.formatEther(price)} {props.tokenName}
+          </ButtonNice>
+        </SpaceWidget>
+      }
+      {!!props.buyNewCard && level > 0 && minTrade &&
+        <SpaceWidget>
+          <ButtonNice
+            onClick={() => props.buyCard && minTrade &&
+              props.buyCard(minTrade.userId, minTrade.userCardId, minTrade.price)
+            }
+          >
+            Buy for {ethersUtils.formatEther(minTrade.price)} {props.tokenName}
+          </ButtonNice>
+        </SpaceWidget>
+      }
       </Col>
     )
   }

@@ -22,7 +22,7 @@ export const getUserId = async (
   address?: string,
 ) => {
   if (!address) {
-    address = await contract.signer.getAddress()
+    address = await contract.contract.signer.getAddress()
   }
   const idBG = await contract.userAddressList(address)
   return idBG[0].toNumber()

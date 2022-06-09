@@ -6,19 +6,8 @@ import {
 } from './card'
 
 import {
-  getWithManagerContractTrading,
-} from '../contract/solidity/compiled/contractAutoFactory'
-
-import {
   TradeType
 } from '../type/tradeType'
-
-export const getTradingContract = async (
-  contract: ContractGameManager,
-) => {
-  const tradeContractAddress = await contract.trading()
-  return getWithManagerContractTrading(tradeContractAddress[0], contract.transactionManager)
-}
 
 export const loadAllTrade = async (
   contract: ContractGameManager,

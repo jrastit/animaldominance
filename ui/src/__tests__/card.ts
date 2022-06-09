@@ -10,8 +10,12 @@ import {
 } from '../game/card'
 
 import {
-  createContract,
+  updateAllContract,
 } from '../game/contract'
+
+import {
+  newContractHandler
+} from '../type/contractType'
 
 const testTransaction = () => {
 
@@ -38,12 +42,20 @@ const testTransaction = () => {
   describe('Test card', () => {
     it('Test card', async () => {
 
-      const contract = await createContract(undefined, transactionManager)
+      const contractHandler = newContractHandler(transactionManager)
 
-      await createAllCard(contract)
-      //console.log(transactionManager.transactionList.map(transactionManager.gasInfo))
-      console.log(transactionManager.transactionList.map(transactionManager.log))
-      await loadAllCard(contract)
+      await updateAllContract(contractHandler)
+
+      expect(contractHandler.gameManager.contract).toBeTruthy()
+
+      if (contractHandler.gameManager.contract) {
+        await createAllCard(contractHandler.gameManager.contract)
+        //console.log(transactionManager.transactionList.map(transactionManager.gasInfo))
+        console.log(transactionManager.transactionList.map(transactionManager.log))
+        await loadAllCard(contractHandler.gameManager.contract)
+      }
+
+
     })
 
   })

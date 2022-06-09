@@ -30,7 +30,13 @@
       "contract": "PlayGame"
     },
     {
-      "contract": "PlayGameFactory"
+      "contract": "PlayGameFactory",
+      "arg": [
+        {
+          "name": "_contractHash",
+          "type": "ethers.BigNumber"
+        }
+      ]
     },
     {
       "contract": "Trading",
@@ -38,11 +44,24 @@
         {
           "name": "_gameManager",
           "type": "ethers.Contract"
+        },
+        {
+          "name": "_contractHash",
+          "type": "ethers.BigNumber"
         }
       ]
     },
     {
-      "contract": "PlayActionLib"
+      "contract": "PlayActionLib",
+      "arg": [
+        {
+          "name": "_contractHash",
+          "type": "ethers.BigNumber"
+        }
+      ]
+    },
+    {
+      "contract": "PlayBot"
     }
   ]
 }

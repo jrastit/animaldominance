@@ -3,6 +3,7 @@ import { ethers } from 'ethers'
 import { useEffect } from 'react'
 
 import { TransactionManager } from '../util/TransactionManager'
+import TimerSemaphore from '../util/TimerSemaphore'
 
 import {
   Step,
@@ -101,16 +102,29 @@ const loadWalletFromBroswer = async (
                 }
                 const provider = await getProvider(_network, setErrorWallet)
                 if (provider) {
-                  const transactionManager = new TransactionManager(new ethers.Wallet(
-                    walletStorageWithKey.pkey,
-                    provider
-                  ))
+                  let timerSemaphore
+                  if (_network?.timeBetweenRequest){
+                    timerSemaphore = new TimerSemaphore(
+                      _network.timeBetweenRequest,
+                      _network?.retry
+                    )
+                  }
+                  const transactionManager = new TransactionManager(
+                    new ethers.Wallet(
+                      walletStorageWithKey.pkey,
+                      provider
+                    ),
+                    timerSemaphore,
+
+                  )
                   setTransactionManager(transactionManager)
                   refreshBalance(dispatch, transactionManager)
-                  provider.on('block', () => {
-                    refreshBalance(dispatch, transactionManager)
-                  });
-
+                  provider.removeAllListeners()
+                  if (!_network?.refreshBalance){
+                    provider.on('block', () => {
+                      refreshBalance(dispatch, transactionManager)
+                    })
+                  }
                 }
               }
               dispatch(setWallet({
@@ -143,13 +157,25 @@ const loadWalletFromBroswer = async (
         }))
         dispatch(resetAllStep())
         dispatch(updateStep({ id: StepId.Wallet, step: Step.Ok }))
-        const transactionManager = new TransactionManager(web3Wallet.signer)
+        let timerSemaphore
+        if (web3Wallet.network?.timeBetweenRequest){
+          timerSemaphore = new TimerSemaphore(
+            web3Wallet.network.timeBetweenRequest,
+            web3Wallet.network?.retry,
+          )
+        }
+        const transactionManager = new TransactionManager(
+          web3Wallet.signer,
+          timerSemaphore,
+        )
         setTransactionManager(transactionManager)
         refreshBalance(dispatch, transactionManager)
         web3Wallet.signer.provider.removeAllListeners()
-        web3Wallet.signer.provider.on('block', () => {
-          refreshBalance(dispatch, transactionManager)
-        });
+        if (!web3Wallet.network?.refreshBalance){
+          web3Wallet.signer.provider.on('block', () => {
+            refreshBalance(dispatch, transactionManager)
+          });
+        }
         addHooks()
         break
       default:
@@ -162,11 +188,13 @@ const loadWalletFromBroswer = async (
 }
 
 const WalletLoader = (props: {
+  transactionManager : TransactionManager | undefined
   setTransactionManager: (transactionManager: TransactionManager) => void
 }) => {
 
   const step = useAppSelector((state) => state.contractSlice.step)
   const password = useAppSelector((state) => state.walletSlice.password)
+  const network = useAppSelector((state) => state.walletSlice.network)
 
   const dispatch = useAppDispatch()
 
@@ -184,7 +212,28 @@ const WalletLoader = (props: {
       password,
       props.setTransactionManager,
     ])
+
+      useEffect(() => {
+        if (network?.refreshBalance && props.transactionManager){
+        const timer = setInterval(() => {
+          if (props.transactionManager){
+            refreshBalance(dispatch, props.transactionManager)
+          }
+        }, network.refreshBalance)
+
+        return () => clearTimeout(timer)
+      }
+    }, [
+      dispatch,
+      props.transactionManager
+    ])
+
+
+
+
   return (<></>)
 }
+
+
 
 export default WalletLoader

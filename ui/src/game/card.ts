@@ -8,10 +8,6 @@ import {
   CardLevelType
 } from '../type/cardType'
 
-import {
-  createWithManagerContractTrading,
-} from '../contract/solidity/compiled/contractAutoFactory'
-
 const DEF_DELAY = 1000;
 
 function sleep(ms: number) {
@@ -83,27 +79,14 @@ export const createAllCard = async (
   await contract.setCardHash(cardHash)
 }
 
-export const registerTrading = async (
-  contract: ContractGameManager,
-) => {
-  const tradingContract = await createWithManagerContractTrading(
-    contract,
-    contract.transactionManager
-  )
-  const tx = await contract.updateTrading(
-    tradingContract.address
-  )
-  return tx
-}
-
 export const buyNewCard = async (
   contract: ContractGameManager,
   cardId: number,
-  value: number,
+  value: BigNumber,
 ) => {
   return await contract.buyNewCard(
     cardId,
-    { value: ethersUtils.formatEther(value) }
+    { value }
   )
 }
 

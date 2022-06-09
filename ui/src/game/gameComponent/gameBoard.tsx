@@ -482,6 +482,16 @@ const GameBoard = (props: {
       for (let _id = _playActionTurnList.length - 1; _id >= 0 ; _id--) {
         const _playAction = _playActionTurnList[_id]
         if (_playAction) {
+          let _style
+          if (_id === 0){
+            _style={borderBottom : 'thin solid black'}
+          }
+          _actionList.push(
+            <div style={_style} key={_turn + ' ' + _id}>
+              {_turn} {ActionType[_playAction.actionTypeId]} {_playAction.gameCardId} {_playAction.dest}
+            </div>
+          )
+          /*
           const pos = 1 - (_turn % 2)
           const gameCard = turnData.cardList[pos][_playAction.gameCardId]
           let name
@@ -493,7 +503,7 @@ const GameBoard = (props: {
             name = cardList[gameCard.cardId - 1]?.name
             _actionList.push(
               <div style={_style} key={_turn + ' ' + _id}>
-                {_turn} {ActionType[_playAction.actionTypeId]} {name.substring(0, 12)}
+                {_turn} {ActionType[_playAction.actionTypeId]} {_playAction.gameCardId}
               </div>
             )
           } else {
@@ -501,6 +511,7 @@ const GameBoard = (props: {
               <div style={_style} key={_turn + ' ' + _id}>{_turn} Loading...</div>
             )
           }
+          */
         }
       }
     }

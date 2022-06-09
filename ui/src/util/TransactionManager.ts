@@ -1,5 +1,7 @@
 import * as ethers from 'ethers'
 
+import TimerSemaphore from './TimerSemaphore'
+
 export interface TransactionItem {
   txu: ethers.ethers.PopulatedTransaction | ethers.providers.TransactionRequest,
   tx: ethers.ethers.providers.TransactionResponse
@@ -13,7 +15,12 @@ export function getErrorMessage(err: any) {
   try {
     message = JSON.parse(err.error.body).error.message
   } catch {
-    message = err.error
+    if (err.error) {
+      message = err.error
+    } else {
+      message = err
+    }
+
   }
   return message
 }
@@ -25,19 +32,33 @@ export class TransactionManager {
 
   nextNonce: number
 
-  constructor(signer: ethers.Signer) {
+  timerSemaphore: TimerSemaphore | undefined
+
+  constructor(signer: ethers.Signer, timerSemaphore?: TimerSemaphore) {
     this.signer = signer
     this.transactionList = []
     this.nextNonce = -1
+    this.timerSemaphore = timerSemaphore
   }
 
   async getBalance() {
-    return this.signer.getBalance()
+    if (this.timerSemaphore) {
+      return this.timerSemaphore.callClassFunction(this.signer, this.signer.getBalance) as Promise<ethers.BigNumber>
+    } else {
+      return this.signer.getBalance()
+    }
   }
 
   async getNonce() {
     if (this.nextNonce === -1) {
-      this.nextNonce = await this.signer.getTransactionCount()
+      if (this.timerSemaphore) {
+        this.nextNonce = await this.timerSemaphore.callClassFunction(
+          this.signer,
+          this.signer.getTransactionCount
+        ) as number
+      } else {
+        this.nextNonce = await this.signer.getTransactionCount()
+      }
     } else {
       this.nextNonce = this.nextNonce + 1
     }
@@ -45,6 +66,17 @@ export class TransactionManager {
   }
 
   async sendTx(txu: ethers.ethers.PopulatedTransaction | ethers.providers.TransactionRequest, log: string) {
+    if (!txu) {
+      console.error(txu)
+    }
+    if (this.timerSemaphore) {
+      return this.timerSemaphore.callClassFunction(this, this._sendTx, txu, log) as Promise<TransactionItem>
+    } else {
+      return this._sendTx(txu, log)
+    }
+  }
+
+  async _sendTx(txu: ethers.ethers.PopulatedTransaction | ethers.providers.TransactionRequest, log: string) {
     try {
       txu.gasLimit = (await this.signer.estimateGas(txu)).mul(120).div(100)
       txu.gasPrice = await this.signer.getGasPrice()
@@ -75,6 +107,14 @@ export class TransactionManager {
       throw new Error(log + ' : ' + message)
     }
 
+  }
+
+  async callView(fnToCall: any, ...args: any[]) {
+    if (this.timerSemaphore) {
+      return this.timerSemaphore.callFunction(fnToCall, ...args) as Promise<any>
+    } else {
+      return fnToCall(...args)
+    }
   }
 
   async sendContractTx(

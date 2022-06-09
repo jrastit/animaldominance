@@ -27,6 +27,9 @@ const StepMessageWidget = (props : {
     case Step.NotSet :
     stepCaption = 'Not set'
     break
+    case Step.NotFound :
+    stepCaption = 'Not found'
+    break
   }
 
   if (props.step.message) {

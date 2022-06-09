@@ -32,6 +32,7 @@ export enum Step {
   Ready,
   Clean,
   NotSet,
+  NotFound,
   Empty,
   Ok,
   Error,

@@ -1,6 +1,7 @@
 import * as ethers from 'ethers'
 
 import { TransactionManager } from '../util/TransactionManager'
+import TimerSemaphore from '../util/TimerSemaphore'
 
 import { network as networkList } from '../config/network.json'
 import { NetworkType } from '../type/networkType'
@@ -11,23 +12,31 @@ const networkName = "ganache"
 //const networkName = "Matic Mumbai Testnet"
 //const networkName = "Matic Mainnet"
 
-const network: NetworkType = networkList.filter((network) => network.name === networkName)[0]
+export const network: NetworkType = networkList.filter((network) => network.name === networkName)[0]
 
-let privateKeys = require("../../key/" + networkName.replace(/ /g, "") + "PrivateKeys.json")
+let timerSemaphore = undefined as TimerSemaphore | undefined
+
+if (network.timeBetweenRequest) {
+  timerSemaphore = new TimerSemaphore(network.timeBetweenRequest, network.retry)
+}
+
+export let privateKeys = require("../../key/" + networkName.replace(/ /g, "") + "PrivateKeys.json")
 const url = network.url
-const provider = new ethers.providers.JsonRpcProvider(url)
+export const provider = new ethers.providers.JsonRpcProvider(url)
 
-const getWalletList = (): ethers.Signer[] => {
+export const getWalletList = (): ethers.Signer[] => {
   return privateKeys.map((pk: string): ethers.Signer => {
     return new ethers.Wallet(pk, provider)
   })
 }
 
-const getTransactionManegerList = () => {
-  return getWalletList().map((signer: ethers.Signer): TransactionManager => new TransactionManager(signer))
+export const getTransactionManagerList = () => {
+  return getWalletList().map((signer: ethers.Signer): TransactionManager =>
+    new TransactionManager(signer, timerSemaphore)
+  )
 }
 
-const constant = {
+export const constant = {
   kovanDaiAddress: "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa",
   addressOne: "0x0000000000000000000000000000000000000001",
   tokenName: "test",
@@ -37,5 +46,3 @@ const constant = {
   token2Symbol: "TST2",
   token2Decimals: 10,
 }
-
-export { network, networkName, provider, privateKeys, getWalletList, getTransactionManegerList, constant }

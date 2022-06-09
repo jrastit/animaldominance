@@ -6,23 +6,36 @@ import { GameManager, UserCard, Card } from './GameManager.sol';
 
 contract PlayActionLib {
 
-  function getGameCard(GameManager gameManager, uint64 _userId, uint32 _userCardId) public view returns (GameCard memory){
-      UserCard memory userCard = gameManager.getUserCard(_userId, _userCardId);
-      uint8 level = gameManager.getLevel(userCard.exp);
-      Card memory card = gameManager.getCard(userCard.cardId);
-      GameCard memory gameCard = GameCard(
-          _userId,
-          _userCardId,
-          userCard.cardId,
-          card.level[level].life,
-          card.level[level].attack,
-          userCard.exp,
-          0,
-          card.mana,
-          0
-      );
-      return gameCard;
-  }
+    uint256 public contractHash;
+
+    constructor(
+        uint256 _contractHash
+    ) {
+        contractHash = _contractHash;
+    }
+
+    function random8(uint8 number, uint8 _turn, uint8 _actionId) public view returns(uint8){
+        //return turn % number;
+        return uint8(uint(keccak256(abi.encode(blockhash(block.number-1), block.timestamp, _turn, _actionId)))) % number;
+    }
+
+    function getGameCard(GameManager gameManager, uint64 _userId, uint32 _userCardId) public view returns (GameCard memory){
+        UserCard memory userCard = gameManager.getUserCard(_userId, _userCardId);
+        uint8 level = gameManager.getLevel(userCard.exp);
+        Card memory card = gameManager.getCard(userCard.cardId);
+        GameCard memory gameCard = GameCard(
+            _userId,
+            _userCardId,
+            userCard.cardId,
+            card.level[level].life,
+            card.level[level].attack,
+            userCard.exp,
+            0,
+            card.mana,
+            0
+        );
+        return gameCard;
+    }
 
     function playActionAttack(GameCard memory gameCard1, GameCard memory gameCard2, uint8 turn) public pure returns (
         uint16 result,
@@ -54,7 +67,7 @@ contract PlayActionLib {
         }
         return (result, gameCard1, gameCard2);
     }
-    
+
     function playActionAttackOponent(GameCard memory gameCard, uint16 life, uint8 turn) public pure returns (
         uint16 result,
         uint16,

@@ -2,6 +2,7 @@ import * as solc from 'solc'
 import * as fs from 'fs'
 import * as path from 'path';
 import * as fse from 'fs-extra';
+import * as ethers from 'ethers'
 
 interface FileTs {
   header: string[],
@@ -47,6 +48,8 @@ const compileInput = (contractConfig: any, outputPath: string, fileTs: FileTs) =
 
   let output = JSON.parse(solc.compile(JSON.stringify(contractConfig.input), { import: findImports }));
 
+  const contractHash = ethers.utils.id(JSON.stringify(contractConfig.input))
+
   let hasError = 0;
 
   if (output.errors) {
@@ -85,7 +88,7 @@ const compileInput = (contractConfig: any, outputPath: string, fileTs: FileTs) =
 
   for (var contract in output.contracts) {
     for (var contractName in output.contracts[contract]) {
-      console.log("contract ", contractName)
+      console.log("contract ", contractName, contractHash)
       let outputfile = {
         abi: output.contracts[contract][contractName].abi,
         bytecode: output.contracts[contract][contractName].evm.bytecode.object,
@@ -192,7 +195,8 @@ const compileInput = (contractConfig: any, outputPath: string, fileTs: FileTs) =
       fileTs.getHash.push(
         "export const getHashContract" + contractName + " = (\n" +
         ") => {\n" +
-        "\treturn ethers.utils.id(JSON.stringify(json" + contractName + "))\n" +
+        //"\treturn ethers.utils.id(JSON.stringify(json" + contractName + "))\n" +
+        "\treturn ethers.BigNumber.from('" + contractHash + "') \n" +
         "}\n")
     }
 

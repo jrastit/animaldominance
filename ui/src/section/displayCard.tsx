@@ -32,7 +32,7 @@ const DisplayCard = (props: {
   const [loading, setLoading] = useState<boolean>()
   const [error, setError] = useState<string>()
 
-  const _buyNewCard = (cardId: number, value: number) => {
+  const _buyNewCard = (cardId: number, value: BigNumber) => {
     if (props.contract) {
       setLoading(true)
       buyNewCard(props.contract, cardId, value).then(() => {

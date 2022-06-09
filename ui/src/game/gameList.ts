@@ -1,9 +1,14 @@
+import { BigNumber } from 'ethers'
+
 import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
 
 import {
   GameListItemType,
 } from '../type/gameType'
 
+import {
+  getHashContractPlayBot,
+} from '../contract/solidity/compiled/contractAutoFactory'
 
 export const getGameLastId = async (
   contract: ContractGameManager,
@@ -61,7 +66,8 @@ export const createGameBot = async (
   userDeckId: number,
 ) => {
   const tx = await contract.createGameBotSelf(
-    userDeckId
+    userDeckId,
+    BigNumber.from(getHashContractPlayBot()),
   )
   for (let i = 0; i < tx.result.logs.length; i++) {
     try {

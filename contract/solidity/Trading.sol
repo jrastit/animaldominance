@@ -14,15 +14,20 @@ struct TradeUserCardLevel {
 }
 
 contract Trading {
+
+    uint256 public contractHash;
+
     ///////////////////////////////// contract ///////////////////////////////////////
     address payable private owner;
     GameManager gameManager;
 
     constructor(
-        GameManager _gameManager
+        GameManager _gameManager,
+        uint256 _contractHash
     ) {
         _updateGameManager(_gameManager);
         owner = payable( msg.sender);
+        contractHash = _contractHash;
     }
 
     modifier isOwner() {

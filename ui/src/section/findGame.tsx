@@ -1,5 +1,3 @@
-import {ContractGameManager} from '../contract/solidity/compiled/contractAutoFactory'
-import { TransactionManager } from '../util/TransactionManager'
 import { useState } from 'react'
 
 import Container from 'react-bootstrap/Container';
@@ -9,9 +7,7 @@ import StepMessageNiceWidget from '../component/stepMessageNiceWidget'
 import DeckSelect from '../game/component/deckSelect'
 import FormControl from 'react-bootstrap/FormControl'
 
-import {
-  createContract,
-} from '../game/reducer/contract'
+import { ContractHandlerType } from '../type/contractType'
 
 import {
   joinGame,
@@ -41,21 +37,26 @@ import {
 } from '../reducer/contractSlice'
 
 import {
+  updateContract,
+} from '../game/reducer/contract'
+
+import {
   registerUser,
   addUserDefaultDeck,
 } from '../game/user'
 
 const FindGame = (props: {
-  transactionManager : TransactionManager,
-  contract: ContractGameManager | undefined,
-  setContract: (contract: ContractGameManager | undefined) => void,
+  contractHandler : ContractHandlerType,
 }) => {
+
+  const contract = props.contractHandler.gameManager.contract
 
   const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)
   const gameList = useAppSelector((state) => state.gameSlice.gameList)
   const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const userDeckList = useAppSelector((state) => state.userSlice.userDeckList)
+  const network = useAppSelector((state) => state.walletSlice.network)
   const dispatch = useAppDispatch()
 
   const [deck, setDeck] = useState<UserDeckType | undefined>(
@@ -65,9 +66,9 @@ const FindGame = (props: {
   const [name, setName] = useState<string>()
 
   const _registerUser = () => {
-    if (name && props.contract) {
+    if (name && contract) {
       dispatch(updateStep({ id: StepId.User, step: Step.Loading }))
-      registerUser(props.contract, name).then(() => {
+      registerUser(contract, name).then(() => {
         dispatch(clearError(StepId.User))
       }).catch((err) => {
         dispatch(setError({ id: StepId.User, catchError: err }))
@@ -127,11 +128,11 @@ const FindGame = (props: {
   }
 
   const _addUserDefaultDeck = () => {
-    if (props.contract){
+    if (contract){
       dispatch(updateStep({id: StepId.UserDeckList, step: Step.Creating}))
       if (userCardList){
         addUserDefaultDeck(
-          props.contract,
+          contract,
           userCardList,
         ).then((deck) => {
           let newUserDeckList = [] as UserDeckType[]
@@ -150,10 +151,10 @@ const FindGame = (props: {
   }
 
   const onGameJoin = async (gameId: number) => {
-    if (deck && props.contract) {
+    if (deck && contract) {
       dispatch(updateStep({ id: StepId.Game, step: Step.Joining }))
       joinGame(
-        props.contract,
+        contract,
         gameId,
         deck.id
       ).then(() => {
@@ -168,10 +169,10 @@ const FindGame = (props: {
   }
 
   const _createGame = async () => {
-    if (deck && props.contract) {
+    if (deck && contract) {
       dispatch(updateStep({ id: StepId.Game, step: Step.Creating }))
       createGame(
-        props.contract,
+        contract,
         deck.id
       ).then((_gameId) => {
         dispatch(setGameId(_gameId))
@@ -184,10 +185,10 @@ const FindGame = (props: {
   }
 
   const _createGameBot = async () => {
-    if (deck && props.contract) {
+    if (deck && contract) {
       dispatch(updateStep({ id: StepId.Game, step: Step.Creating }))
       createGameBot(
-        props.contract,
+        contract,
         deck.id
       ).then((_gameId) => {
         dispatch(setGameId(_gameId))
@@ -220,7 +221,7 @@ const FindGame = (props: {
   }
 
   const joinGameRender = () => {
-    if (props.contract && gameList && gameList.length > 0) {
+    if (contract && gameList && gameList.length > 0) {
       const openGame = gameList.filter(game => !game.playGame && !game.userId2 && !game.ended)
       const myOpenGame = openGame.filter(game => user && game.userId1 === user.id)
       const gameToJoin = openGame.filter(game => user && game.userId1 !== user.id)
@@ -262,12 +263,12 @@ const FindGame = (props: {
       <DivNice>
         {reanderLoading()}
       </DivNice>
-      {isStep(StepId.Contract, Step.NotSet, step) &&
+      {isStep(StepId.Contract, Step.NotFound, step) &&
         <DivNice>
         <Button onClick={() => {
-          createContract(dispatch, props.transactionManager, props.setContract)
+          updateContract(dispatch, network, props.contractHandler)
         }}>
-          Create new contract
+          Create or update contract
         </Button>
       </DivNice>
       }

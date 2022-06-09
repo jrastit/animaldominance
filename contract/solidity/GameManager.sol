@@ -5,6 +5,7 @@ import { Trading } from "./Trading.sol";
 import { PlayGame, GameCard } from "./PlayGame.sol";
 import { PlayGameFactory } from "./PlayGameFactory.sol";
 import { PlayActionLib } from "./PlayActionLib.sol";
+import { PlayBot } from "./PlayBot.sol";
 
 struct User {
     uint64 id;
@@ -55,6 +56,7 @@ struct Game {
     uint64 winner;
     bool ended;
     PlayGame playGame;
+    uint256 playGameHash;
 }
 
 contract GameManager {
@@ -164,7 +166,7 @@ contract GameManager {
 
     ///////////////////////// Game Factory //////////////////////////////////
 
-    PlayGameFactory private playGameFactory;
+    PlayGameFactory public playGameFactory;
 
     function _updatePlayGameFactory(PlayGameFactory _playGameFactory) private {
         require(address(_playGameFactory) != address(0), "playGameFactory is null");
@@ -204,7 +206,8 @@ contract GameManager {
         userIdList[_userId].gameId = gameLastId;
     }
 
-    function _createGameBot(uint64 _userId, uint16 _gameDeckId) private {
+    function _createGameBot(uint64 _userId, uint16 _gameDeckId, PlayBot playBot) private {
+        require(address(playBot) != address(0), 'Bot not found');
         _createGame(_userId, _gameDeckId);
         gameList[gameLastId].playGame = playGameFactory.newGame(
             this,
@@ -212,7 +215,8 @@ contract GameManager {
             _gameDeckId,
             0,
             _gameDeckId,
-            gameLastId
+            gameLastId,
+            playBot
         );
         userIdList[_userId].gameId = gameLastId;
         emit GameCreatedBot(gameLastId, _userId);
@@ -223,8 +227,8 @@ contract GameManager {
         emit GameCreated(gameLastId, userAddressList[msg.sender]);
     }
 
-    function createGameBotSelf(uint16 _gameDeckId) public isUser {
-        _createGameBot(userAddressList[msg.sender], _gameDeckId);
+    function createGameBotSelf(uint16 _gameDeckId, uint256 _playBotHash) public isUser {
+        _createGameBot(userAddressList[msg.sender], _gameDeckId, playBotMap[_playBotHash]);
     }
 
     function cancelGame() public isUser {
@@ -249,7 +253,8 @@ contract GameManager {
             game.userDeck1,
             game.userId2,
             game.userDeck2,
-            _gameId
+            _gameId,
+            PlayBot(address(0))
         );
         userIdList[_userId].gameId = _gameId;
         emit GameFill(_gameId, _userId);
@@ -418,8 +423,6 @@ contract GameManager {
         }
     }
 
-
-
     ////////////////////////////////////// User Deck ///////////////////////////////////////
     event DeckUpdated(uint64 userId, uint16 deckId);
 
@@ -466,6 +469,15 @@ contract GameManager {
 
     function updateGameDeckSelf(uint16 _deckId, uint32[20] memory _userCardIdList) public isUser {
       _updateGameDeck(userAddressList[msg.sender], _deckId, _userCardIdList);
+    }
+
+    //////////////////////////////////////////// Bot ////////////////////////////////////////////
+
+    mapping(uint256 => PlayBot) public playBotMap;
+
+    function addBot(uint256 contractHash, PlayBot bot) public {
+        require(address(playBotMap[contractHash]) == address(0), 'Bot already exist');
+        playBotMap[contractHash] = bot;
     }
 
 }

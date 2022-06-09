@@ -1,30 +1,27 @@
 import * as ethers from 'ethers'
-import { getWalletList } from '../__test_util__/testConfig'
+import { getTransactionManagerList } from '../__test_util__/testConfig'
 
 import {
-  createContract,
+  updateAllContract,
 } from '../game/contract'
+
+import {
+  newContractHandler
+} from '../type/contractType'
 
 import { TransactionManager } from '../util/TransactionManager'
 
 const testTransaction = () => {
 
-  let walletList: ethers.Signer[]
-
   jest.setTimeout(600000)
 
-  let transactionManager: TransactionManager
-  let transactionManager1: TransactionManager
-  let transactionManager2: TransactionManager
+  let transactionManager: TransactionManager[]
 
   beforeAll(done => {
     const func_async = (async () => {
 
       try {
-        walletList = getWalletList()
-        transactionManager = new TransactionManager(walletList[0])
-        transactionManager1 = new TransactionManager(walletList[1])
-        transactionManager2 = new TransactionManager(walletList[2])
+        transactionManager = getTransactionManagerList()
         done()
       } catch (error) {
         done(error)
@@ -35,25 +32,25 @@ const testTransaction = () => {
 
   describe('Test transaction token', () => {
     it('Test account balance', async () => {
-      console.log(await transactionManager.getAddress(), (ethers.utils.formatEther(await transactionManager.getBalance())))
-      console.log(await transactionManager1.getAddress(), (ethers.utils.formatEther(await transactionManager1.getBalance())))
-      console.log(await transactionManager2.getAddress(), (ethers.utils.formatEther(await transactionManager2.getBalance())))
+      console.log(await transactionManager[0].getAddress(), (ethers.utils.formatEther(await transactionManager[0].getBalance())))
+      console.log(await transactionManager[1].getAddress(), (ethers.utils.formatEther(await transactionManager[1].getBalance())))
+      console.log(await transactionManager[2].getAddress(), (ethers.utils.formatEther(await transactionManager[2].getBalance())))
     })
 
     it('Test transaction token', async () => {
-      const contract = await createContract(
-        undefined,
-        transactionManager,
-      )
+      const contractHandler = newContractHandler(transactionManager[0])
+      await updateAllContract(contractHandler)
 
-      await transactionManager.sendTx(await contract.populateTransaction.createCard(
-        'test',
-        1,
-        1,
-        1
-      ), "Create card")
-      console.log(transactionManager.transactionList.map(transactionManager.gasInfo))
-      console.log(transactionManager.transactionList.map(transactionManager.log))
+      if (contractHandler.gameManager.contract) {
+        await contractHandler.gameManager.contract.createCard(
+          'test',
+          1,
+          1,
+          1
+        )
+      }
+      console.log(transactionManager[0].transactionList.map(tx => transactionManager[0].gasInfo(tx)))
+      console.log(transactionManager[0].transactionList.map(tx => transactionManager[0].log(tx)))
     })
 
   })
