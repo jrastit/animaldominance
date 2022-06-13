@@ -28,8 +28,15 @@ export const switchNetwork = (network: NetworkType) => {
 }
 
 export const getNetworkList = async (): Promise<NetworkType[]> => {
-  const networkList = require('../config/network.json').network as any
-  return networkList.sort((a: any, b: any) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+  const networkList = require('../config/network.json').network as NetworkType[]
+  return networkList.filter((_network) => {
+    if (!_network.host) {
+      return true
+    }
+    return _network.host === window.location.hostname
+  }).sort(
+    (a: any, b: any) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0)
+  )
 }
 
 export const getNetwork = async (chainId: number | undefined): Promise<NetworkType | undefined> => {

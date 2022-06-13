@@ -77,7 +77,7 @@ const WalletPassword = () => {
           type="checkbox"
           label="Remember it"
           name="remeber"
-          onChange={(event) => {console.log(event.target.value); setRemember(!remember)}}
+          onChange={(_event) => {setRemember(!remember)}}
           />
           <Form.Control type="password" placeholder="Password" name="password" onChange={_unlockPassword}/>
         </>

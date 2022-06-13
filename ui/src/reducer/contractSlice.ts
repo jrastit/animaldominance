@@ -38,6 +38,8 @@ export enum Step {
   Error,
   NoPassword,
   NoAddress,
+  NoNetwork,
+  NoBalance,
   NoKey,
 }
 
@@ -101,6 +103,19 @@ export const contractSlice = createSlice({
       })
 
     },
+    updateStepIf: (state, action: PayloadAction<{ id: number, ifStep: number, step: number }>) => {
+      state.step.forEach((step) => {
+        if (step.id === action.payload.id) {
+          if (step.step === action.payload.ifStep) {
+            console.log("updateStep", StepId[action.payload.id], Step[action.payload.step])
+            step.step = action.payload.step
+            step.message = undefined
+            step.error = undefined
+            state.version = state.version + 1
+          }
+        }
+      })
+    },
     clearError: (state, action: PayloadAction<number>) => {
       state.step.forEach((step) => {
         if (step.id === action.payload) {
@@ -142,6 +157,7 @@ export const contractSlice = createSlice({
 
 export const {
   updateStep,
+  updateStepIf,
   clearError,
   setError,
   setMessage,

@@ -57,7 +57,7 @@ export default class TimerSemaphore {
         const item = this.currentRequests.shift();
         if (item) {
           this.start = Date.now();
-          console.log(new Date(this.start), item.fnToCall, this.timeBetweenRequest)
+          //console.log(new Date(this.start), item.fnToCall, this.timeBetweenRequest)
           let req
           if (item.callClass) {
             req = item.fnToCall.apply(item.callClass, item.args) as any

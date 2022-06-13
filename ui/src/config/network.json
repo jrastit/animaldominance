@@ -8,7 +8,8 @@
       "tokenName": "TEST",
       "timeBetweenRequest" : 1000,
       "retry" : 2,
-      "refreshBalance" : 10000
+      "refreshBalance" : 10000,
+      "host" : "localhost"
     },
     {
       "name" : "Emerald Testnet",
@@ -19,7 +20,8 @@
       "tokenName": "TEST",
       "timeBetweenRequest" : 10,
       "retry" : 2,
-      "refreshBalance" : 10000
+      "refreshBalance" : 10000,
+      "default" : true
     },
     {
       "name" : "Arbitrum Testnet",
@@ -29,7 +31,8 @@
       "tokenName": "ETH",
       "timeBetweenRequest" : 1000,
       "retry" : 2,
-      "refreshBalance" : 10000
+      "refreshBalance" : 10000,
+      "host" : "localhost"
     },
     {
       "name" : "Matic Mainnet",
@@ -38,7 +41,8 @@
       "gameContract": "0x5818F16D20f6b4Ba84b186C8b8911E0133Eddd84",
       "tokenName": "MATIC",
       "timeBetweenRequest" : 1000,
-      "retry" : 2
+      "retry" : 2,
+      "host" : "localhost"
     },
     {
       "name" : "Matic Mumbai Testnet",
@@ -47,7 +51,8 @@
       "gameContract": "0x220f47ffB54A314488e461391e3616F464bA4c1d",
       "tokenName": "MATIC",
       "timeBetweenRequest" : 1000,
-      "retry" : 2
+      "retry" : 2,
+      "host" : "localhost"
     }
   ]
 }

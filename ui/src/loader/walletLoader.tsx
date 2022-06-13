@@ -1,6 +1,6 @@
 import { ethers } from 'ethers'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 
 import { TransactionManager } from '../util/TransactionManager'
 import TimerSemaphore from '../util/TimerSemaphore'
@@ -10,6 +10,7 @@ import {
   StepId,
   isInit,
   updateStep,
+  updateStepIf,
   setError,
   resetAllStep,
 } from '../reducer/contractSlice'
@@ -41,27 +42,29 @@ const refreshBalance = async (
   dispatch: any,
   transactionManager: TransactionManager,
 ) => {
-
   const _balance = parseFloat(
     ethers.utils.formatEther(
       await transactionManager.getBalance()
     )
   )
-  //console.log('refreshBalance', await transactionManager.getAddress(), _balance)
   dispatch(
     setBalance({
-      address : await transactionManager.getAddress(),
-      balance : _balance
-    }
-
-    )
+      address: await transactionManager.getAddress(),
+      balance: _balance
+    })
   )
+  if (_balance){
+    dispatch(updateStepIf({ id: StepId.Wallet, ifStep: Step.NoBalance, step: Step.Init }))
+  }
+  return _balance
 }
 
 const loadWalletFromBroswer = async (
   dispatch: any,
   password: { password: string | undefined, passwordCheck: string | undefined },
-  setTransactionManager: (transactionManager: TransactionManager) => void
+  setTransactionManager: (transactionManager: TransactionManager) => void,
+  timer : NodeJS.Timeout | undefined,
+  setTimer : (timer : NodeJS.Timeout) => void
 ) => {
   dispatch(updateStep({ id: StepId.Wallet, step: Step.Loading }))
   const walletStorage = walletStorageLoad()
@@ -72,7 +75,7 @@ const loadWalletFromBroswer = async (
           type: 'Broswer',
         }))
         dispatch(setPasswordCheck({
-          password: password.password ? password.password : walletStorage.password,
+          password: password.password? password.password : walletStorage.password,
           passwordCheck: walletStorage.passwordCheck
         }))
         if (!password.password) {
@@ -94,43 +97,63 @@ const loadWalletFromBroswer = async (
                 name: walletStorageWithKey.name,
                 address: walletStorageWithKey.address,
               }))
+              let balance
               if (walletStorageWithKey.pkey) {
                 const _network = await getNetwork(walletStorage.chainId)
-                dispatch(setNetwork(_network))
-                const setErrorWallet = (error: string) => {
-                  setError({ id: StepId.Wallet, error })
-                }
-                const provider = await getProvider(_network, setErrorWallet)
-                if (provider) {
-                  let timerSemaphore
-                  if (_network?.timeBetweenRequest){
-                    timerSemaphore = new TimerSemaphore(
-                      _network.timeBetweenRequest,
-                      _network?.retry
-                    )
+                if (_network) {
+                  dispatch(setNetwork(_network))
+                  const setErrorWallet = (error: string) => {
+                    setError({ id: StepId.Wallet, error })
                   }
-                  const transactionManager = new TransactionManager(
-                    new ethers.Wallet(
-                      walletStorageWithKey.pkey,
-                      provider
-                    ),
-                    timerSemaphore,
+                  const provider = await getProvider(_network, setErrorWallet)
+                  if (provider) {
+                    let timerSemaphore
+                    if (_network.timeBetweenRequest) {
+                      timerSemaphore = new TimerSemaphore(
+                        _network.timeBetweenRequest,
+                        _network.retry
+                      )
+                    }
+                    const transactionManager = new TransactionManager(
+                      new ethers.Wallet(
+                        walletStorageWithKey.pkey,
+                        provider
+                      ),
+                      timerSemaphore,
 
-                  )
-                  setTransactionManager(transactionManager)
-                  refreshBalance(dispatch, transactionManager)
-                  provider.removeAllListeners()
-                  if (!_network?.refreshBalance){
-                    provider.on('block', () => {
-                      refreshBalance(dispatch, transactionManager)
-                    })
+                    )
+                    setTransactionManager(transactionManager)
+                    balance = await refreshBalance(dispatch, transactionManager)
+                    provider.removeAllListeners('block')
+                    if (!_network.refreshBalance) {
+                      provider.on('block', () => {
+                        refreshBalance(dispatch, transactionManager)
+                      })
+                    } else {
+                      if (timer) {
+                        clearTimeout(timer)
+                      }
+                      setTimer(setInterval(() => {
+                        if (transactionManager) {
+                          refreshBalance(dispatch, transactionManager)
+                        }
+                      }, _network.refreshBalance))
+                    }
+                    if (!balance) {
+                      dispatch(updateStep({ id: StepId.Wallet, step: Step.NoBalance }))
+                      return
+                    }
                   }
+                } else {
+                  dispatch(updateStep({ id: StepId.Wallet, step: Step.NoNetwork }))
+                  return
                 }
               }
               dispatch(setWallet({
                 type: 'Broswer',
                 name: walletStorageWithKey.name,
                 address: walletStorageWithKey.address,
+                balance,
               }))
               dispatch(resetAllStep())
               dispatch(updateStep({ id: StepId.Wallet, step: Step.Ok }))
@@ -158,7 +181,7 @@ const loadWalletFromBroswer = async (
         dispatch(resetAllStep())
         dispatch(updateStep({ id: StepId.Wallet, step: Step.Ok }))
         let timerSemaphore
-        if (web3Wallet.network?.timeBetweenRequest){
+        if (web3Wallet.network?.timeBetweenRequest) {
           timerSemaphore = new TimerSemaphore(
             web3Wallet.network.timeBetweenRequest,
             web3Wallet.network?.retry,
@@ -171,7 +194,7 @@ const loadWalletFromBroswer = async (
         setTransactionManager(transactionManager)
         refreshBalance(dispatch, transactionManager)
         web3Wallet.signer.provider.removeAllListeners()
-        if (!web3Wallet.network?.refreshBalance){
+        if (!web3Wallet.network?.refreshBalance) {
           web3Wallet.signer.provider.on('block', () => {
             refreshBalance(dispatch, transactionManager)
           });
@@ -188,13 +211,13 @@ const loadWalletFromBroswer = async (
 }
 
 const WalletLoader = (props: {
-  transactionManager : TransactionManager | undefined
+  transactionManager: TransactionManager | undefined
   setTransactionManager: (transactionManager: TransactionManager) => void
 }) => {
 
   const step = useAppSelector((state) => state.contractSlice.step)
   const password = useAppSelector((state) => state.walletSlice.password)
-  const network = useAppSelector((state) => state.walletSlice.network)
+  const [timer, setTimer] = useState<NodeJS.Timeout>()
 
   const dispatch = useAppDispatch()
 
@@ -203,33 +226,18 @@ const WalletLoader = (props: {
       loadWalletFromBroswer(
         dispatch,
         password,
-        props.setTransactionManager
+        props.setTransactionManager,
+        timer,
+        setTimer
       )
     }
   }, [
+      timer,
       dispatch,
       step,
       password,
       props.setTransactionManager,
     ])
-
-      useEffect(() => {
-        if (network?.refreshBalance && props.transactionManager){
-        const timer = setInterval(() => {
-          if (props.transactionManager){
-            refreshBalance(dispatch, props.transactionManager)
-          }
-        }, network.refreshBalance)
-
-        return () => clearTimeout(timer)
-      }
-    }, [
-      dispatch,
-      props.transactionManager
-    ])
-
-
-
 
   return (<></>)
 }

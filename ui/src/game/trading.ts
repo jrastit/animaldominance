@@ -23,7 +23,7 @@ export const loadAllTrade = async (
       const tradeLengthChain = (await tradingContract.getCardLevelTradeLength(i, level))
       if (tradeLengthChain > 0) {
         for (let tradeId = 0; tradeId < tradeLengthChain; tradeId++) {
-          const tradeChain = (await tradingContract.getTrade(i, level, tradeId))
+          const tradeChain = (await tradingContract.getTrade(i, level, tradeId))[0]
           tradeList[i - 1][level][tradeId] = {
             userId: tradeChain.userId.toNumber(),
             userCardId: tradeChain.userCardId,

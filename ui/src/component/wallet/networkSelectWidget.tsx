@@ -38,14 +38,23 @@ const NetworkSelectWidget = () => {
   useEffect(() => {
     if (option.length === 0) {
       getNetworkList().then(networkList => {
-        const _option = networkList.map(network => {
+        const _option = networkList.map(_network => {
           return {
-            value: network.chainId.toString(),
-            name: network.name,
+            value: _network.chainId.toString(),
+            name: _network.name,
           }
         })
-        if (_option[0] && !network)
-          _setNetwork2(parseInt(_option[0].value))
+        if (_option[0] && !network){
+          let defautNetwork = networkList.filter(_network => {
+            return _network.default
+          })[0]
+          if (!defautNetwork){
+            defautNetwork = networkList[0]
+          }
+          if (defautNetwork){
+            _setNetwork2(defautNetwork.chainId)
+          }
+        }
         setOption(_option)
       })
     }

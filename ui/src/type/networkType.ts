@@ -16,6 +16,8 @@ type NetworkType = {
   timeBetweenRequest?: number
   retry?: number
   refreshBalance?: number
+  host?: string
+  default?: boolean
 }
 
 export type { NetworkType }

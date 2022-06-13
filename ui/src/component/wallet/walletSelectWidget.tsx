@@ -38,6 +38,7 @@ const _setWallet2 = (
 
 const WalletSelectWidget = (props: {
   setSection : (section : string) => void
+  isOk : boolean
 }) => {
 
   const wallet = useAppSelector((state) => state.walletSlice.wallet)
@@ -94,7 +95,13 @@ const WalletSelectWidget = (props: {
             network={network}
           />
         }
-        <Button onClick={() => props.setSection('game')}>Ok</Button>
+        { !wallet.balance &&
+          <p>Wallet balance is empty, add some tokens!</p>
+        }
+        { props.isOk &&
+          <Button onClick={() => props.setSection('game')}>Ok</Button>
+        }
+
         </BoxWidget>
         <WalletDelete />
         </>

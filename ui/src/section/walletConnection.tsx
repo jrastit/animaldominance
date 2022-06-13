@@ -148,15 +148,16 @@ const WalletConnection = (props: {
       case 'Broswer':
         if (isStep(StepId.Wallet, Step.NoAddress, step)) {
           return (
-            <p>
+            <>
               <SpaceWidget>
                 <WalletSelectWidget
                   setSection={props.setSection}
+                  isOk={false}
                 />
               </SpaceWidget>
               {renderDisconnect()}
               {renderHome()}
-            </p>
+            </>
           )
         }
         if (isStep(StepId.Wallet, Step.NoPassword, step)) {
@@ -172,7 +173,7 @@ const WalletConnection = (props: {
             </SpaceWidget>
           )
         }
-        if (isStep(StepId.Wallet, Step.Ok, step)) {
+        if (isStep(StepId.Wallet, Step.Ok, step) || isStep(StepId.Wallet, Step.NoNetwork, step) || isStep(StepId.Wallet, Step.NoBalance, step)) {
           return (
             <>
             <SpaceWidget>
@@ -183,12 +184,13 @@ const WalletConnection = (props: {
               <SpaceWidget>
                 <WalletSelectWidget
                   setSection={props.setSection}
+                  isOk={isStep(StepId.Wallet, Step.Ok, step)}
                 />
               </SpaceWidget>
               <SpaceWidget>
                 <BoxWidget>
                   {renderDisconnect()}
-                  <Button variant="warning" onClick={() => setWalletType()}>Home</Button>
+                  {renderHome()}
                 </BoxWidget>
               </SpaceWidget>
             </>
@@ -198,12 +200,15 @@ const WalletConnection = (props: {
           return (
             <>
             <SpaceWidget>
-              <BoxWidget title='Metamask Error'>
-                <p>Is your metamask connected?</p>
-                <Button size='sm' variant="warning" onClick={() => {
-                  window.ethereum.enable().then()
-                }}>Connect metamask</Button>
-
+              <BoxWidget title="Select network">
+                <NetworkSelectWidget />
+              </BoxWidget>
+            </SpaceWidget>
+            <SpaceWidget>
+              <BoxWidget title='Broswer wallet Error'>
+                <p>Is the network connected?</p>
+                <p>Cannot reach {network?.url}</p>
+                <p>Click ok to re-test</p>
                 <StepMessageNiceWidget
                   title='Wallet'
                   step={getStep(StepId.Wallet, step)}
@@ -214,7 +219,7 @@ const WalletConnection = (props: {
             </SpaceWidget>
             <SpaceWidget>
             <BoxWidget>
-              <Button variant="warning" onClick={() => setWalletType()}>Home</Button>
+              {renderHome()}
             </BoxWidget>
             </SpaceWidget>
             </>
@@ -234,7 +239,7 @@ const WalletConnection = (props: {
                 <Button size='sm' variant="warning" onClick={() => {
                   window.ethereum.enable().then()
                 }}>Connect wallet</Button>
-                <Button variant="warning" onClick={() => setWalletType()}>Home</Button>
+                {renderHome()}
               </BoxWidget>
             </SpaceWidget>
           )
@@ -258,7 +263,7 @@ const WalletConnection = (props: {
                 <Button onClick={() => props.setSection('game')}>Ok</Button>
               </BoxWidget>
               <BoxWidget>
-                <Button variant="warning" onClick={() => setWalletType()}>Home</Button>
+                {renderHome()}
               </BoxWidget>
             </SpaceWidget>
           )
@@ -272,7 +277,7 @@ const WalletConnection = (props: {
                 <Button size='sm' variant="warning" onClick={() => {
                   window.ethereum.enable().then()
                 }}>Connect metamask</Button>
-
+                <p>When connected, click ok to re-test</p>
                 <StepMessageNiceWidget
                   title='Wallet'
                   step={getStep(StepId.Wallet, step)}
@@ -284,7 +289,7 @@ const WalletConnection = (props: {
             </SpaceWidget>
             <SpaceWidget>
             <BoxWidget>
-              <Button variant="warning" onClick={() => setWalletType()}>Home</Button>
+              {renderHome()}
             </BoxWidget>
             </SpaceWidget>
             </>
@@ -293,6 +298,7 @@ const WalletConnection = (props: {
         return (
           <BoxWidget title='Metamask Error wallet step'>
             {'Unknow step ' + Step[getStep(StepId.Wallet, step).step]}
+            {renderHome()}
           </BoxWidget>
         )
       default:
@@ -300,6 +306,7 @@ const WalletConnection = (props: {
           <SpaceWidget>
             <BoxWidget title='Error wallet type'>
               <p>Unkonw type : {wallet.type}</p>
+              {renderHome()}
             </BoxWidget>
           </SpaceWidget>
         )

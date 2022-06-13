@@ -41,9 +41,9 @@ const WalletAddWidget = () => {
         fieldValue.pkey,
         password.password,
       ).then((wallet) => {
+        setSubmit(2)
         walletStorageSetWallet(wallet.address)
         dispatch(updateStep({id : StepId.Wallet, step : Step.Init}))
-        setSubmit(2)
       }).catch((error) => {
         setError(error.message)
       })
