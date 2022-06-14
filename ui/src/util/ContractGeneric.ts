@@ -18,8 +18,10 @@ function initContract(contractClass: any, abi: any[]) {
       const functionName = obj.name as string
       Object.defineProperty(contractClass, functionName, {
         value: async (...args: any[]) => {
-          //console.log("call function ", functionName)
-          return await contractClass.transactionManager.sendTx(await contractClass.contract.populateTransaction[functionName](...args), functionName)
+          console.log("call function 1", functionName)
+          const tx = await contractClass.transactionManager.populateTransaction(contractClass, functionName, ...args)
+          console.log("call function 2", functionName)
+          return await contractClass.transactionManager.sendTx(tx, functionName)
         },
         writable: false,
         enumerable: true,

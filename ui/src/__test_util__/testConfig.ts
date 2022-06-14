@@ -22,7 +22,7 @@ if (network.timeBetweenRequest) {
 
 export let privateKeys = require("../../key/" + networkName.replace(/ /g, "") + "PrivateKeys.json")
 const url = network.url
-export const provider = new ethers.providers.JsonRpcProvider(url)
+export const provider = new ethers.providers.StaticJsonRpcProvider(url)
 
 export const getWalletList = (): ethers.Signer[] => {
   return privateKeys.map((pk: string): ethers.Signer => {

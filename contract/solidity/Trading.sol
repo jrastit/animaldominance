@@ -56,6 +56,31 @@ contract Trading {
     event TradeAdd(uint32 cardId, uint8 level, uint64 userId, uint32 userCardId, uint price);
     event TradeRemove(uint32 cardId, uint8 level, uint64 userId, uint32 userCardId);
 
+    function getAllCardTrade() public view returns (TradeUserCard[][][] memory){
+      uint32 lastId = gameManager.cardLastId();
+      TradeUserCard[][][] memory ret = new TradeUserCard[][][](lastId);
+      for (uint32 cardId = 0; cardId < gameManager.cardLastId(); cardId++){
+        ret[cardId] = new TradeUserCard[][](6);
+        for (uint8 level = 0; level < 6; level++){
+          ret[cardId][level] = tradeCartList[cardId][level].tradeUserCardList;
+        }
+      }
+      return ret;
+    }
+
+    function getAllCardTradeLength() public view returns (uint32[][] memory){
+      uint32 lastId = gameManager.cardLastId();
+      uint32[][] memory ret = new uint32[][](lastId);
+
+      for (uint32 cardId = 0; cardId < lastId; cardId++){
+        ret[cardId] = new uint32[](6);
+        for (uint8 level = 0; level < 6; level++){
+          ret[cardId][level] = uint32(tradeCartList[cardId + 1][level].tradeUserCardList.length);
+        }
+      }
+      return ret;
+    }
+
     function getCardLevelTradeLength(uint32 cardId, uint8 level) public view returns (uint32){
         return uint32(tradeCartList[cardId][level].tradeUserCardList.length);
     }

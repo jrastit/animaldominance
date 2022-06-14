@@ -20,7 +20,8 @@ export const createAllCard = async (
   speed?: number,
 ) => {
   let cardFile = require("../card/card.json")
-  for (let i = 0; i < cardFile.card.length; i++) {
+  const cardLastId = await getCardLastId(contract)
+  for (let i = cardLastId - 1; i < cardFile.card.length; i++) {
     const card = cardFile.card[i]
     if (1) {
       const description = [] as string[]

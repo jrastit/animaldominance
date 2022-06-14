@@ -483,7 +483,7 @@ export const getHashContractPlayGameFactory = (
 
 export const getHashContractTrading = (
 ) => {
-	return ethers.BigNumber.from('0x67649f2ac0ea44733fd52fd2866524a03bb3108aa06d8b0bd4db8053e974699a') 
+	return ethers.BigNumber.from('0xb2756dd23c8b60a1206b0abe6c713eb54cf40b48fe93efd7c35af94b293f14ee') 
 }
 
 export const getHashContractPlayActionLib = (

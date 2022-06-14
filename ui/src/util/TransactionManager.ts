@@ -65,6 +65,18 @@ export class TransactionManager {
     return this.nextNonce
   }
 
+  async populateTransaction(contractClass: any, functionName: string, ...args: any[]) {
+    if (this.timerSemaphore) {
+      return this.timerSemaphore.callClassFunction(this, this._populateTransaction, contractClass, functionName, ...args) as Promise<ethers.ethers.PopulatedTransaction>
+    }
+    return this._populateTransaction(contractClass, functionName, ...args)
+
+  }
+
+  async _populateTransaction(contractClass: any, functionName: string, ...args: any[]) {
+    return contractClass.contract.populateTransaction[functionName](...args)
+  }
+
   async sendTx(txu: ethers.ethers.PopulatedTransaction | ethers.providers.TransactionRequest, log: string) {
     if (!txu) {
       console.error(txu)
@@ -125,8 +137,11 @@ export class TransactionManager {
     ) => ethers.Contract,
     log: string
   ) {
+    console.log("send contract tx")
     const result = await this.sendTx(txu, log)
-    return getContract(result.result.contractAddress, this.signer)
+    const contract = getContract(result.result.contractAddress, this.signer)
+    console.log("send contract tx end")
+    return contract
   }
 
   gasInfo(

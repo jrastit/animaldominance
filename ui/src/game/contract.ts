@@ -132,13 +132,13 @@ const updateContractTrading = async (
   _setMessage?: (message: string | undefined) => void,
 ) => {
   if (contractHandler.gameManager.contract && contractHandler.gameManager.versionOk) {
-    _setMessage && _setMessage("Creating contract play bot...")
+    _setMessage && _setMessage("Creating contract trading...")
     contractHandler.trading.contract = await createWithManagerContractTrading(
       contractHandler.gameManager.contract,
       getHashContractTrading(),
       contractHandler.transactionManager,
     )
-    _setMessage && _setMessage("Add play bot to game manager...")
+    _setMessage && _setMessage("Add trading to game manager...")
     await contractHandler.gameManager.contract.updateTrading(
       contractHandler.trading.contract.address
     )
@@ -268,7 +268,7 @@ const checkContractPlayActionLib = async (
       if (contractHandler.playActionLib.contract.address === ethersConstants.AddressZero) {
         contractHandler.playActionLib.versionOk = undefined
       } else {
-        _setMessage && _setMessage("Get hash play game factory...")
+        _setMessage && _setMessage("Get hash play action lib...")
         contractHandler.playActionLib.contractHash = (await contractHandler.playActionLib.contract.contractHash())[0]
         if (contractHandler.playActionLib.contractHash) {
           contractHandler.playActionLib.versionOk = getHashContractPlayActionLib().eq(contractHandler.playActionLib.contractHash)
@@ -290,7 +290,7 @@ const checkContractTrading = async (
 ) => {
   if (contractHandler.gameManager.versionOk && contractHandler.gameManager.contract) {
     try {
-      _setMessage && _setMessage("Get contract play action lib...")
+      _setMessage && _setMessage("Get contract trading...")
       contractHandler.trading.contract = getWithManagerContractTrading(
         (await contractHandler.gameManager.contract.trading())[0],
         contractHandler.transactionManager
@@ -298,7 +298,7 @@ const checkContractTrading = async (
       if (contractHandler.trading.contract.address === ethersConstants.AddressZero) {
         contractHandler.trading.versionOk = undefined
       } else {
-        _setMessage && _setMessage("Get hash play game factory...")
+        _setMessage && _setMessage("Get hash trading...")
         contractHandler.trading.contractHash = (await contractHandler.trading.contract.contractHash())[0]
         if (contractHandler.trading.contractHash) {
           contractHandler.trading.versionOk = getHashContractTrading().eq(contractHandler.trading.contractHash)
@@ -344,7 +344,7 @@ const checkContractGameManager = async (
 ) => {
   if (contractHandler.animalDominance.versionOk && contractHandler.animalDominance.contract) {
     try {
-      _setMessage && _setMessage("Get contract play bot...")
+      _setMessage && _setMessage("Get contract game manager...")
       contractHandler.gameManager.contract = getWithManagerContractGameManager(
         (await contractHandler.animalDominance.contract.getGameManager(getHashContractGameManager()))[0],
         contractHandler.transactionManager

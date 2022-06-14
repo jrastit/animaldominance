@@ -52,7 +52,9 @@ export const getWalletList = async (password: string): Promise<WalletType[] | un
 export const getProvider = async (network: NetworkType | undefined, setError: (error: string) => void) => {
   try {
     if (network) {
-      return new ethers.providers.JsonRpcProvider(network.url)
+      const provider = new ethers.providers.StaticJsonRpcProvider(network.url)
+      provider.pollingInterval = 10000
+      return provider
     } else {
       console.error("error in get network : network not set", )
     }

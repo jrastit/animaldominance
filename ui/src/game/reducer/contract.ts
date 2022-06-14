@@ -134,6 +134,13 @@ export const updateContract = async (
       }).catch((err) => {
         dispatch(setError({ id: stepId, catchError: err }))
       })
+    } else {
+      if (contractHandler.gameManager.contract) {
+        fillContract(dispatch, contractHandler.gameManager.contract)
+      } else {
+        dispatch(setError({ id: stepId, error: "Invalid game manager" }))
+      }
+
     }
   }).catch((err) => {
     dispatch(setError({ id: stepId, catchError: err }))

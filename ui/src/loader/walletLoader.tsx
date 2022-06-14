@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 
 import { TransactionManager } from '../util/TransactionManager'
 import TimerSemaphore from '../util/TimerSemaphore'
+import { NetworkType } from '../type/networkType'
 
 import {
   Step,
@@ -59,6 +60,46 @@ const refreshBalance = async (
   return _balance
 }
 
+const setTransactionManagerUpdate = async (
+  dispatch: any,
+  provider: ethers.providers.Provider,
+  timer : NodeJS.Timeout | undefined,
+  setTimer : (timer : NodeJS.Timeout) => void,
+  setTransactionManager: (transactionManager: TransactionManager) => void,
+  network : NetworkType,
+  signer : ethers.Signer
+) => {
+  let timerSemaphore
+  if (network.timeBetweenRequest) {
+    timerSemaphore = new TimerSemaphore(
+      network.timeBetweenRequest,
+      network.retry,
+    )
+  }
+  const transactionManager = new TransactionManager(
+    signer,
+    timerSemaphore,
+  )
+  setTransactionManager(transactionManager)
+  const balance = refreshBalance(dispatch, transactionManager)
+  provider.removeAllListeners()
+  if (timer) {
+    clearTimeout(timer)
+  }
+  if (network.refreshBalance) {
+    setTimer(setInterval(() => {
+      if (transactionManager) {
+        refreshBalance(dispatch, transactionManager)
+      }
+    }, network.refreshBalance))
+  } else {
+    provider.on('block', () => {
+      refreshBalance(dispatch, transactionManager)
+    })
+  }
+  return balance
+}
+
 const loadWalletFromBroswer = async (
   dispatch: any,
   password: { password: string | undefined, passwordCheck: string | undefined },
@@ -107,38 +148,18 @@ const loadWalletFromBroswer = async (
                   }
                   const provider = await getProvider(_network, setErrorWallet)
                   if (provider) {
-                    let timerSemaphore
-                    if (_network.timeBetweenRequest) {
-                      timerSemaphore = new TimerSemaphore(
-                        _network.timeBetweenRequest,
-                        _network.retry
-                      )
-                    }
-                    const transactionManager = new TransactionManager(
+                    const balance = await setTransactionManagerUpdate(
+                      dispatch,
+                      provider,
+                      timer,
+                      setTimer,
+                      setTransactionManager,
+                      _network,
                       new ethers.Wallet(
                         walletStorageWithKey.pkey,
                         provider
                       ),
-                      timerSemaphore,
-
                     )
-                    setTransactionManager(transactionManager)
-                    balance = await refreshBalance(dispatch, transactionManager)
-                    provider.removeAllListeners('block')
-                    if (!_network.refreshBalance) {
-                      provider.on('block', () => {
-                        refreshBalance(dispatch, transactionManager)
-                      })
-                    } else {
-                      if (timer) {
-                        clearTimeout(timer)
-                      }
-                      setTimer(setInterval(() => {
-                        if (transactionManager) {
-                          refreshBalance(dispatch, transactionManager)
-                        }
-                      }, _network.refreshBalance))
-                    }
                     if (!balance) {
                       dispatch(updateStep({ id: StepId.Wallet, step: Step.NoBalance }))
                       return
@@ -173,33 +194,32 @@ const loadWalletFromBroswer = async (
         }))
         const web3Wallet = await getWeb3Wallet()
         const address = await web3Wallet.signer.getAddress()
-        dispatch(setNetwork(web3Wallet.network))
-        dispatch(setWallet({
-          type: 'Metamask',
-          address,
-        }))
-        dispatch(resetAllStep())
-        dispatch(updateStep({ id: StepId.Wallet, step: Step.Ok }))
-        let timerSemaphore
-        if (web3Wallet.network?.timeBetweenRequest) {
-          timerSemaphore = new TimerSemaphore(
-            web3Wallet.network.timeBetweenRequest,
-            web3Wallet.network?.retry,
+        if (web3Wallet.network){
+          dispatch(setNetwork(web3Wallet.network))
+          dispatch(setWallet({
+            type: 'Metamask',
+            address,
+          }))
+          dispatch(resetAllStep())
+          dispatch(updateStep({ id: StepId.Wallet, step: Step.Ok }))
+          const balance = await setTransactionManagerUpdate(
+            dispatch,
+            web3Wallet.signer.provider,
+            timer,
+            setTimer,
+            setTransactionManager,
+            web3Wallet.network,
+            web3Wallet.signer,
           )
+          if (!balance) {
+            dispatch(updateStep({ id: StepId.Wallet, step: Step.NoBalance }))
+            return
+          }
+          addHooks()
+        } else {
+          dispatch(updateStep({ id: StepId.Wallet, step: Step.NoNetwork }))
+          return
         }
-        const transactionManager = new TransactionManager(
-          web3Wallet.signer,
-          timerSemaphore,
-        )
-        setTransactionManager(transactionManager)
-        refreshBalance(dispatch, transactionManager)
-        web3Wallet.signer.provider.removeAllListeners()
-        if (!web3Wallet.network?.refreshBalance) {
-          web3Wallet.signer.provider.on('block', () => {
-            refreshBalance(dispatch, transactionManager)
-          });
-        }
-        addHooks()
         break
       default:
         dispatch(updateStep({ id: StepId.Wallet, step: Step.NotSet }))
