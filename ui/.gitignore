@@ -2,4 +2,4 @@ node_modules/
 node_modules/
 key/
 src/contract/solidity/compiled/*.json
-
+build/
