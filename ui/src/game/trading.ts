@@ -15,10 +15,8 @@ export const loadAllTrade = async (
   setMessage?: (message: string | undefined) => void,
 ) => {
   let tradeList = [] as TradeType[][][]
-  console.log(await tradingContract.getAllCardTradeLength())
   if (1) {
     const tradeListChain = (await tradingContract.getAllCardTrade())[0]
-    console.log(tradeListChain)
     tradeList = tradeListChain.map(
       (tradeCardChain: any[][]) => tradeCardChain.map(
         (tradeLevelChain: any[]) => tradeLevelChain.map(

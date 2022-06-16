@@ -21,7 +21,7 @@ export const createAllCard = async (
 ) => {
   let cardFile = require("../card/card.json")
   const cardLastId = await getCardLastId(contract)
-  for (let i = cardLastId - 1; i < cardFile.card.length; i++) {
+  for (let i = cardLastId; i < cardFile.card.length; i++) {
     const card = cardFile.card[i]
     if (1) {
       const description = [] as string[]
@@ -127,7 +127,7 @@ export const cancelListCard = async (
 export const getCardLastId = async (
   contract: ContractGameManager,
 ) => {
-  return (await contract.cardLastId())
+  return (await contract.cardLastId())[0]
 }
 
 export const loadAllCard = async (

@@ -2,6 +2,7 @@ import { ethers } from 'ethers'
 import { TransactionManager } from '../../../util/TransactionManager'
 import { ContractGeneric, initContract, ContractFunction } from '../../../util/ContractGeneric'
 
+import jsonNFT from './NFT.json'
 import jsonAnimalDominance from './AnimalDominance.json'
 import jsonGameManager from './GameManager.json'
 import jsonPlayGame from './PlayGame.json'
@@ -9,6 +10,14 @@ import jsonPlayGameFactory from './PlayGameFactory.json'
 import jsonTrading from './Trading.json'
 import jsonPlayActionLib from './PlayActionLib.json'
 import jsonPlayBot from './PlayBot.json'
+
+export class ContractNFT extends ContractGeneric {
+	readonly [key: string]: ContractFunction | any
+	constructor(contract: ethers.Contract, transactionManager: TransactionManager) {
+		super(contract, transactionManager)
+		initContract(this, jsonNFT.abi)
+	}
+}
 
 export class ContractAnimalDominance extends ContractGeneric {
 	readonly [key: string]: ContractFunction | any
@@ -66,6 +75,28 @@ export class ContractPlayBot extends ContractGeneric {
 	}
 }
 
+
+export const createContractNFT = async (
+	_owner : string,
+	_royaltyFraction : number,
+	_reicever : string,
+	_baseURI : string,
+	signer: ethers.Signer
+) => {
+	const factory = new ethers.ContractFactory(
+		jsonNFT.abi,
+		jsonNFT.bytecode,
+		signer
+	)
+	const contract = await factory.deploy(
+		_owner,
+		_royaltyFraction,
+		_reicever,
+		_baseURI,
+	)
+	await contract.deployed()
+	return contract
+}
 
 export const createContractAnimalDominance = async (
 	_contractHash : ethers.BigNumber,
@@ -179,6 +210,30 @@ export const createContractPlayBot = async (
 	return contract
 }
 
+
+export const createWithManagerContractNFT = async (
+	_owner : string,
+	_royaltyFraction : number,
+	_reicever : string,
+	_baseURI : string,
+	transactionManager: TransactionManager
+) => {
+	const factory = new ethers.ContractFactory(
+		jsonNFT.abi,
+		jsonNFT.bytecode,
+	)
+	const utx = factory.getDeployTransaction(
+		_owner,
+		_royaltyFraction,
+		_reicever,
+		_baseURI,
+	)
+	return new ContractNFT(await transactionManager.sendContractTx(
+		utx,
+		getContractNFT,
+		 'Create contract NFT',
+	), transactionManager)
+}
 
 export const createWithManagerContractAnimalDominance = async (
 	_contractHash : ethers.BigNumber,
@@ -307,6 +362,17 @@ export const createWithManagerContractPlayBot = async (
 }
 
 
+export const getContractNFT = (
+	contractAddress: string,
+	signer: ethers.Signer,
+) => {
+	return new ethers.Contract(
+		contractAddress,
+		jsonNFT.abi,
+		signer,
+	)
+}
+
 export const getContractAnimalDominance = (
 	contractAddress: string,
 	signer: ethers.Signer,
@@ -385,6 +451,17 @@ export const getContractPlayBot = (
 }
 
 
+export const getWithManagerContractNFT = (
+	contractAddress: string,
+	transactionManager: TransactionManager
+) => {
+	return new ContractNFT(new ethers.Contract(
+		contractAddress,
+		jsonNFT.abi,
+		transactionManager.signer,
+	), transactionManager)
+}
+
 export const getWithManagerContractAnimalDominance = (
 	contractAddress: string,
 	transactionManager: TransactionManager
@@ -461,6 +538,11 @@ export const getWithManagerContractPlayBot = (
 		transactionManager.signer,
 	), transactionManager)
 }
+export const getHashContractNFT = (
+) => {
+	return ethers.BigNumber.from('0x6d2e94e8934ce9ed1326504b437f85c820b5a510045b0dd221d6328308d268b1') 
+}
+
 export const getHashContractAnimalDominance = (
 ) => {
 	return ethers.BigNumber.from('0x8cb3544c3bb4431ab56e60b4631858802a6e4d793539d2d9ea89ad0f2b19bf24') 
@@ -468,7 +550,7 @@ export const getHashContractAnimalDominance = (
 
 export const getHashContractGameManager = (
 ) => {
-	return ethers.BigNumber.from('0xe9801b67f53d43b5f8b12f18817438f44a1b84c1bd68e5c42606f59d2e9339f7') 
+	return ethers.BigNumber.from('0x4a0e28b0f5fb03c7696fa478a0480d4365931c5d57420206fb9194c9716cd0b2') 
 }
 
 export const getHashContractPlayGame = (
@@ -483,7 +565,7 @@ export const getHashContractPlayGameFactory = (
 
 export const getHashContractTrading = (
 ) => {
-	return ethers.BigNumber.from('0xb2756dd23c8b60a1206b0abe6c713eb54cf40b48fe93efd7c35af94b293f14ee') 
+	return ethers.BigNumber.from('0xb00eb014b25b216215daabc57d9e18f23633e8f11ab62d2d5b65ca9c31341151') 
 }
 
 export const getHashContractPlayActionLib = (

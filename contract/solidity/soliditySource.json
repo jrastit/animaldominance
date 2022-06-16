@@ -5,6 +5,27 @@
   "TransactionManager" : "../../../util/TransactionManager",
   "file": [
     {
+      "contract": "NFT",
+      "arg": [
+        {
+          "name": "_owner",
+          "type": "string"
+        },
+        {
+          "name": "_royaltyFraction",
+          "type": "number"
+        },
+        {
+          "name": "_reicever",
+          "type": "string"
+        },
+        {
+          "name": "_baseURI",
+          "type": "string"
+        }
+      ]
+    },
+    {
       "contract": "AnimalDominance",
       "arg": [
         {
@@ -13,6 +34,7 @@
         }
       ]
     },
+
     {
       "contract": "GameManager",
       "arg": [
