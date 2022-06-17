@@ -1,6 +1,7 @@
 import {
   utils as ethersUtils,
   constants as ethersConstants,
+  BigNumber,
 } from 'ethers'
 
 import {
@@ -12,9 +13,11 @@ import {
   getWithManagerContractPlayGameFactory,
   getWithManagerContractPlayActionLib,
   createWithManagerContractTrading,
+  createWithManagerContractNFT,
   createWithManagerContractPlayBot,
   getWithManagerContractGameManager,
   getWithManagerContractTrading,
+  getWithManagerContractNFT,
   getWithManagerContractPlayBot,
   getHashContractGameManager,
   getHashContractPlayGameFactory,
@@ -22,6 +25,7 @@ import {
   getHashContractPlayActionLib,
   getHashContractPlayBot,
   getHashContractTrading,
+  getHashContractNFT,
   getHashContractAnimalDominance,
 } from '../contract/solidity/compiled/contractAutoFactory'
 
@@ -31,6 +35,13 @@ import { NetworkType } from '../type/networkType'
 
 const _getHashContractPlayGameFactory = () => {
   return getHashContractPlayGameFactory().xor(getHashContractPlayGame())
+}
+
+const _getHashContractGameManager = () => {
+  if (window && window.location.hostname === 'localhost') {
+    return BigNumber.from(ethersUtils.id(window.location.hostname + getHashContractGameManager()))
+  }
+  return getHashContractGameManager()
 }
 
 const updateContractAnimalDominance = async (
@@ -150,6 +161,32 @@ const updateContractTrading = async (
   }
 }
 
+const updateContractNFT = async (
+  contractHandler: ContractHandlerType,
+  _setMessage?: (message: string | undefined) => void,
+) => {
+  if (contractHandler.gameManager.contract && contractHandler.gameManager.versionOk) {
+    _setMessage && _setMessage("Creating contract nft...")
+    contractHandler.nft.contract = await createWithManagerContractNFT(
+      contractHandler.gameManager.contract.address,
+      500, //5%
+      contractHandler.gameManager.contract.address,
+      window.location.hostname === "localhost" ? "http://localhost/nft/" : "https://animaldominance.com/nft/",
+      getHashContractNFT(),
+      contractHandler.transactionManager,
+    )
+    _setMessage && _setMessage("Add nft to game manager...")
+    await contractHandler.gameManager.contract.updateNFT(
+      contractHandler.nft.contract.address
+    )
+    contractHandler.nft.contractHash = getHashContractNFT()
+    contractHandler.nft.versionOk = true
+  } else {
+    contractHandler.nft.contractHash = undefined
+    contractHandler.nft.versionOk = false
+  }
+}
+
 const updateContractGameManager = async (
   contractHandler: ContractHandlerType,
   _setMessage?: (message: string | undefined) => void,
@@ -174,17 +211,16 @@ const updateContractGameManager = async (
         )
         if (contractHandler.gameManager.contract) {
           contractHandler.animalDominance.contract.addGameManager(
-            getHashContractGameManager(),
+            _getHashContractGameManager(),
             contractHandler.gameManager.contract.address,
           )
-          contractHandler.gameManager.contractHash = getHashContractGameManager()
+          contractHandler.gameManager.contractHash = _getHashContractGameManager()
           contractHandler.gameManager.versionOk = true
           contractHandler.playGameFactory.contractHash = _getHashContractPlayGameFactory()
           contractHandler.playGameFactory.versionOk = true
           contractHandler.playActionLib.contractHash = getHashContractPlayActionLib()
           contractHandler.playActionLib.versionOk = true
         }
-
       }
     }
   } else {
@@ -223,7 +259,6 @@ const checkContractAnimalDominance = async (
   } else {
     contractHandler.animalDominance.versionOk = undefined
   }
-
 }
 
 const checkContractPlayGameFactory = async (
@@ -314,6 +349,37 @@ const checkContractTrading = async (
   }
 }
 
+const checkContractNFT = async (
+  contractHandler: ContractHandlerType,
+  _setMessage?: (message: string | undefined) => void,
+) => {
+  if (contractHandler.gameManager.versionOk && contractHandler.gameManager.contract) {
+    try {
+      _setMessage && _setMessage("Get contract nft...")
+      contractHandler.nft.contract = getWithManagerContractNFT(
+        (await contractHandler.gameManager.contract.nft())[0],
+        contractHandler.transactionManager
+      )
+      if (contractHandler.nft.contract.address === ethersConstants.AddressZero) {
+        contractHandler.nft.versionOk = undefined
+      } else {
+        _setMessage && _setMessage("Get hash nft...")
+        contractHandler.nft.contractHash = (await contractHandler.nft.contract.contractHash())[0]
+        if (contractHandler.nft.contractHash) {
+          contractHandler.nft.versionOk = getHashContractNFT().eq(contractHandler.nft.contractHash)
+        } else {
+          contractHandler.nft.versionOk = undefined
+        }
+      }
+    } catch {
+      contractHandler.nft.versionOk = undefined
+    }
+  } else {
+    contractHandler.nft.versionOk = undefined
+  }
+}
+
+
 const checkContractPlayBot = async (
   contractHandler: ContractHandlerType,
   _setMessage?: (message: string | undefined) => void,
@@ -346,7 +412,7 @@ const checkContractGameManager = async (
     try {
       _setMessage && _setMessage("Get contract game manager...")
       contractHandler.gameManager.contract = getWithManagerContractGameManager(
-        (await contractHandler.animalDominance.contract.getGameManager(getHashContractGameManager()))[0],
+        (await contractHandler.animalDominance.contract.getGameManager(_getHashContractGameManager()))[0],
         contractHandler.transactionManager
       )
       if (contractHandler.gameManager.contract.address === ethersConstants.AddressZero) {
@@ -374,6 +440,7 @@ export const checkAllContract = async (
       await checkContractPlayActionLib(contractHandler, _setMessage)
       await checkContractPlayGameFactory(contractHandler, _setMessage)
       await checkContractTrading(contractHandler, _setMessage)
+      await checkContractNFT(contractHandler, _setMessage)
       await checkContractPlayBot(contractHandler, _setMessage)
     }
   }
@@ -408,6 +475,9 @@ export const updateAllContract = async (
       }
       if (!contractHandler.trading.versionOk) {
         await updateContractTrading(contractHandler, _setMessage)
+      }
+      if (!contractHandler.nft.versionOk) {
+        await updateContractNFT(contractHandler, _setMessage)
       }
       if (!contractHandler.playBot.versionOk) {
         await updateContractPlayBot(contractHandler, _setMessage)

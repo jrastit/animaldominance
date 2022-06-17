@@ -18,17 +18,19 @@ contract NFT is IERC2981, ERC721 {
         address _owner,
         uint32 _royaltyFraction,
         address _receiver,
-        string memory _baseURI
+        string memory _baseURI,
+        uint256 _contractHash
     )
         ERC721("AnimalDominance", "AND")
     {
-		receiver = _receiver;
-		royaltyFraction = _royaltyFraction;
-		owner = _owner;
+		    receiver = _receiver;
+		    royaltyFraction = _royaltyFraction;
+		    owner = _owner;
         baseURI = _baseURI;
-	}
+        contractHash = _contractHash;
+	   }
 
-	/**
+	   /**
      * @dev See {IERC165-supportsInterface}.
      */
     function supportsInterface(bytes4 interfaceId)
@@ -39,6 +41,10 @@ contract NFT is IERC2981, ERC721 {
     {
         return interfaceId == type(IERC2981).interfaceId || super.supportsInterface(interfaceId);
     }
+  ////////////////////////////////////// Hash ///////////////////////////////////////////
+
+  uint256 public contractHash;
+
 	////////////////////////////////////// Owner ///////////////////////////////////////////
 	address owner;
 	modifier isOwner() {
@@ -102,6 +108,7 @@ contract NFT is IERC2981, ERC721 {
     function createNFT(address _player, UserCard calldata _userCard)
         public
         isOwner()
+        returns (uint256)
     {
         tokenLastId++;
         _safeMint(_player, tokenLastId);
@@ -110,6 +117,7 @@ contract NFT is IERC2981, ERC721 {
         for (uint i =  0; i < 3; i++){
             tokenCard[tokenLastId].previousOwner[i] = _userCard.previousOwner[i];
         }
+        return tokenLastId;
     }
 
 	function burnNFT(uint256 tokenId)

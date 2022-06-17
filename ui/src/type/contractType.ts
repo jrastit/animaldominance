@@ -4,6 +4,7 @@ import {
   ContractAnimalDominance,
   ContractGameManager,
   ContractTrading,
+  ContractNFT,
   ContractPlayBot,
   ContractPlayGameFactory,
   ContractPlayActionLib,
@@ -26,6 +27,7 @@ export type ContractHandlerType = {
   gameManager: ContractType<ContractGameManager>
 
   trading: ContractType<ContractTrading>
+  nft: ContractType<ContractNFT>
 
   playGameFactory: ContractType<ContractPlayGameFactory>
   playGame: ContractType<ContractPlayGame>
@@ -43,6 +45,7 @@ export const newContractHandler = (
     animalDominance: {},
     gameManager: {},
     trading: {},
+    nft: {},
     playGameFactory: {},
     playGame: {},
     playActionLib: {},

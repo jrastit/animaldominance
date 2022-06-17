@@ -285,15 +285,6 @@ const testTransaction = () => {
           contract2 = contractHandler2.gameManager.contract
         }
 
-        console.log(
-          await contract.signer.getAddress(),
-          contract.address,
-          await contract1.signer.getAddress(),
-          contract1.address,
-          await contract2.signer.getAddress(),
-          contract2.address,
-        )
-
         if (!useCache) {
           await registerUser(contract, 'test')
           await registerUser(contract1, 'test1')
@@ -301,8 +292,21 @@ const testTransaction = () => {
         }
 
         userId = await getUserId(contract, await transactionManager[0].signer.getAddress())
+        if (useCache && !userId) {
+          await registerUser(contract, 'test')
+          userId = await getUserId(contract, await transactionManager[0].signer.getAddress())
+        }
         userId1 = await getUserId(contract1, await transactionManager[1].signer.getAddress())
+        if (useCache && !userId1) {
+          await registerUser(contract1, 'test1')
+          userId1 = await getUserId(contract1, await transactionManager[1].signer.getAddress())
+        }
         userId2 = await getUserId(contract2, await transactionManager[2].signer.getAddress())
+        if (useCache && !userId2) {
+          await registerUser(contract2, 'test2')
+          userId2 = await getUserId(contract2, await transactionManager[2].signer.getAddress())
+        }
+
         const userCardList = await getUserCardList(contract, userId)
         const userCardList1 = await getUserCardList(contract1, userId1)
         const userCardList2 = await getUserCardList(contract2, userId2)
@@ -312,8 +316,20 @@ const testTransaction = () => {
           await addUserDefaultDeck(contract2, userCardList2)
         }
         deckList = await getUserDeckList(contract, userId)
+        if (useCache && deckList.length === 0) {
+          await addUserDefaultDeck(contract, userCardList)
+          deckList = await getUserDeckList(contract, userId)
+        }
         deckList1 = await getUserDeckList(contract1, userId1)
+        if (useCache && deckList1.length === 0) {
+          await addUserDefaultDeck(contract1, userCardList1)
+          deckList1 = await getUserDeckList(contract1, userId1)
+        }
         deckList2 = await getUserDeckList(contract2, userId2)
+        if (useCache && deckList2.length === 0) {
+          await addUserDefaultDeck(contract2, userCardList2)
+          deckList2 = await getUserDeckList(contract2, userId2)
+        }
         if (!useCache) {
           console.log(transactionManager[0].transactionList.map((tx) => {
             return (tx.log + ' ' + tx.result.gasUsed.toNumber())

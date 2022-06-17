@@ -10,6 +10,10 @@ import {
   cancelListCard,
 } from '../game/card'
 
+import {
+  nftCreateCard,
+} from '../game/nft'
+
 import type {
   UserCardType,
 } from '../type/userType'
@@ -44,6 +48,7 @@ const DisplayUserCard = (props: {
     userCardId: number,
     price?: number,
   }>()
+  const [createNFT, setCreateNFT] = useState<number>()
   const [loading, setLoading] = useState<boolean>()
   const [error, setError] = useState<string>()
 
@@ -70,6 +75,28 @@ const DisplayUserCard = (props: {
       }
       ).catch((err) => {
         setSellCard(undefined)
+        setLoading(false)
+        setError(err.toString())
+      })
+    } else {
+      setError("Sell card not set")
+    }
+
+  }
+
+  const _createNFT = (_userCardId: number) => {
+    if (createNFT) {
+      setLoading(true)
+      nftCreateCard(
+        props.contract,
+        _userCardId,
+      ).then(() => {
+        dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))
+        setCreateNFT(undefined)
+        setLoading(false)
+      }
+      ).catch((err) => {
+        setCreateNFT(0)
         setLoading(false)
         setError(err.toString())
       })
@@ -142,6 +169,27 @@ const DisplayUserCard = (props: {
     }
   }
 
+  const renderCreateNFT = (userCardListItem: UserCardType[]) => {
+    if (createNFT) {
+      const userCard = userCardListItem.filter((userCard) => userCard.id === createNFT)[0]
+      if (userCard) {
+        const card = cardList.filter(card => card.id === userCard.cardId)[0]
+        const level = getLevel(userCard.exp)
+        return (
+          <>
+            <div>
+              Creating NFT for {card.name} level {level} ({userCard.exp})
+            </div>
+            <Button onClick={() => { _createNFT(createNFT) }}>Create NFT</Button>
+            <div>
+              <Button variant='warning' onClick={() => { setSellCard(undefined) }}>Cancel</Button>
+            </div>
+          </>
+        )
+      }
+    }
+  }
+
   const renderRow = (userCardListItem: UserCardType[], id: number) => {
     return (
       <Row key={id}>
@@ -155,15 +203,19 @@ const DisplayUserCard = (props: {
             }
             {!loading && !error &&
               <>
-                {!sellCard && userCardListItem.map((userCard) => {
+                {!sellCard && !createNFT && userCardListItem.map((userCard) => {
                   const card = cardList.filter(card => card.id === userCard.cardId)[0]
                   const level = getLevel(userCard.exp)
                   if (level > 0){
-                    if (!userCard.price) {
+                    if (!userCard.price && !userCard.sold) {
                       return (
                         <div key={userCard.id} style={{margin : '.25em'}}>
+                          {card?.name} level {level} ({userCard.exp}) &nbsp;
                           <ButtonNice onClick={() => { setSellCard({ userCardId: userCard.id }) }}>
-                            Sell {card?.name} level {level} ({userCard.exp})
+                            Sell
+                          </ButtonNice>&nbsp;
+                          <ButtonNice onClick={() => { setCreateNFT(userCard.id) }}>
+                            NFT
                           </ButtonNice>
                         </div>
                       )
@@ -181,7 +233,9 @@ const DisplayUserCard = (props: {
                           </div>
                         </div>
                       )
-                    } else{
+                    } else if (userCard.nftId){
+                      return (<div  key={userCard.id} style={{margin : '.25em'}}>NFT {userCard.nftId.toString()} {card.name} level {level} ({userCard.exp})</div>)
+                    } else {
                       return (<div  key={userCard.id} style={{margin : '.25em'}}>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} {tokenName}</div>)
                     }
                   }
@@ -191,6 +245,9 @@ const DisplayUserCard = (props: {
                 }
                 {!!sellCard &&
                   renderSellCard(userCardListItem)
+                }
+                {!!createNFT &&
+                  renderCreateNFT(userCardListItem)
                 }
               </>
             }

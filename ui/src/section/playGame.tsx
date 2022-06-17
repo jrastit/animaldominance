@@ -108,7 +108,9 @@ const PlayGame = (props:{
       }
     } else if (isStep(stepId, Step.Ended, step)){
       return (
-        <GameEndedWidget/>
+        <GameEndedWidget
+          contract={props.contract}
+        />
       )
     } else {
       return (

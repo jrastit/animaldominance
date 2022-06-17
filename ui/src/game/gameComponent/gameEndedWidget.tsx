@@ -9,6 +9,8 @@ import { useAppSelector, useAppDispatch } from '../../hooks'
 
 import { GameCardType } from '../../type/gameType'
 
+import { ContractGameManager } from '../../contract/solidity/compiled/contractAutoFactory'
+
 import {
   Step,
   StepId,
@@ -24,14 +26,22 @@ import {
 } from '../../game/card'
 
 import {
-  endGameId
+  endGameId,
+  setUserCardList,
 } from '../../reducer/userSlice'
 
-const GameEndedWidget = () => {
+import {
+  getUserCardList
+} from '../../game/user'
+
+const GameEndedWidget = (props : {
+  contract : ContractGameManager
+}) => {
 
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
   const game = useAppSelector((state) => state.gameSlice.game)
   const user = useAppSelector((state) => state.userSlice.user)
+  const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const dispatch = useAppDispatch()
 
   const isWinner = () => {
@@ -43,7 +53,44 @@ const GameEndedWidget = () => {
     return 0
   }
 
-  const _exitGame = () => {
+  const _exitGame = async () => {
+    if (userCardList && user){
+      const newUserCardList = userCardList.map(userCard => {
+        if (game){
+          const gameCard = game.cardList1.filter(
+            _card => _card?.userCardId === userCard.id
+          )[0]
+          if (gameCard){
+            return {
+              ...userCard,
+              exp : userCard.exp + gameCard.expWin,
+              expWin : userCard.expWin + gameCard.expWin,
+            }
+          }
+        }
+        return userCard
+      })
+
+      const loadUserCardList = await getUserCardList(props.contract, user.id)
+      if (loadUserCardList){
+        if (newUserCardList.length !== loadUserCardList.length){
+          throw Error("Error checking user card list length")
+        }
+        for (let i = 0; i < loadUserCardList.length; i++){
+          if (loadUserCardList[i].exp !== newUserCardList[i].exp ||
+            loadUserCardList[i].expWin !== newUserCardList[i].expWin){
+              throw Error("Error checking user card exp " + i)
+          }
+        }
+      }
+
+      dispatch(setUserCardList(newUserCardList))
+    }
+
+    game?.cardList1.filter(
+      _card => _card?.expWin
+    )
+
     dispatch(cleanGame())
     game && dispatch(endGameId(game.id))
     dispatch(updateStep({id : StepId.Game, step : Step.Init}))

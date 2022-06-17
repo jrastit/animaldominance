@@ -55,8 +55,9 @@ export const getUserCardList = async (
       expWin: userCardChain.expWin.toNumber(),
       price: parseFloat(ethersUtils.formatEther(userCardChain.price)),
       sold: userCardChain.sold,
+      nftId: userCardChain.nftId,
     } as UserCardType
-  })
+  }) as UserCardType[]
 }
 
 export const getUserDeckList = async (

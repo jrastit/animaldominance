@@ -49,6 +49,7 @@ struct UserCard {
     PreviousOwner[3] previousOwner;
     uint price;
     bool sold;
+    uint256 nftId;
 }
 
 struct GameDeck {
@@ -434,8 +435,9 @@ contract GameManager {
         uint64 userId = getUserId();
         _checkCardAvaillable(userId, _userCardId);
         _updateXpWin(userId, _userCardId);
-        userIdList[userId].userCardList[_userCardId].sold = true;
-        nft.createNFT(userIdList[userId].wallet, userIdList[userId].userCardList[_userCardId]);
+        UserCard storage userCard = userIdList[userId].userCardList[_userCardId];
+        userCard.sold = true;
+        userCard.nftId = nft.createNFT(userIdList[userId].wallet, userCard);
     }
 
     function burnNFT(uint256 _tokenId) public isNFT() {
@@ -513,7 +515,8 @@ contract GameManager {
     function checkDeck(uint64 _userId, uint16 _deckId) public view {
         uint32[20] storage userCardIdList = userIdList[_userId].deckList[_deckId].userCardIdList;
         for (uint8 i = 0; i < 20; i++){
-            require(userIdList[_userId].userCardList[userCardIdList[i]].price == 0, "card is for sale");
+            UserCard storage userCard = userIdList[_userId].userCardList[userCardIdList[i]];
+            require(userCard.price == 0 && !userCard.sold, "Deck card locked");
         }
     }
 

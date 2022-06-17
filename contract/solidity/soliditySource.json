@@ -22,6 +22,10 @@
         {
           "name": "_baseURI",
           "type": "string"
+        },
+        {
+          "name": "_contractHash",
+          "type": "ethers.BigNumber"
         }
       ]
     },
