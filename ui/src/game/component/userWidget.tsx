@@ -4,6 +4,7 @@ import type {
 
 
 const UserWidget = (props : {
+  gameId : number
   user ?: UserType
 }) => {
 
@@ -12,8 +13,8 @@ const UserWidget = (props : {
       { props.user &&
         <>{props.user.name}#{props.user.id}</>
       }
-      { props.user && props.user.gameId &&
-        <> in game {props.user.gameId}</>
+      { !!props.gameId &&
+        <> in game {props.gameId}</>
       }
       {
         !props.user &&

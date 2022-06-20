@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import {ContractGameManager} from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import UserWidget from '../game/component/userWidget'
 import SpaceWidget from '../component/spaceWidget'
@@ -27,10 +27,11 @@ import {
 } from '../reducer/contractSlice'
 
 const AdminUser = (props : {
-  contract : ContractGameManager,
+  contractHandler : ContractHandlerType,
 }) => {
   const stepId = StepId.User
   const user = useAppSelector((state) => state.userSlice.user)
+  const gameId = useAppSelector((state) => state.gameSlice.gameId)
   const step = useAppSelector((state) => state.contractSlice.step)
   const dispatch = useAppDispatch()
 
@@ -39,7 +40,7 @@ const AdminUser = (props : {
   const _registerUser = () => {
     if (name){
       dispatch(updateStep({id : stepId, step : Step.Loading}))
-      registerUser(props.contract, name).then(() => {
+      registerUser(props.contractHandler, name).then(() => {
         dispatch(clearError(stepId))
       }).catch((err) => {
         dispatch(setError({id : stepId, catchError : err}))
@@ -55,7 +56,7 @@ const AdminUser = (props : {
           resetStep = {() => {dispatch(clearError(stepId))}}
         />
         {user &&
-          <UserWidget user={user} />
+          <UserWidget gameId={gameId} user={user} />
         }
         { isStep(stepId, Step.NotSet, step) &&
           <div>

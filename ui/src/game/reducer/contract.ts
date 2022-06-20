@@ -22,10 +22,13 @@ import {
 } from '../../game/card'
 
 import {
-  updateAnimalDominanceContractHash as _updateAnimalDominanceContractHash,
   checkAllContract,
+} from '../../game/contract/contractCheck'
+
+import {
+  updateAnimalDominanceContractHash as _updateAnimalDominanceContractHash,
   updateAllContract,
-} from '../../game/contract'
+} from '../../game/contract/contractUpdate'
 
 import {
   loadAllTrade,
@@ -33,6 +36,7 @@ import {
 
 import {
   getGameList,
+  getGameId,
 } from '../../game/gameList'
 
 import {
@@ -54,6 +58,7 @@ import {
   setGameList,
   clearGameList,
   clearGame,
+  setGameId,
 } from '../../reducer/gameSlice'
 
 import {
@@ -64,11 +69,6 @@ import {
   setUserCardList,
   setUserDeckList,
 } from '../../reducer/userSlice'
-
-import {
-  ContractGameManager,
-  ContractTrading,
-} from '../../contract/solidity/compiled/contractAutoFactory'
 
 import {
   ContractHandlerType
@@ -95,16 +95,16 @@ export const clearState = (
   dispatch(clearGameList())
 }
 
-export const fillContract = (
+export const fillContract = async (
   dispatch: any,
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
 ) => {
   const _setMessage = (message: string | undefined) => {
     dispatch(setMessage({ id: stepId, message: message }))
   }
   _setMessage("Adding all cards...")
   dispatch(updateStep({ id: stepId, step: Step.Creating }))
-  createAllCard(contract, _setMessage).then(() => {
+  await createAllCard(contractHandler, _setMessage).then(() => {
     dispatch(updateStep({ id: stepId, step: Step.Ok }))
   }).catch((err) => {
     dispatch(setError({ id: stepId, catchError: err }))
@@ -117,30 +117,21 @@ export const updateContract = async (
   contractHandler: ContractHandlerType,
 ) => {
   const _setMessage = (message: string | undefined) => {
+    console.log("Update crontract", message)
     dispatch(setMessage({ id: stepId, message: message }))
   }
-
   dispatch(updateStep({ id: stepId, step: Step.Creating }))
-  checkAllContract(network, contractHandler, _setMessage).then(isOk => {
+  checkAllContract(network, contractHandler, _setMessage).then(async (isOk) => {
     if (!isOk) {
-      updateAllContract(contractHandler, _setMessage).then(() => {
+      updateAllContract(contractHandler, _setMessage).then(async () => {
         clearState(dispatch)
         dispatch(resetAllSubStep())
-        if (contractHandler.gameManager.contract) {
-          fillContract(dispatch, contractHandler.gameManager.contract)
-        } else {
-          dispatch(setError({ id: stepId, error: 'Error Game Manager not set' }))
-        }
+        await fillContract(dispatch, contractHandler)
       }).catch((err) => {
         dispatch(setError({ id: stepId, catchError: err }))
       })
     } else {
-      if (contractHandler.gameManager.contract) {
-        fillContract(dispatch, contractHandler.gameManager.contract)
-      } else {
-        dispatch(setError({ id: stepId, error: "Invalid game manager" }))
-      }
-
+      await fillContract(dispatch, contractHandler)
     }
   }).catch((err) => {
     dispatch(setError({ id: stepId, catchError: err }))
@@ -155,7 +146,7 @@ export const updateAnimalDominanceContractHash = (
     dispatch(setMessage({ id: stepId, message: message }))
   }
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
-  _updateAnimalDominanceContractHash(contractHandler, _setMessage).then(async (_contract) => {
+  _updateAnimalDominanceContractHash(contractHandler, _setMessage).then(async () => {
     clearState(dispatch)
     dispatch(resetAllSubStep())
     dispatch(updateStep({ id: stepId, step: Step.Init }))
@@ -167,8 +158,7 @@ export const updateAnimalDominanceContractHash = (
 
 export const _loadAllTread = (
   dispatch: any,
-  contract: ContractGameManager,
-  tradingContract: ContractTrading,
+  contractHandler: ContractHandlerType,
 ) => {
   const stepId = StepId.Trading
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
@@ -176,25 +166,27 @@ export const _loadAllTread = (
     dispatch(setMessage({ id: StepId.Trading, message: message }))
   }
   try {
-    addTradingListener(dispatch, tradingContract)
+    addTradingListener(dispatch, contractHandler)
   } catch (err: any) {
     dispatch(setError({ id: stepId, catchError: err }))
     return
   }
-  loadAllTrade(contract, tradingContract, setMessageTradeList).then((_tradeList) => {
-    dispatch(setTradeList(_tradeList))
-    dispatch(updateStep({ id: stepId, step: Step.Ok }))
-  }).catch((err) => {
-    dispatch(setError({ id: stepId, catchError: err }))
-  })
+  loadAllTrade(
+    contractHandler,
+    setMessageTradeList).then((_tradeList) => {
+      dispatch(setTradeList(_tradeList))
+      dispatch(updateStep({ id: stepId, step: Step.Ok }))
+    }).catch((err) => {
+      dispatch(setError({ id: stepId, catchError: err }))
+    })
 }
 
 const addTradingListener = (
   dispatch: any,
-  tradingContract: ContractTrading,
+  contractHandler: ContractHandlerType,
 ) => {
-  if (tradingContract.listenerCount("TradeAdd") === 0) {
-    tradingContract.on("TradeAdd", (_cardId, _level, _chainUserId, _userCardId, _price) => {
+  if (contractHandler.trading.getContract().listenerCount("TradeAdd") === 0) {
+    contractHandler.trading.getContract().on("TradeAdd", (_cardId, _level, _chainUserId, _userCardId, _price) => {
       const _userId = _chainUserId.toNumber()
       console.log("Trade add event ", _cardId, _level, _userId, _userCardId, ethersUtils.formatEther(_price))
       dispatch(addTrade({
@@ -206,8 +198,8 @@ const addTradingListener = (
       }))
     })
   }
-  if (tradingContract.listenerCount("TradeRemove") === 0) {
-    tradingContract.on("TradeRemove", (_cardId, _level, _chainUserId, _userCardId) => {
+  if (contractHandler.trading.getContract().listenerCount("TradeRemove") === 0) {
+    contractHandler.trading.getContract().on("TradeRemove", (_cardId, _level, _chainUserId, _userCardId) => {
       const _userId = _chainUserId.toNumber()
       console.log("Trade remove event ", _cardId, _level, _userId, _userCardId)
       dispatch(removeTrade({
@@ -222,19 +214,19 @@ const addTradingListener = (
 
 export const loadUser = (
   dispatch: any,
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
 ) => {
   const stepId = StepId.User
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
-  getUserId(contract).then((userId) => {
-    if (userId && contract) {
-      getUser(contract, userId).then((_user) => {
+  getUserId(contractHandler).then((userId) => {
+    if (userId && contractHandler.gameManager.getContract()) {
+      getUser(contractHandler, userId).then((_user) => {
         dispatch(setUser(_user))
         dispatch(updateStep({ id: stepId, step: Step.Ok }))
       }).catch((err) => {
         dispatch(setError({ id: stepId, catchError: err }))
       })
-    } else if (contract) {
+    } else if (contractHandler.gameManager.getContract()) {
       dispatch(updateStep({ id: stepId, step: Step.NotSet }))
     }
   }).catch((err) => {
@@ -244,12 +236,12 @@ export const loadUser = (
 
 export const loadUserCardList = (
   dispatch: any,
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   user: UserType,
 ) => {
   const stepId = StepId.UserCardList
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
-  getUserCardList(contract, user.id).then((_userCardList) => {
+  getUserCardList(contractHandler, user.id).then((_userCardList) => {
     if (_userCardList.length > 0) {
       dispatch(setUserCardList(_userCardList))
       dispatch(updateStep({ id: stepId, step: Step.Ok }))
@@ -263,12 +255,12 @@ export const loadUserCardList = (
 
 export const loadUserDeckList = (
   dispatch: any,
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   user: UserType,
 ) => {
   const stepId = StepId.UserDeckList
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
-  getUserDeckList(contract, user.id).then((_userDeckList) => {
+  getUserDeckList(contractHandler, user.id).then((_userDeckList) => {
     if (_userDeckList.length > 0) {
       dispatch(setUserDeckList(_userDeckList))
       dispatch(updateStep({ id: stepId, step: Step.Ok }))
@@ -282,14 +274,14 @@ export const loadUserDeckList = (
 
 export const loadCardList = (
   dispatch: any,
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
 ) => {
   const stepId = StepId.CardList
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
   const setMessageCardList = (message: string | undefined) => {
     dispatch(setMessage({ id: StepId.CardList, message: message }))
   }
-  loadAllCard(contract, setMessageCardList).then((_cardList) => {
+  loadAllCard(contractHandler, setMessageCardList).then((_cardList) => {
     if (_cardList.length > 0) {
       dispatch(setCardList(_cardList))
       dispatch(updateStep({ id: stepId, step: Step.Ok }))
@@ -303,17 +295,17 @@ export const loadCardList = (
 
 export const loadGameList = (
   dispatch: any,
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
 ) => {
   const stepId = StepId.GameList
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
   try {
-    addGameListener(dispatch, contract)
+    addGameListener(dispatch, contractHandler)
   } catch (err: any) {
     dispatch(setError({ id: stepId, catchError: err }))
     return
   }
-  getGameList(contract).then((_gameList) => {
+  getGameList(contractHandler).then((_gameList) => {
     dispatch(setGameList(_gameList))
     dispatch(updateStep({ id: stepId, step: Step.Ok }))
   }).catch((err) => {
@@ -321,12 +313,31 @@ export const loadGameList = (
   })
 }
 
+export const loadGameId = (
+  userId: number,
+  dispatch: any,
+  contractHandler: ContractHandlerType,
+) => {
+  const stepId = StepId.Game
+  dispatch(updateStep({ id: stepId, step: Step.Loading }))
+  getGameId(userId, contractHandler).then((_id) => {
+    dispatch(setGameId(_id))
+    if (!_id) {
+      dispatch(updateStep({ id: stepId, step: Step.NotSet }))
+    } else {
+      dispatch(updateStep({ id: stepId, step: Step.Ready }))
+    }
+  }).catch((err) => {
+    dispatch(setError({ id: stepId, catchError: err }))
+  })
+}
+
 const addGameListener = (
   dispatch: any,
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
 ) => {
-  if (contract.listenerCount("GameCreated") === 0) {
-    contract.on("GameCreated", (_chainGameId, _chainUserId) => {
+  if (contractHandler.gameList.getContract().listenerCount("GameCreated") === 0) {
+    contractHandler.gameList.getContract().on("GameCreated", (_chainGameId, _chainUserId) => {
       const _gameId = _chainGameId.toNumber()
       const _userId = _chainUserId.toNumber()
       console.log("game created event ", _gameId, _userId)
@@ -342,8 +353,8 @@ const addGameListener = (
       }))
     })
   }
-  if (contract.listenerCount("GameFill") === 0) {
-    contract.on("GameFill", (_chainGameId, _chainUserId) => {
+  if (contractHandler.gameList.getContract().listenerCount("GameFill") === 0) {
+    contractHandler.gameList.getContract().on("GameFill", (_chainGameId, _chainUserId) => {
       const _gameId = _chainGameId.toNumber()
       const _userId = _chainUserId.toNumber()
       console.log("game join event", _gameId, _userId)
@@ -353,8 +364,8 @@ const addGameListener = (
       }))
     })
   }
-  if (contract.listenerCount("GameEnd") === 0) {
-    contract.on("GameEnd", (_chainGameId, _chainWinner) => {
+  if (contractHandler.gameList.getContract().listenerCount("GameEnd") === 0) {
+    contractHandler.gameList.getContract().on("GameEnd", (_chainGameId, _chainWinner) => {
       const _gameId = _chainGameId.toNumber()
       const _winner = _chainWinner.toNumber()
       console.log("game end event", _gameId, _winner)
@@ -373,14 +384,20 @@ export const loadContract = async (
 ) => {
   const stepId = StepId.Contract
   dispatch(updateStep({ id: stepId, step: Step.Loading }))
-  dispatch(setMessage({ id: stepId, message: 'Loading contract...' }))
+  const _setMessage = (message: string | undefined) => {
+    console.log("Load contract", message)
+    dispatch(setMessage({ id: stepId, message: message }))
+  }
+  _setMessage('Loading contract...')
+  //dispatch(setMessage({ id: stepId, message: 'Loading contract...' }))
   if (network.gameContract) {
     checkAllContract(
       network,
-      contractHandler
+      contractHandler,
+      _setMessage,
     ).then(async (isOk) => {
-      if (isOk && contractHandler.gameManager.contract) {
-        if (await getCardLastId(contractHandler.gameManager.contract) > 0) {
+      if (isOk) {
+        if (await getCardLastId(contractHandler) > 0) {
           dispatch(updateStep({ id: stepId, step: Step.Ok }))
         } else {
           dispatch(updateStep({ id: stepId, step: Step.Empty }))
@@ -391,12 +408,14 @@ export const loadContract = async (
         } else if (!contractHandler.animalDominance.versionOk) {
           dispatch(setError({ id: stepId, error: "Animal Dominance version not found at address" }))
         } else {
-          dispatch(setError({ id: stepId, error: "Wrong version of contract, update game" }))
+          dispatch(setError({ id: stepId, error: "Wrong version of Animal Dominance" }))
         }
       }
+    }).catch((err) => {
+      dispatch(setError({ id: stepId, catchError: err }))
     })
   } else {
-    //no game contract set
+    //no game contractHandler.gameManager.getContract() set
     dispatch(updateStep({ id: stepId, step: Step.NoAddress }))
   }
 }

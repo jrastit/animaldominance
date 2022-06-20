@@ -1,4 +1,4 @@
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import Button from 'react-bootstrap/Button'
 
@@ -31,7 +31,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 const AdminUserDeckList = (props : {
-  contract : ContractGameManager,
+  contractHandler : ContractHandlerType,
 }) => {
   const stepId = StepId.UserDeckList
   const step = useAppSelector((state) => state.contractSlice.step)
@@ -43,7 +43,7 @@ const AdminUserDeckList = (props : {
     dispatch(updateStep({id: stepId, step: Step.Creating}))
     if (userCardList){
       addUserDefaultDeck(
-        props.contract,
+        props.contractHandler,
         userCardList,
       ).then((deck) => {
         let newUserDeckList = [] as UserDeckType[]

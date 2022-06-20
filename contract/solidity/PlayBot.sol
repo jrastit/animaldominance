@@ -5,6 +5,14 @@ import { GameUser, GameCard } from './PlayGame.sol';
 
 contract PlayBot {
 
+    uint256 public contractHash;
+
+    constructor(
+        uint256 _contractHash
+    ) {
+        contractHash = _contractHash;
+    }
+
       /////////////////////////////// Bot ///////////////////////////////////
       function nextAction(
           uint8 _pos,

@@ -1,4 +1,4 @@
-import { ContractPlayGame } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import { GameCardType, TurnDataType, GameActionType, ActionType } from '../type/gameType'
 
@@ -7,7 +7,7 @@ import { PlaceRefType } from '../component/placeHelper'
 import { getNewGameCardFromId } from '../game/game'
 
 export const playDrawCard = async (
-  gameContract: ContractPlayGame,
+  contractHandler: ContractHandlerType,
   gameCardId: number,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
@@ -15,7 +15,7 @@ export const playDrawCard = async (
   if (turnData.cardList[1 - turnData.myTurn][gameCardId] === undefined) {
     const cardList = turnData.cardList[1 - turnData.myTurn].concat([])
     cardList[gameCardId] = await getNewGameCardFromId(
-      gameContract,
+      contractHandler,
       turnData.userId[1 - turnData.myTurn],
       gameCardId
     )
@@ -170,7 +170,7 @@ export const playAttackOponent = (
 }
 
 export const playAction = async (
-  gameContract: ContractPlayGame,
+  contractHandler: ContractHandlerType,
   gameAction: GameActionType,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
@@ -191,7 +191,7 @@ export const playAction = async (
   if (gameAction.result || gameAction.self) {
     if (gameAction.actionTypeId === ActionType.Draw) {
       await playDrawCard(
-        gameContract,
+        contractHandler,
         gameAction.gameCardId,
         turnData,
         setTurnData,

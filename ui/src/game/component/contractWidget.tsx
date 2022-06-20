@@ -5,15 +5,16 @@ const ContractInfoWidget = (props : {
   contractHandler : ContractHandlerType
 }) => {
 
-  const displayContract = (name : string, contract : {
+  const displayContract = (contract : {
       contract ?: {
         address : string
       },
       versionOk ?: boolean
+      name : string
     }) => {
     if (contract.contract)
       return (<div key={contract.contract.address}>
-        {name}:
+        {contract.name}:
         &nbsp;<AddressWidget address={contract.contract.address}/>
         &nbsp;{
           contract.versionOk === undefined ?
@@ -25,16 +26,23 @@ const ContractInfoWidget = (props : {
 
   const render = () => {
     const ret = []
-    const animalDominance = displayContract('Animal Dominance', props.contractHandler.animalDominance)
+    const animalDominance = displayContract(props.contractHandler.animalDominance)
     if (animalDominance){
       ret.push(animalDominance)
-      const gameManager = displayContract('Game Manager', props.contractHandler.gameManager)
+      const gameManager = displayContract(props.contractHandler.gameManager)
       if (gameManager){
         ret.push(gameManager)
-        ret.push(displayContract('Play Action Lib', props.contractHandler.playActionLib))
-        ret.push(displayContract('Play Game Factory', props.contractHandler.playGameFactory))
-        ret.push(displayContract('Trading', props.contractHandler.trading))
-        ret.push(displayContract('Play Bot', props.contractHandler.playBot))
+        ret.push(displayContract(props.contractHandler.trading))
+        ret.push(displayContract(props.contractHandler.nft))
+        ret.push(displayContract(props.contractHandler.cardList))
+        const gameList = displayContract(props.contractHandler.gameList)
+        if (gameList){
+          ret.push(gameList)
+          ret.push(displayContract(props.contractHandler.playActionLib))
+          ret.push(displayContract(props.contractHandler.playGameFactory))
+          ret.push(displayContract(props.contractHandler.playBot))
+        }
+
       }
     }
     return ret

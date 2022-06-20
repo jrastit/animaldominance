@@ -137,10 +137,8 @@ export class TransactionManager {
     ) => ethers.Contract,
     log: string
   ) {
-    console.log("send contract tx")
     const result = await this.sendTx(txu, log)
     const contract = getContract(result.result.contractAddress, this.signer)
-    console.log("send contract tx end")
     return contract
   }
 

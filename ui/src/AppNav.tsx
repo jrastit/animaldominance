@@ -16,6 +16,7 @@ const AppNav = (props: {
 
   const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)
+  const gameId = useAppSelector((state) => state.gameSlice.gameId)
   const network = useAppSelector((state) => state.walletSlice.network)
   const wallet = useAppSelector((state) => state.walletSlice.wallet)
 
@@ -32,6 +33,7 @@ const AppNav = (props: {
             <>
             <Nav.Link onClick={() => props.setSection('userCard')}>My cards</Nav.Link>
             <Nav.Link onClick={() => props.setSection('userDeck')}>My decks</Nav.Link>
+            <Nav.Link onClick={() => props.setSection('NFT')}>My NFTs</Nav.Link>
             </>
 
           }
@@ -43,7 +45,7 @@ const AppNav = (props: {
         </Nav>
       </Navbar.Collapse>
       <Navbar.Brand>
-        <UserWidget user={user}/>
+        <UserWidget gameId={gameId} user={user}/>
         <WalletWidget address={wallet.address} error={getStep(StepId.Wallet, step).error} />
         {wallet.balance !== undefined &&
           <span>{Math.floor(wallet.balance * 100) / 100} {network?.tokenName}</span>

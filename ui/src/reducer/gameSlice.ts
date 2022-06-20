@@ -10,6 +10,7 @@ import type { UserType } from '../type/userType'
 
 // Define a type for the slice state
 interface GameState {
+  gameId: number
   game: GameType | undefined
   gameList: GameListItemType[]
   gameVersion: number
@@ -19,6 +20,7 @@ interface GameState {
 
 // Define the initial state using that type
 const initialState: GameState = {
+  gameId: 0,
   game: undefined,
   gameList: [],
   gameVersion: 0,
@@ -89,6 +91,14 @@ export const gameSlice = createSlice({
     clearGameList: (state) => {
       state.gameList = []
     },
+    setGameId: (state, action: PayloadAction<number>) => {
+      state.gameId = action.payload
+    },
+    endGameId: (state, action: PayloadAction<number>) => {
+      if (state.gameId === action.payload) {
+        state.gameId = 0
+      }
+    },
     setGameVersion: (state, action: PayloadAction<number>) => {
       state.gameVersion = action.payload
     },
@@ -114,6 +124,7 @@ export const gameSlice = createSlice({
       state.playActionList = []
     },
     clearGame: (state) => {
+      state.gameId = 0
       state.game = undefined
       state.gameVersion = 0
       state.oponent = undefined
@@ -134,6 +145,8 @@ export const {
   clearGame,
   cleanGame,
   addPlayAction,
+  setGameId,
+  endGameId,
 } = gameSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

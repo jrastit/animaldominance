@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
 import type { UserType, UserCardType, UserDeckType } from '../type/userType'
@@ -27,7 +28,12 @@ export const userSlice = createSlice({
     clearUserDeckList: (state) => {
       state.userDeckList = undefined
     },
-
+    updateNftId: (state, action: PayloadAction<{ id: BigNumber, userCardId: number }>) => {
+      if (!state.userCardList || !state.userCardList[action.payload.userCardId]) {
+        throw Error('User Card not found')
+      }
+      state.userCardList[action.payload.userCardId].nftId = action.payload.id
+    },
     setUserCardList: (state, action: PayloadAction<UserCardType[]>) => {
       state.userCardList = action.payload
     },
@@ -37,16 +43,6 @@ export const userSlice = createSlice({
     setUser: (state, action: PayloadAction<UserType>) => {
       state.user = action.payload
     },
-    setGameId: (state, action: PayloadAction<number>) => {
-      if (state.user) {
-        state.user.gameId = action.payload
-      }
-    },
-    endGameId: (state, action: PayloadAction<number>) => {
-      if (state.user && state.user.gameId === action.payload) {
-        state.user.gameId = 0
-      }
-    },
     clearUser: (state) => {
       state.user = undefined
     }
@@ -54,8 +50,7 @@ export const userSlice = createSlice({
 })
 
 export const {
-  setGameId,
-  endGameId,
+  updateNftId,
   setUserDeckList,
   clearUserDeckList,
   setUserCardList,

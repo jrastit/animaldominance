@@ -43,12 +43,42 @@
       "contract": "GameManager",
       "arg": [
         {
+          "name": "_animalDominance",
+          "type": "ethers.Contract"
+        },
+        {
+          "name": "_cardList",
+          "type": "ethers.Contract"
+        }
+      ]
+    },
+    {
+      "contract": "GameList",
+      "arg": [
+        {
+          "name": "_gameManager",
+          "type": "ethers.Contract"
+        },
+        {
           "name": "_playGameFactory",
           "type": "ethers.Contract"
         },
         {
           "name": "_playActionLib",
           "type": "ethers.Contract"
+        },
+        {
+          "name": "_contractHash",
+          "type": "ethers.BigNumber"
+        }
+      ]
+    },
+    {
+      "contract": "CardList",
+      "arg": [
+        {
+          "name": "_contractHash",
+          "type": "ethers.BigNumber"
         }
       ]
     },
@@ -87,7 +117,13 @@
       ]
     },
     {
-      "contract": "PlayBot"
+      "contract": "PlayBot",
+      "arg": [
+        {
+          "name": "_contractHash",
+          "type": "ethers.BigNumber"
+        }
+      ]
     }
   ]
 }

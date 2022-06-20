@@ -1,7 +1,7 @@
 import { BigNumber } from 'ethers'
 import { useState } from 'react'
 import CardListWidget from '../game/component/cardListWidget'
-import {ContractGameManager} from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import { buyNewCard, buyCard } from '../game/card'
 import { useAppSelector, useAppDispatch } from '../hooks'
@@ -19,7 +19,7 @@ import Alert from 'react-bootstrap/Alert'
 
 
 const DisplayCard = (props: {
-  contract?: ContractGameManager,
+  contractHandler : ContractHandlerType,
 }) => {
 
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
@@ -33,29 +33,26 @@ const DisplayCard = (props: {
   const [error, setError] = useState<string>()
 
   const _buyNewCard = (cardId: number, value: BigNumber) => {
-    if (props.contract) {
       setLoading(true)
-      buyNewCard(props.contract, cardId, value).then(() => {
+      buyNewCard(props.contractHandler, cardId, value).then(() => {
         setLoading(false)
         dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))
       }).catch((err) => {
         setLoading(false)
         setError(err.toString())
       })
-    }
   }
 
   const _buyCard = (userId : number, userCardId: number, value: BigNumber) => {
-    if (props.contract) {
+
       setLoading(true)
-      buyCard(props.contract, userId, userCardId, value).then(() => {
+      buyCard(props.contractHandler, userId, userCardId, value).then(() => {
         setLoading(false)
         dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))
       }).catch((err) => {
         setLoading(false)
         setError(err.toString())
       })
-    }
   }
 
   const refresh = () => {
@@ -82,8 +79,8 @@ const DisplayCard = (props: {
         }
         {!loading && !error &&
           <CardListWidget
-            buyNewCard={props.contract && _buyNewCard}
-            buyCard={props.contract && _buyCard}
+            buyNewCard={_buyNewCard}
+            buyCard={_buyCard}
             cardList={cardList}
             tradeList={tradeList}
             userId={user?.id}

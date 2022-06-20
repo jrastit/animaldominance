@@ -12,6 +12,14 @@ struct TokenCard {
 	PreviousOwner[3] previousOwner;
 }
 
+struct HistoryCard {
+	uint256 nftId;
+	address owner;
+	uint32 cardId;
+	uint64 exp;
+	PreviousOwner[3] previousOwner;
+}
+
 contract NFT is IERC2981, ERC721 {
 
     constructor(
@@ -23,9 +31,9 @@ contract NFT is IERC2981, ERC721 {
     )
         ERC721("AnimalDominance", "AND")
     {
-		    receiver = _receiver;
-		    royaltyFraction = _royaltyFraction;
-		    owner = _owner;
+				receiver = _receiver;
+				royaltyFraction = _royaltyFraction;
+				owner = _owner;
         baseURI = _baseURI;
         contractHash = _contractHash;
 	   }
@@ -74,7 +82,7 @@ contract NFT is IERC2981, ERC721 {
         override
         returns (address, uint256)
     {
-        require(tokenCard[_tokenId].cardId != 0, 'Token does not exist');
+        require(tokenCardList[_tokenId].cardId != 0, 'Token does not exist');
         uint256 royaltyAmount = (_salePrice * royaltyFraction) / 10000;
         return (receiver, royaltyAmount);
     }
@@ -83,7 +91,7 @@ contract NFT is IERC2981, ERC721 {
 	uint256 tokenLastId;
 
 	// Mapping from token ID to card
-	mapping(uint256 => TokenCard) private tokenCard;
+	mapping(uint256 => TokenCard) private tokenCardList;
 
 	string baseURI;
 
@@ -101,8 +109,8 @@ contract NFT is IERC2981, ERC721 {
         override
         returns (string memory)
     {
-        require(tokenCard[_tokenId].cardId != 0, 'Token does not exist');
-        return string(abi.encodePacked(baseURI, tokenCard[_tokenId].cardId, '/', tokenCard[_tokenId].exp));
+        require(tokenCardList[_tokenId].cardId != 0, 'Token does not exist');
+        return string(abi.encodePacked(baseURI, tokenCardList[_tokenId].cardId, '/', tokenCardList[_tokenId].exp));
     }
 
     function createNFT(address _player, UserCard calldata _userCard)
@@ -112,10 +120,11 @@ contract NFT is IERC2981, ERC721 {
     {
         tokenLastId++;
         _safeMint(_player, tokenLastId);
-        tokenCard[tokenLastId].cardId = _userCard.cardId;
-        tokenCard[tokenLastId].exp = _userCard.exp;
+				TokenCard storage tokenCard = tokenCardList[tokenLastId];
+        tokenCard.cardId = _userCard.cardId;
+        tokenCard.exp = _userCard.exp;
         for (uint i =  0; i < 3; i++){
-            tokenCard[tokenLastId].previousOwner[i] = _userCard.previousOwner[i];
+            tokenCard.previousOwner[i] = _userCard.previousOwner[i];
         }
         return tokenLastId;
     }
@@ -123,14 +132,50 @@ contract NFT is IERC2981, ERC721 {
 	function burnNFT(uint256 tokenId)
 		public
 		isOwner()
-        returns (UserCard memory userCard)
+    	returns (UserCard memory userCard)
 	{
 		_burn(tokenId);
-        userCard.cardId = tokenCard[tokenLastId].cardId;
-        userCard.exp = tokenCard[tokenLastId].exp;
-        for (uint i =  0; i < 3; i++){
-            userCard.previousOwner[i] = tokenCard[tokenLastId].previousOwner[i];
-        }
-        return userCard;
+		TokenCard storage tokenCard = tokenCardList[tokenLastId];
+		userCard.cardId = tokenCard.cardId;
+		userCard.exp = tokenCard.exp;
+		for (uint i =  0; i < 3; i++){
+			userCard.previousOwner[i] = tokenCard.previousOwner[i];
+		}
+		return userCard;
+	}
+
+	////////////////////////////////// NFTHistory //////////////////////////
+	mapping(address => uint256[]) private historyTokenCard;
+
+	function _afterTokenTransfer(
+		address ,
+        address _to,
+        uint256 _tokenId
+	)
+		internal
+		override
+	{
+		historyTokenCard[_to].push(_tokenId);
+	}
+
+	function nftHistory(address _player)
+		public
+		view
+		returns (HistoryCard[] memory ret)
+	{
+		uint256[] storage history = historyTokenCard[_player];
+		ret = new HistoryCard[](history.length);
+		for (uint i = 0; i < history.length; i++){
+			uint256 token = history[i];
+			TokenCard storage tokenCard = tokenCardList[token];
+			ret[i].nftId = token;
+			ret[i].owner = ownerOf(token);
+			ret[i].cardId = tokenCard.cardId;
+			ret[i].exp = tokenCard.exp;
+			for (uint j =  0; j < 3; j++){
+				ret[i].previousOwner[j] = tokenCard.previousOwner[j];
+			}
+		}
+		return ret;
 	}
 }

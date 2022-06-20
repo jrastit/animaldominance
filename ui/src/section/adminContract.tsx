@@ -80,9 +80,9 @@ const AdminContract = (props : {
       }
       { isStep(stepId, Step.Empty, step) &&
         <SpaceWidget>
-        <Button variant="warning" onClick={() => {props.contractHandler.gameManager.contract && fillContract(
+        <Button variant="warning" onClick={() => {fillContract(
           dispatch,
-          props.contractHandler.gameManager.contract,
+          props.contractHandler,
         )}}>
           Fill new game contract on {network?.name}
         </Button>

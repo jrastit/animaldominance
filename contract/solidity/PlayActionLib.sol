@@ -2,7 +2,8 @@
 pragma solidity ^0.8.0;
 
 import { PlayGame, GameCard } from "./PlayGame.sol";
-import { GameManager, UserCard, Card } from './GameManager.sol';
+import { GameManager, UserCard } from './GameManager.sol';
+import { Card } from './CardList.sol';
 
 contract PlayActionLib {
 
@@ -21,8 +22,8 @@ contract PlayActionLib {
 
     function getGameCard(GameManager gameManager, uint64 _userId, uint32 _userCardId) public view returns (GameCard memory){
         UserCard memory userCard = gameManager.getUserCard(_userId, _userCardId);
-        uint8 level = gameManager.getLevel(userCard.exp);
-        Card memory card = gameManager.getCard(userCard.cardId);
+        uint8 level = gameManager.cardList().getLevel(userCard.exp);
+        Card memory card = gameManager.cardList().getCard(userCard.cardId);
         GameCard memory gameCard = GameCard(
             _userId,
             _userCardId,

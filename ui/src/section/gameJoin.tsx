@@ -1,4 +1,4 @@
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 import { useState } from 'react'
 
 import Button from 'react-bootstrap/Button'
@@ -18,7 +18,7 @@ import {
 
 import {
   setGameId
-} from '../reducer/userSlice'
+} from '../reducer/gameSlice'
 
 import {
   Step,
@@ -29,7 +29,7 @@ import {
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 const GameJoin = (props : {
-  contract : ContractGameManager,
+  contractHandler : ContractHandlerType,
 }) => {
   const stepId = StepId.Game
   const user = useAppSelector((state) => state.userSlice.user)
@@ -45,7 +45,7 @@ const GameJoin = (props : {
     if (deck){
       dispatch(updateStep({id : stepId, step: Step.Joining}))
       joinGame(
-        props.contract,
+        props.contractHandler,
         gameId,
         deck.id
       ).then(() => {
@@ -63,7 +63,7 @@ const GameJoin = (props : {
     if (deck){
       dispatch(updateStep({id : stepId, step: Step.Creating}))
       createGame(
-        props.contract,
+        props.contractHandler,
         deck.id
       ).then((_gameId) => {
         dispatch(setGameId(_gameId))

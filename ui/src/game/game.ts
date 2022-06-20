@@ -1,6 +1,6 @@
-import { BigNumber } from 'ethers'
-import { ContractPlayGame } from '../contract/solidity/compiled/contractAutoFactory'
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
+import { constants as ethersConstants, BigNumber } from 'ethers'
+
+import { ContractHandlerType } from '../type/contractType'
 
 import {
   GameCardType,
@@ -15,15 +15,16 @@ import {
 } from '../contract/solidity/compiled/contractAutoFactory'
 
 export const getGameContract = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   gameId: number
 ) => {
-  const gameChain = await contract.gameList(gameId)
+  const gameChain = await contractHandler.gameList.getContract().gameList(gameId)
   const contractAddress = gameChain.playGame
-  if (!contractAddress || contractAddress === "0x0000000000000000000000000000000000000000") {
+  if (!contractAddress || contractAddress === ethersConstants.AddressZero) {
     return undefined
   }
-  return getWithManagerContractPlayGame(contractAddress, contract.transactionManager)
+  contractHandler.playGame.contract = getWithManagerContractPlayGame(contractAddress, contractHandler.transactionManager)
+  contractHandler.playGame.versionOk = true
 }
 
 export const getGameCardFromChain = (
@@ -47,20 +48,20 @@ export const getGameCardFromChain = (
 }
 
 export const getGameCardList = async (
-  gameContract: ContractPlayGame,
+  contractHandler: ContractHandlerType,
   pos: number
 ) => {
-  return ((await gameContract.getGameCardList(pos))[0]).map((gameCardListChain: any, id: number) => {
+  return ((await contractHandler.playGame.getContract().getGameCardList(pos))[0]).map((gameCardListChain: any, id: number) => {
     return getGameCardFromChain(gameCardListChain, id)
   }) as GameCardType[]
 }
 
 export const getNewGameCardFromId = async (
-  gameContract: ContractPlayGame,
+  contractHandler: ContractHandlerType,
   userId: number,
   gameCardId: number
 ) => {
-  const gameCardListChain = (await gameContract.getNewGameCardFromId(userId, gameCardId))[0]
+  const gameCardListChain = (await contractHandler.playGame.getContract().getNewGameCardFromId(userId, gameCardId))[0]
   if (!gameCardListChain || !gameCardListChain.cardId) {
     throw Error('Invalid card ' + gameCardId + '/' + userId)
   }
@@ -69,11 +70,11 @@ export const getNewGameCardFromId = async (
 }
 
 export const getGameFull = async (
-  gameContract: ContractPlayGame,
+  contractHandler: ContractHandlerType,
   setMessage?: (message: string) => void
 ) => {
   setMessage && setMessage('Load game ')
-  const gameFull = await gameContract.getGameFull()
+  const gameFull = await contractHandler.playGame.getContract().getGameFull()
   const id = gameFull[0].toNumber()
   const userId1 = gameFull[1].toNumber()
   const userId2 = gameFull[2].toNumber()
@@ -108,33 +109,33 @@ export const getGameFull = async (
 }
 
 export const getGameFull2 = async (
-  gameContract: ContractPlayGame,
+  contractHandler: ContractHandlerType,
   setMessage?: (message: string) => void
 ) => {
   setMessage && setMessage('Load id ')
-  const id = (await gameContract.gameId())[0].toNumber()
+  const id = (await contractHandler.playGame.getContract().gameId())[0].toNumber()
   setMessage && setMessage('Load user1 id ')
-  const gameUser1 = await gameContract.gameUser(0)
+  const gameUser1 = await contractHandler.playGame.getContract().gameUser(0)
   const userId1 = BigNumber.from(gameUser1.userId).toNumber()
   const life1 = BigNumber.from(gameUser1.life).toNumber()
   setMessage && setMessage('Load user2 id ')
-  const gameUser2 = await gameContract.gameUser(1)
+  const gameUser2 = await contractHandler.playGame.getContract().gameUser(1)
   const userId2 = BigNumber.from(gameUser2.userId).toNumber()
   const life2 = BigNumber.from(gameUser2.life).toNumber()
   setMessage && setMessage('Load user1 card ')
-  const cardList1 = await getGameCardList(gameContract, 0)
+  const cardList1 = await getGameCardList(contractHandler, 0)
   setMessage && setMessage('Load user2 card ')
-  const cardList2 = await getGameCardList(gameContract, 1)
+  const cardList2 = await getGameCardList(contractHandler, 1)
   setMessage && setMessage('Load latest time ')
-  const latestTime = (await gameContract.latestTime())[0].toNumber()
+  const latestTime = (await contractHandler.playGame.getContract().latestTime())[0].toNumber()
   setMessage && setMessage('Load version ')
-  const version = (await gameContract.version())[0]
+  const version = (await contractHandler.playGame.getContract().version())[0]
   setMessage && setMessage('Load turn ')
-  const turn = (await gameContract.turn())[0]
+  const turn = (await contractHandler.playGame.getContract().turn())[0]
   setMessage && setMessage('Load winner ')
-  const winner = (await gameContract.winner())[0].toNumber()
+  const winner = (await contractHandler.playGame.getContract().winner())[0].toNumber()
   setMessage && setMessage('Load ended ')
-  const ended = (await gameContract.ended())[0]
+  const ended = (await contractHandler.playGame.getContract().ended())[0]
   const game = {
     id,
     userId1,
@@ -153,7 +154,7 @@ export const getGameFull2 = async (
 }
 
 export const endTurn = async (
-  gameContract: ContractPlayGame,
+  contractHandler: ContractHandlerType,
   playActionList: GameActionListType,
   turn: number,
   addPlayAction: (payload: GameActionPayloadType) => Promise<void>,
@@ -171,13 +172,13 @@ export const endTurn = async (
     ]
   )
   //console.log("endTurn", turn, _playActionList)
-  const tx = await gameContract.endTurn(
+  const tx = await contractHandler.playGame.getContract().endTurn(
     turn,
     _playActionList,
   )
 
   for (let i = 0; i < tx.result.logs.length; i++) {
-    const log = gameContract.interface.parseLog(tx.result.logs[i])
+    const log = contractHandler.playGame.getContract().interface.parseLog(tx.result.logs[i])
     if (log.name === 'PlayAction' && addPlayAction) {
       /*
       console.log(
@@ -204,19 +205,19 @@ export const endTurn = async (
 }
 
 export const endGameByTime = async (
-  gameContract: ContractPlayGame,
+  contractHandler: ContractHandlerType,
 ) => {
-  const tx = await gameContract.endGameByTime(
+  const tx = await contractHandler.playGame.getContract().endGameByTime(
 
   )
   return tx
 }
 
 export const leaveGame = async (
-  gameContract: ContractPlayGame,
+  contractHandler: ContractHandlerType,
 ) => {
 
-  return await gameContract.leaveGame(
+  return await contractHandler.playGame.getContract().leaveGame(
 
   )
 }

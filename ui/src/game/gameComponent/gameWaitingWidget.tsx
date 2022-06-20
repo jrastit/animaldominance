@@ -1,13 +1,9 @@
 import { useEffect } from 'react'
 import Button from 'react-bootstrap/Button'
 import DivNice from '../../component/divNice'
-import { ContractGameManager } from '../../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../../type/contractType'
 
 import { useAppSelector, useAppDispatch } from '../../hooks'
-
-import {
-  setGameId
-} from '../../reducer/userSlice'
 
 import {
   cancelGame,
@@ -27,18 +23,17 @@ import {
 const stepId = StepId.Game
 
 const GameWaitingWidget = (props:{
-  contract : ContractGameManager,
+  contractHandler : ContractHandlerType,
 }) => {
 
   const gameList = useAppSelector((state) => state.gameSlice.gameList)
-  const user = useAppSelector((state) => state.userSlice.user)
+  const gameId = useAppSelector((state) => state.gameSlice.gameId)
   const dispatch = useAppDispatch()
 
-  console.log(user && gameList.filter(_gameItem => _gameItem.id === user.gameId)[0])
+  console.log(gameList.filter(_gameItem => _gameItem.id === gameId)[0])
 
   useEffect(() => {
-    if (user){
-      const gameItem = gameList.filter(_gameItem => _gameItem.id === user.gameId)[0]
+      const gameItem = gameList.filter(_gameItem => _gameItem.id === gameId)[0]
       if (gameItem) {
         if (gameItem.ended){
           dispatch(updateStep({id : stepId, step : Step.Ended}))
@@ -46,13 +41,11 @@ const GameWaitingWidget = (props:{
           dispatch(updateStep({id : stepId, step : Step.Ready}))
         }
       }
-    }
-  }, [gameList, dispatch, user])
+  }, [gameList, dispatch, gameId])
 
   const _cancelGame = () => {
     dispatch(updateStep({id : stepId, step : Step.Loading}))
-    cancelGame(props.contract).then(() => {
-      dispatch(setGameId(0))
+    cancelGame(props.contractHandler).then(() => {
       dispatch(clearGame())
       dispatch(updateStep({id : stepId, step : Step.Init}))
     }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
@@ -60,7 +53,7 @@ const GameWaitingWidget = (props:{
 
   return (
     <DivNice>
-    Waiting for opponent for game {user?.gameId}<br/><br/>
+    Waiting for opponent for game {gameId}<br/><br/>
     <Button variant='danger' onClick={_cancelGame}>Cancel</Button>
     </DivNice>
   )

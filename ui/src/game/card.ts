@@ -1,7 +1,7 @@
 import { utils as ethersUtils, BigNumber } from 'ethers'
 
 import { TransactionItem } from '../util/TransactionManager'
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import {
   CardType,
@@ -15,12 +15,12 @@ function sleep(ms: number) {
 }
 
 export const createAllCard = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   setMessage?: (msg: string | undefined) => void,
   speed?: number,
 ) => {
   let cardFile = require("../card/card.json")
-  const cardLastId = await getCardLastId(contract)
+  const cardLastId = await getCardLastId(contractHandler)
   for (let i = cardLastId; i < cardFile.card.length; i++) {
     const card = cardFile.card[i]
     if (1) {
@@ -32,7 +32,7 @@ export const createAllCard = async (
         attack.push(level.attack)
         life.push(level.life)
       });
-      const tx = await contract.createCardFull(
+      const tx = await contractHandler.cardList.getContract().createCardFull(
         card.name,
         card.mana,
         card.family,
@@ -43,7 +43,7 @@ export const createAllCard = async (
       );
       if (setMessage) setMessage(tx.log + ' ' + card.name)
     } else {
-      const tx = await contract.createCard(
+      const tx = await contractHandler.cardList.getContract().createCard(
         card.name,
         card.mana,
         card.family,
@@ -51,12 +51,12 @@ export const createAllCard = async (
       )
       if (setMessage) setMessage(tx.log)
       await Promise.all(tx.result.logs.map(async (log: any) => {
-        const log2 = contract.interface.parseLog(log)
+        const log2 = contractHandler.cardList.getContract().interface.parseLog(log)
         if (log2.name === 'CardCreated') {
           const promise = [] as Array<Promise<TransactionItem>>
           for (let l = 0; l < card.level.length; l++) {
             const level = card.level[l]
-            const tx2 = await contract.setCardLevel(
+            const tx2 = await contractHandler.cardList.getContract().setCardLevel(
               log2.args.id,
               level.description,
               l,
@@ -77,27 +77,27 @@ export const createAllCard = async (
     }
   }
   const cardHash = BigNumber.from(ethersUtils.id(JSON.stringify(cardFile)))
-  await contract.setCardHash(cardHash)
+  await contractHandler.cardList.getContract().setCardHash(cardHash)
 }
 
 export const buyNewCard = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   cardId: number,
   value: BigNumber,
 ) => {
-  return await contract.buyNewCard(
+  return await contractHandler.gameManager.getContract().buyNewCard(
     cardId,
     { value }
   )
 }
 
 export const buyCard = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   userId: number,
   userCardId: number,
   value: BigNumber,
 ) => {
-  return await contract.buyCard(
+  return await contractHandler.gameManager.getContract().buyCard(
     userId,
     userCardId,
     { value }
@@ -105,36 +105,36 @@ export const buyCard = async (
 }
 
 export const listCard = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   cardId: number,
   price: number,
 ) => {
-  return await contract.sellCardSelf(
+  return await contractHandler.gameManager.getContract().sellCardSelf(
     cardId,
     ethersUtils.parseEther(price.toString()),
   )
 }
 
 export const cancelListCard = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   cardId: number,
 ) => {
-  return await contract.cancelSellCardSelf(
+  return await contractHandler.gameManager.getContract().cancelSellCardSelf(
     cardId,
   )
 }
 
 export const getCardLastId = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
 ) => {
-  return (await contract.cardLastId())[0]
+  return (await contractHandler.cardList.getContract().cardLastId())[0]
 }
 
 export const loadAllCard = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   setMessage?: (message: string | undefined) => void,
 ) => {
-  const _cardHash = (await contract.cardHash())[0]
+  const _cardHash = (await contractHandler.cardList.getContract().cardHash())[0]
   if (_cardHash) {
     let cardFile = require("../card/card.json")
     const cardHash = BigNumber.from(ethersUtils.id(JSON.stringify(cardFile)))
@@ -142,11 +142,11 @@ export const loadAllCard = async (
       return loadAllCardFromFile()
     }
   }
-  const cardLastId = await getCardLastId(contract)
+  const cardLastId = await getCardLastId(contractHandler)
   //console.log(cardId)
   const cardList = [] as Array<CardType>
   for (let i = 1; i <= cardLastId; i++) {
-    const cardChain = (await contract.cardList(i))
+    const cardChain = (await contractHandler.cardList.getContract().cardList(i))
     //console.log(cardChain)
     const card = {
       id: cardChain.id,
@@ -158,7 +158,7 @@ export const loadAllCard = async (
     } as CardType
     for (let j = 0; j < 6; j++) {
       if (setMessage) setMessage("Loading card " + ((i - 1) * 6 + j + 1) + "/" + (cardLastId * 6) + " " + card.name)
-      const levelChain = (await contract.getCardLevel(i, j))[0]
+      const levelChain = (await contractHandler.cardList.getContract().getCardLevel(i, j))[0]
       const level = {
         description: levelChain.description,
         life: levelChain.life,

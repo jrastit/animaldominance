@@ -1,4 +1,4 @@
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import UserCardListWidget from '../game/component/userCardListWidget'
 
@@ -13,6 +13,10 @@ import {
 import {
   nftCreateCard,
 } from '../game/nft'
+
+import {
+  updateNftId,
+} from '../reducer/userSlice'
 
 import type {
   UserCardType,
@@ -35,7 +39,7 @@ import ButtonNice from '../component/buttonNice'
 import DivFullNice from '../component/divFullNice'
 
 const DisplayUserCard = (props: {
-  contract: ContractGameManager,
+  contractHandler : ContractHandlerType,
 }) => {
   const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
@@ -52,7 +56,9 @@ const DisplayUserCard = (props: {
   const [loading, setLoading] = useState<boolean>()
   const [error, setError] = useState<string>()
 
-  const userCardListToSplit = userCardList ? userCardList.concat([]).sort((card1, card2) => {
+  const userCardListToSplit = userCardList ? userCardList.concat([]).filter((userCard) => {
+    return !userCard.sold && userCard.nftId.eq(0)
+  }).sort((card1, card2) => {
     return card2.exp - card1.exp
   }) : []
 
@@ -65,7 +71,7 @@ const DisplayUserCard = (props: {
     if (sellCard && sellCard.price) {
       setLoading(true)
       listCard(
-        props.contract,
+        props.contractHandler,
         _userCardId,
         sellCard.price
       ).then(() => {
@@ -88,10 +94,11 @@ const DisplayUserCard = (props: {
     if (createNFT) {
       setLoading(true)
       nftCreateCard(
-        props.contract,
+        props.contractHandler,
         _userCardId,
-      ).then(() => {
+      ).then((nftId) => {
         dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))
+        dispatch(updateNftId({ id: nftId, userCardId: _userCardId }))
         setCreateNFT(undefined)
         setLoading(false)
       }
@@ -109,7 +116,7 @@ const DisplayUserCard = (props: {
   const _cancelListCard = (_userCardId: number) => {
     setLoading(true)
     cancelListCard(
-      props.contract,
+      props.contractHandler,
       _userCardId
     ).then(() => {
       dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))

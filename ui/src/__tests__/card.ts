@@ -11,7 +11,7 @@ import {
 
 import {
   updateAllContract,
-} from '../game/contract'
+} from '../game/contract/contractUpdate'
 
 import {
   newContractHandler
@@ -49,13 +49,11 @@ const testTransaction = () => {
       expect(contractHandler.gameManager.contract).toBeTruthy()
 
       if (contractHandler.gameManager.contract) {
-        await createAllCard(contractHandler.gameManager.contract)
+        await createAllCard(contractHandler)
         //console.log(transactionManager.transactionList.map(transactionManager.gasInfo))
         console.log(transactionManager.transactionList.map(transactionManager.log))
-        await loadAllCard(contractHandler.gameManager.contract)
+        await loadAllCard(contractHandler)
       }
-
-
     })
 
   })

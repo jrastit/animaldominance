@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
-import { ContractPlayGame } from '../contract/solidity/compiled/contractAutoFactory'
+import {
+  ContractHandlerType
+} from '../type/contractType'
 
 import { UserType } from '../type/userType'
 
@@ -35,21 +36,20 @@ import { useAppSelector, useAppDispatch } from '../hooks'
 
 const stepId = StepId.Game
 
-const addGameListener = (dispatch : any, _gameContract : ContractPlayGame) => {
-  if (_gameContract){
-    if (_gameContract.listenerCount("PlayAction") === 0) {
-      _gameContract.on("PlayAction", (turn : number, id : number, gameCardId : number, actionTypeId : number, dest : number, result : number) => {
+const addGameListener = (dispatch : any, contractHandler: ContractHandlerType,) => {
+
+    if (contractHandler.playGame.getContract().listenerCount("PlayAction") === 0) {
+      contractHandler.playGame.getContract().on("PlayAction", (turn : number, id : number, gameCardId : number, actionTypeId : number, dest : number, result : number) => {
         console.log("Play action event " + turn + ' ,' + id + ', ' + gameCardId + ', ' + actionTypeId + ', ' + dest + ', ' + result)
         dispatch(addPlayAction({turn, id, gameAction : {gameCardId, actionTypeId, dest, result}}))
       })
     }
-    if (_gameContract.listenerCount("GameUpdate") === 0) {
-      _gameContract.on("GameUpdate", (_gameVersion : number) => {
+    if (contractHandler.playGame.getContract().listenerCount("GameUpdate") === 0) {
+      contractHandler.playGame.getContract().on("GameUpdate", (_gameVersion : number) => {
         console.log("game update event " + _gameVersion)
         dispatch(setGameVersion(_gameVersion))
       })
     }
-  }
 }
 
 const _cleanGame = (dispatch : any) => {
@@ -60,21 +60,20 @@ const _cleanGame = (dispatch : any) => {
 
 const _getGameFull = (
   dispatch : any,
-  contract : ContractGameManager,
-  gameContract : ContractPlayGame,
+  contractHandler: ContractHandlerType,
   user : UserType | undefined,
   oponent : UserType | undefined,
   _setMessage ?: (message : string) => void,
 ) => {
   if (user){
-    getGameFull(gameContract, _setMessage).then((_game) => {
+    getGameFull(contractHandler, _setMessage).then((_game) => {
       dispatch(setGame(_game))
       if (!oponent){
         let oponentId =  user.id === _game.userId1?_game.userId2:_game.userId1
         if (!oponent) {
           oponentId = user.id
         }
-        getUser(contract, oponentId).then(
+        getUser(contractHandler, oponentId).then(
           (_oponent) => {
             dispatch(setOponent(_oponent))
             if (_game.ended){
@@ -101,31 +100,25 @@ const _getGameFull = (
 
 const loadGameFromId = (
   dispatch : any,
-  contract : ContractGameManager,
+  contractHandler: ContractHandlerType,
   user : UserType | undefined,
-  setGameContract : (contract : ContractPlayGame) => void,
+  gameId : number,
   oponent : UserType | undefined,
 ) => {
-  if (user && user.gameId){
+  if (user && gameId){
     dispatch(updateStep({id : stepId, step: Step.Loading}))
-    getGameContract(contract, user.gameId).then((_gameContract) => {
-      if (_gameContract){
-        addGameListener(dispatch, _gameContract)
-        setGameContract(_gameContract)
+    getGameContract(contractHandler, gameId).then(() => {
+        addGameListener(dispatch, contractHandler)
         const _setMessage = (message : string) => {
           dispatch(setMessage({id : stepId, message : message}))
         }
         _getGameFull(
           dispatch,
-          contract,
-          _gameContract,
+          contractHandler,
           user,
           oponent,
            _setMessage,
         )
-      } else {
-        dispatch(updateStep({id : stepId, step: Step.Waiting}))
-      }
     }).catch ((err) => {dispatch(setError({id:stepId, catchError:err}))})
   } else {
     dispatch(setError({id:stepId, error:"user gameId not set"}))
@@ -134,31 +127,26 @@ const loadGameFromId = (
 
 const updateGame = (
   dispatch : any,
-  contract : ContractGameManager,
-  gameContract : ContractPlayGame | undefined,
+  contractHandler: ContractHandlerType,
   user : UserType | undefined,
   oponent : UserType | undefined,
 ) => {
-  if (gameContract){
     dispatch(updateStep({id : stepId, step: Step.Refresh}))
     _getGameFull(
       dispatch,
-      contract,
-      gameContract,
+      contractHandler,
       user,
       oponent,
     )
-  }
 }
 
 const GameLoader = (props : {
-  contract : ContractGameManager,
-  gameContract ?: ContractPlayGame,
-  setGameContract : (contract : ContractPlayGame) => void,
+  contractHandler: ContractHandlerType,
 }) => {
   const step = useAppSelector((state) => state.contractSlice.step)
   const version = useAppSelector((state) => state.contractSlice.version)
   const gameVersion = useAppSelector((state) => state.gameSlice.gameVersion)
+  const gameId = useAppSelector((state) => state.gameSlice.gameId)
   const game = useAppSelector((state) => state.gameSlice.game)
   const user = useAppSelector((state) => state.userSlice.user)
   const oponent = useAppSelector((state) => state.gameSlice.oponent)
@@ -172,12 +160,12 @@ const GameLoader = (props : {
       _cleanGame(dispatch)
     }
 
-    if (isOk(StepId.Contract, step) && isStep(stepId, Step.Clean, step) && user && user.gameId){
+    if (isOk(StepId.Contract, step) && isStep(stepId, Step.Clean, step) && gameId){
       loadGameFromId(
         dispatch,
-        props.contract,
+        props.contractHandler,
         user,
-        props.setGameContract,
+        gameId,
         oponent,
       )
     }
@@ -185,8 +173,7 @@ const GameLoader = (props : {
       if (game && game.version < gameVersion){
         updateGame(
           dispatch,
-          props.contract,
-          props.gameContract,
+          props.contractHandler,
           user,
           oponent,
         )
@@ -203,6 +190,7 @@ const GameLoader = (props : {
     gameVersion,
     network,
     wallet,
+    gameId,
   ])
 
   return (

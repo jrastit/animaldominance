@@ -1,5 +1,5 @@
 import { utils as ethersUtils } from 'ethers'
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import {
   UserType,
@@ -8,45 +8,44 @@ import {
 } from '../type/userType'
 
 export const registerUser = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   name: string,
 ) => {
-  const tx = await contract.registerUserSelf(
+  const tx = await contractHandler.gameManager.getContract().registerUserSelf(
     name
   )
   return tx
 }
 
 export const getUserId = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   address?: string,
 ) => {
   if (!address) {
-    address = await contract.contract.signer.getAddress()
+    address = await contractHandler.transactionManager.signer.getAddress()
   }
-  const idBG = await contract.userAddressList(address)
+  const idBG = await contractHandler.gameManager.getContract().userAddressList(address)
   return idBG[0].toNumber()
 }
 
 export const getUser = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   userId: number,
 ) => {
-  const userChain = await contract.userIdList(userId)
+  const userChain = await contractHandler.gameManager.getContract().userIdList(userId)
   return {
     id: userChain.id.toNumber(),
     name: userChain.name,
     totem: userChain.totem,
     rank: userChain.rank.toNumber(),
-    gameId: userChain.gameId.toNumber(),
   } as UserType
 }
 
 export const getUserCardList = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   userId: number,
 ) => {
-  const cardListChain = await contract.getUserCardList(userId)
+  const cardListChain = await contractHandler.gameManager.getContract().getUserCardList(userId)
   return cardListChain.userCard.map((userCardChain: any, id: number) => {
     return {
       id: id + 1,
@@ -61,13 +60,13 @@ export const getUserCardList = async (
 }
 
 export const getUserDeckList = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   userId: number,
 ) => {
-  const deckLength = (await contract.getUserDeckLength(userId))[0]
+  const deckLength = (await contractHandler.gameManager.getContract().getUserDeckLength(userId))[0]
   const userDeckList = [] as UserDeckType[]
   for (let i = 1; i <= deckLength; i++) {
-    const gameDeckCardChain = (await contract.getUserDeckCard(userId, i))[0]
+    const gameDeckCardChain = (await contractHandler.gameManager.getContract().getUserDeckCard(userId, i))[0]
     userDeckList.push({
       id: i,
       userCardIdList: gameDeckCardChain,
@@ -77,30 +76,30 @@ export const getUserDeckList = async (
 }
 
 export const addUserDefaultDeck = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   userCardList: UserCardType[],
 ) => {
   if (userCardList.length < 20) {
     throw new Error("Not enought card")
   }
   const deckCardList = userCardList.slice(0, 20)
-  return await addUserDeck(contract, deckCardList)
+  return await addUserDeck(contractHandler, deckCardList)
 }
 
 export const addUserDeck = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   userCardList: UserCardType[],
 ) => {
   if (userCardList.length !== 20) {
     throw new Error("Should have 20 cards")
   }
   const deckCardIdList = userCardList.map(userCard => userCard.id)
-  const tx = await contract.addGameDeckSelf(
+  const tx = await contractHandler.gameManager.getContract().addGameDeckSelf(
     deckCardIdList,
   )
   let deckId = 0
   await Promise.all(tx.result.logs.map(async (log: any) => {
-    const log2 = contract.interface.parseLog(log)
+    const log2 = contractHandler.gameManager.getContract().interface.parseLog(log)
     if (log2.name === 'DeckUpdated') {
       deckId = log2.args.deckId
     }
@@ -112,7 +111,7 @@ export const addUserDeck = async (
 }
 
 export const updateUserDeck = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   deckId: number,
   userCardList: UserCardType[],
 ) => {
@@ -120,7 +119,7 @@ export const updateUserDeck = async (
     throw new Error("Should have 20 cards")
   }
   const deckCardIdList = userCardList.map(userCard => userCard.id)
-  await contract.updateGameDeckSelf(
+  await contractHandler.gameManager.getContract().updateGameDeckSelf(
     deckId,
     deckCardIdList,
   )
@@ -131,10 +130,10 @@ export const updateUserDeck = async (
 }
 
 export const addUserStarterCard = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   userId: number,
 ) => {
-  return await contract.addUserStarterCard(
+  return await contractHandler.gameManager.getContract().addUserStarterCard(
     userId
   )
 }

@@ -9,7 +9,7 @@ import { useAppSelector, useAppDispatch } from '../../hooks'
 
 import { GameCardType } from '../../type/gameType'
 
-import { ContractGameManager } from '../../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../../type/contractType'
 
 import {
   Step,
@@ -27,6 +27,10 @@ import {
 
 import {
   endGameId,
+} from '../../reducer/gameSlice'
+
+import {
+
   setUserCardList,
 } from '../../reducer/userSlice'
 
@@ -35,7 +39,7 @@ import {
 } from '../../game/user'
 
 const GameEndedWidget = (props : {
-  contract : ContractGameManager
+  contractHandler : ContractHandlerType,
 }) => {
 
   const cardList = useAppSelector((state) => state.cardListSlice.cardList)
@@ -60,6 +64,7 @@ const GameEndedWidget = (props : {
           const gameCard = game.cardList1.filter(
             _card => _card?.userCardId === userCard.id
           )[0]
+          console.log(gameCard)
           if (gameCard){
             return {
               ...userCard,
@@ -71,20 +76,26 @@ const GameEndedWidget = (props : {
         return userCard
       })
 
-      const loadUserCardList = await getUserCardList(props.contract, user.id)
+      const loadUserCardList = await getUserCardList(props.contractHandler, user.id)
       if (loadUserCardList){
         if (newUserCardList.length !== loadUserCardList.length){
-          throw Error("Error checking user card list length")
+          console.error("Error checking user card list length")
         }
         for (let i = 0; i < loadUserCardList.length; i++){
           if (loadUserCardList[i].exp !== newUserCardList[i].exp ||
             loadUserCardList[i].expWin !== newUserCardList[i].expWin){
-              throw Error("Error checking user card exp " + i)
+              console.error(
+                "Error checking user card exp " + i +
+                ' exp:' + newUserCardList[i].exp +
+                '/' + loadUserCardList[i].exp +
+                ' expWin:' + newUserCardList[i].expWin +
+                '/' + loadUserCardList[i].expWin
+              )
           }
         }
       }
 
-      dispatch(setUserCardList(newUserCardList))
+      dispatch(setUserCardList(loadUserCardList))
     }
 
     game?.cardList1.filter(
@@ -102,7 +113,7 @@ const GameEndedWidget = (props : {
     const level2 = getLevel(gameCard.exp + gameCard.expWin)
     return (
       <Row style={{marginBottom : "1em", marginTop : "1em"}}><Col>
-      <div>Level {level1}</div><div>
+      <div>Level {level1 + 1}</div><div>
       <CardWidget
         family={card.family}
         mana={card.mana}
@@ -115,7 +126,7 @@ const GameEndedWidget = (props : {
       />
       </div>
       </Col><Col>
-      <div>Level {level2}</div><div>
+      <div>Level {level2 + 1}</div><div>
       <CardWidget
         family={card.family}
         mana={card.mana}

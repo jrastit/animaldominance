@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
-import { Card, GameManager, GameDeck, UserCard } from "./GameManager.sol";
+import { Card } from './CardList.sol';
+import { GameManager, GameDeck, UserCard } from "./GameManager.sol";
 import { PlayActionLib } from "./PlayActionLib.sol";
 import { PlayBot } from "./PlayBot.sol";
 
@@ -40,7 +41,7 @@ contract PlayGame {
       PlayBot _playBot
     ) {
         gameManager = _gameManager;
-        playActionLib = _gameManager.playActionLib();
+        playActionLib = _gameManager.gameList().playActionLib();
         playBot = _playBot;
         pos = (playActionLib.random8(2, turn, actionId) == 1) ? 0 : 1;
         _loadCard(_userId1, _gameDeckId1);
@@ -243,7 +244,7 @@ contract PlayGame {
         require(!ended, 'Already ended');
         winner = _winner;
         ended = true;
-        gameManager.endGame(gameId);
+        gameManager.gameList().endGame(gameId);
     }
 
     function endGameByTime() public {

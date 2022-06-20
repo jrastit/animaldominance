@@ -1,4 +1,4 @@
-import { ContractPlayGame } from '../../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../../type/contractType'
 import { useEffect, useState, useRef, ReactElement } from 'react'
 import {
   GameType,
@@ -78,7 +78,7 @@ const annimatePlay = async (
   gameCardId2: number,
 ) => {
   //console.log(gameCardId1, current, cardRefIdList[1 - myTurn])
-  console.log(actionId, gameCardId1, gameCardId2)
+  //console.log(actionId, gameCardId1, gameCardId2)
   if (!gameCardId2) console.error('error!')
   const place1 = current[cardRefIdList[1 - myTurn][gameCardId1]]?.getPlace()
   //console.log(place1)
@@ -107,7 +107,7 @@ const annimatePlay = async (
 }
 
 const _playAction = async (
-  gameContract: ContractPlayGame,
+  contractHandler : ContractHandlerType,
   gameAction: GameActionType,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
@@ -124,8 +124,8 @@ const _playAction = async (
     ) => Promise<void>
   }
 ) => {
-  gameContract && await playAction(
-    gameContract,
+  await playAction(
+    contractHandler,
     gameAction,
     turnData,
     setTurnData,
@@ -134,7 +134,7 @@ const _playAction = async (
 }
 
 const _playNextAction = async (
-  gameContract: ContractPlayGame,
+  contractHandler : ContractHandlerType,
   turnData: TurnDataType,
   setTurnData: (turnData: TurnDataType) => void,
   setPlay: (play: number) => void,
@@ -154,7 +154,7 @@ const _playNextAction = async (
   ) {
     const gameAction = playActionTurnList[turnData.playActionList.length] as GameActionType
     await _playAction(
-      gameContract,
+      contractHandler,
       gameAction,
       turnData,
       setTurnData,
@@ -179,7 +179,7 @@ const _playNextAction = async (
 }
 
 const GameBoard = (props: {
-  gameContract: ContractPlayGame,
+  contractHandler : ContractHandlerType,
   game: GameType,
   user: UserType,
   oponent: UserType,
@@ -233,14 +233,14 @@ const GameBoard = (props: {
   }
 
   const _endGameByTime = () => {
-    endGameByTime(props.gameContract).then(() => {
+    endGameByTime(props.contractHandler).then(() => {
     }).catch((err) => { dispatch(setError({ id: stepId, catchError: err })) })
   }
 
   const _endTurn = async () => {
     setPlay(Play.EndTurn)
     endTurn(
-      props.gameContract,
+      props.contractHandler,
       turnData.playActionList,
       turn,
       _addPlayAction,
@@ -251,6 +251,22 @@ const GameBoard = (props: {
     })
   }
 
+  const _autoPlay = async () => {
+    if (turnData.myTurn){
+      if (playRandomly(turnData, true)){
+        await _playRandomly()
+        setTimeout(async () => {
+          setPlay(Play.AutoPlay)
+        }, 500)
+      } else {
+        await _endTurn()
+      }
+    } else {
+      setPlay(Play.Ready)
+    }
+
+  }
+
   useEffect(() => {
     if (play === Play.Init) {
       setTurnData(getTurnData(props.game, props.user.id))
@@ -259,7 +275,7 @@ const GameBoard = (props: {
     if (play === Play.Replay) {
       setPlay(Play.Playing)
       _playNextAction(
-        props.gameContract,
+        props.contractHandler,
         turnData,
         setTurnData,
         setPlay,
@@ -291,23 +307,9 @@ const GameBoard = (props: {
       setPlay(Play.Loading)
       _autoPlay()
     }
-  }, [play, props.game, props.user.id, props.gameContract, turnData, playActionList, cardRefIdList, turn, dispatch])
+  }, [play, autoPlay, props.game, props.user.id, props.contractHandler, turnData, playActionList, cardRefIdList, turn, dispatch])
 
-  const _autoPlay = async () => {
-    if (turnData.myTurn){
-      if (playRandomly(turnData, true)){
-        await _playRandomly()
-        setTimeout(async () => {
-          setPlay(Play.AutoPlay)
-        }, 500)
-      } else {
-        await _endTurn()
-      }
-    } else {
-      setPlay(Play.Ready)
-    }
 
-  }
 
   const displayUser = (
     pos: number,
@@ -402,7 +404,7 @@ const GameBoard = (props: {
       self : true,
     }
     await _playAction(
-      props.gameContract,
+      props.contractHandler,
       gameAction,
       turnData,
       setTurnData,
@@ -424,7 +426,7 @@ const GameBoard = (props: {
       self : true,
     }
     await _playAction(
-      props.gameContract,
+      props.contractHandler,
       gameAction,
       turnData,
       setTurnData,
@@ -445,7 +447,7 @@ const GameBoard = (props: {
       self : true,
     }
     await _playAction(
-      props.gameContract,
+      props.contractHandler,
       gameAction,
       turnData,
       setTurnData,
@@ -461,7 +463,7 @@ const GameBoard = (props: {
     const gameAction = playRandomly(turnData)
     if (gameAction !== 0 && gameAction !== 1) {
       await _playAction(
-        props.gameContract,
+        props.contractHandler,
         gameAction,
         turnData,
         setTurnData,

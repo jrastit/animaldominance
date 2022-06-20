@@ -20,9 +20,12 @@ import {
 } from '../type/userType'
 
 import {
-  setGameId,
   setUserDeckList,
 } from '../reducer/userSlice'
+
+import {
+  setGameId,
+} from '../reducer/gameSlice'
 
 import { useAppSelector, useAppDispatch } from '../hooks'
 
@@ -49,8 +52,6 @@ const FindGame = (props: {
   contractHandler : ContractHandlerType,
 }) => {
 
-  const contract = props.contractHandler.gameManager.contract
-
   const step = useAppSelector((state) => state.contractSlice.step)
   const user = useAppSelector((state) => state.userSlice.user)
   const gameList = useAppSelector((state) => state.gameSlice.gameList)
@@ -66,9 +67,9 @@ const FindGame = (props: {
   const [name, setName] = useState<string>()
 
   const _registerUser = () => {
-    if (name && contract) {
+    if (name) {
       dispatch(updateStep({ id: StepId.User, step: Step.Loading }))
-      registerUser(contract, name).then(() => {
+      registerUser(props.contractHandler, name).then(() => {
         dispatch(clearError(StepId.User))
       }).catch((err) => {
         dispatch(setError({ id: StepId.User, catchError: err }))
@@ -128,11 +129,10 @@ const FindGame = (props: {
   }
 
   const _addUserDefaultDeck = () => {
-    if (contract){
       dispatch(updateStep({id: StepId.UserDeckList, step: Step.Creating}))
       if (userCardList){
         addUserDefaultDeck(
-          contract,
+          props.contractHandler,
           userCardList,
         ).then((deck) => {
           let newUserDeckList = [] as UserDeckType[]
@@ -147,14 +147,13 @@ const FindGame = (props: {
           dispatch(setError({id : StepId.UserDeckList, catchError : err}))
         })
       }
-    }
   }
 
   const onGameJoin = async (gameId: number) => {
-    if (deck && contract) {
+    if (deck) {
       dispatch(updateStep({ id: StepId.Game, step: Step.Joining }))
       joinGame(
-        contract,
+        props.contractHandler,
         gameId,
         deck.id
       ).then(() => {
@@ -169,10 +168,10 @@ const FindGame = (props: {
   }
 
   const _createGame = async () => {
-    if (deck && contract) {
+    if (deck) {
       dispatch(updateStep({ id: StepId.Game, step: Step.Creating }))
       createGame(
-        contract,
+        props.contractHandler,
         deck.id
       ).then((_gameId) => {
         dispatch(setGameId(_gameId))
@@ -185,10 +184,10 @@ const FindGame = (props: {
   }
 
   const _createGameBot = async () => {
-    if (deck && contract) {
+    if (deck) {
       dispatch(updateStep({ id: StepId.Game, step: Step.Creating }))
       createGameBot(
-        contract,
+        props.contractHandler,
         deck.id
       ).then((_gameId) => {
         dispatch(setGameId(_gameId))
@@ -221,7 +220,7 @@ const FindGame = (props: {
   }
 
   const joinGameRender = () => {
-    if (contract && gameList && gameList.length > 0) {
+    if (gameList && gameList.length > 0) {
       const openGame = gameList.filter(game => !game.playGame && !game.userId2 && !game.ended)
       const myOpenGame = openGame.filter(game => user && game.userId1 === user.id)
       const gameToJoin = openGame.filter(game => user && game.userId1 !== user.id)

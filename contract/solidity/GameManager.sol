@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0
 pragma solidity ^0.8.0;
 
+import { GameList } from "./GameList.sol";
+import { CardList } from "./CardList.sol";
 import { Trading } from "./Trading.sol";
 import { PlayGame, GameCard } from "./PlayGame.sol";
 import { PlayGameFactory } from "./PlayGameFactory.sol";
 import { PlayActionLib } from "./PlayActionLib.sol";
 import { PlayBot } from "./PlayBot.sol";
 import { NFT } from "./NFT.sol";
+import { AnimalDominance } from "./AnimalDominance.sol";
 
 struct User {
     uint64 id;
@@ -15,26 +18,9 @@ struct User {
     uint64 rank;
     uint32 userCardListLastId;
     uint16 deckListLastId;
-    uint64 gameId;
     address payable wallet;
     mapping(uint32 => UserCard) userCardList;
     mapping(uint16 => GameDeck) deckList;
-}
-
-struct Card {
-    uint32 id;
-    string name;
-    uint8 mana;
-    uint8 family;
-    uint8 starter;
-    CardLevel[6] level;
-}
-
-struct CardLevel {
-    uint8 level;
-    string description;
-    uint16 life;
-    uint16 attack;
 }
 
 struct PreviousOwner {
@@ -56,17 +42,6 @@ struct GameDeck {
     uint32[20] userCardIdList;
 }
 
-struct Game {
-    uint64 userId1;
-    uint64 userId2;
-    uint16 userDeck1;
-    uint16 userDeck2;
-    uint64 winner;
-    bool ended;
-    PlayGame playGame;
-    uint256 playGameHash;
-}
-
 contract GameManager {
 
     /////////////////// imported event //////////////////////////////
@@ -78,231 +53,64 @@ contract GameManager {
 
     ///////////////////////// contract /////////////////////////////////////
 
-    address payable public owner;
+    function checkOwner() public view {
+        animalDominance.checkOwner(msg.sender);
+    }
 
-    modifier isOwner() {
-     require(msg.sender == owner, "Not owner");
+    modifier _isOwner() {
+        checkOwner();
         _;
     }
 
-    function withdraw (uint _amount) public isOwner {
-      owner.transfer(_amount);
+    function withdraw (uint _amount) public _isOwner {
+        animalDominance.owner().transfer(_amount);
     }
 
     constructor(
-      PlayGameFactory _playGameFactory,
-      PlayActionLib _playActionLib
+        AnimalDominance _animalDominance,
+        CardList _cardList
     ) {
-        _updatePlayGameFactory(_playGameFactory);
-        _updatePlayActionLib(_playActionLib);
-        owner = payable( msg.sender);
+        animalDominance = _animalDominance;
+        cardList = _cardList;
     }
 
-    ///////////////////// Cards ////////////////////////////////////
+    //////////////////////////////////// AnimalDominance ///////////////////////
+    AnimalDominance public animalDominance;
 
-    event CardCreated(uint32 id);
+    /////////////////////////////// CardList //////////////////////////////////
+    CardList public cardList;
 
-    uint32 public cardLastId;
-    uint256 public cardHash;
-
-    mapping(uint32 => Card) public cardList;
-
-    function getCardLevel(uint32 _cardId, uint8 _level) public view returns (CardLevel memory) {
-      return cardList[_cardId].level[_level];
+    function _updateCardList(CardList _cardList) private {
+        require(address(_cardList) != address(0), "CardList is null");
+        cardList = _cardList;
     }
 
-    function getCard(uint32 _cardId) public view returns (Card memory) {
-        return cardList[_cardId];
+    function updateCardList(CardList _cardList) public _isOwner {
+        _updateCardList(_cardList);
     }
 
-    function createCard(string memory _name, uint8 _mana, uint8 _family, uint8 _starter) public isOwner {
-        cardLastId = cardLastId + 1;
-        cardList[cardLastId].id = cardLastId;
-        updateCard(cardLastId, _name, _mana, _family, _starter);
+    ///////////////////////////// GameList ///////////////////////////////////
+    GameList public gameList;
+
+    function _updateGameList(GameList _gameList) private {
+        require(address(_gameList) != address(0), "GameList is null");
+        gameList = _gameList;
     }
 
-    function createCardFull(
-        string memory _name,
-        uint8 _mana,
-        uint8 _family,
-        uint8 _starter,
-        string[] calldata _description,
-        uint16[] calldata _life,
-        uint16[] calldata _attack
-    ) public isOwner {
-        cardLastId = cardLastId + 1;
-        cardList[cardLastId].id = cardLastId;
-        updateCard(cardLastId, _name, _mana, _family, _starter);
-        require(_description.length == _life.length && _description.length == _attack.length, 'Wrong level');
-        for (uint8 i = 0; i < _description.length; i++){
-            setCardLevel(cardLastId, _description[i], i, _life[i], _attack[i]);
-        }
-    }
-
-    function setCardHash(uint256 _cardHash) public isOwner {
-      cardHash = _cardHash;
-    }
-
-    function updateCard(
-        uint32 _cardId,
-        string memory _name,
-        uint8 _mana,
-        uint8 _family,
-        uint8 _starter
-    ) public isOwner {
-        cardList[_cardId].name = _name;
-        cardList[_cardId].mana = _mana;
-        cardList[_cardId].family = _family;
-        cardList[_cardId].starter = _starter;
-        emit CardCreated(_cardId);
-        cardHash = 0;
-    }
-
-    function setCardLevel(uint32 _cardId, string memory _description, uint8 _level, uint16 _life, uint16 _attack) public isOwner {
-        cardList[_cardId].level[_level].description = _description;
-        cardList[_cardId].level[_level].life = _life;
-        cardList[_cardId].level[_level].attack = _attack;
-        cardHash = 0;
-    }
-
-    ///////////////////////// ActionLib //////////////////////////////////
-
-    PlayActionLib public playActionLib;
-
-    function _updatePlayActionLib(PlayActionLib _playActionLib) private {
-        require(address(_playActionLib) != address(0), "playActionLib is null");
-        playActionLib = _playActionLib;
-    }
-
-    function updatePlayActionLib(PlayActionLib _playActionLib) public isOwner {
-        _updatePlayActionLib(_playActionLib);
-    }
-
-    ///////////////////////// Game Factory //////////////////////////////////
-
-    PlayGameFactory public playGameFactory;
-
-    function _updatePlayGameFactory(PlayGameFactory _playGameFactory) private {
-        require(address(_playGameFactory) != address(0), "playGameFactory is null");
-        playGameFactory = _playGameFactory;
-    }
-
-    function updatePlayGameFactory(PlayGameFactory _playGameFactory) public isOwner {
-        _updatePlayGameFactory(_playGameFactory);
-    }
-
-    ///////////////////////// Games /////////////////////////////////////////
-
-    event GameCreated(uint64 id, uint64 userId);
-    event GameCreatedBot(uint64 id, uint64 userId);
-    event GameFill(uint64 id, uint64 userId);
-    event GameEnd(uint64 id, uint64 winner);
-
-    uint64 public gameLastId;
-    mapping(uint64 => Game) public gameList;
-
-    function _joinGamePos(uint64 _gameId, uint64 _userId, uint16 _gameDeckId, bool _pos) private {
-        Game storage game = gameList[_gameId];
-        if (_pos){
-            game.userId1 = _userId;
-            game.userDeck1 = _gameDeckId;
-        } else {
-            game.userId2 = _userId;
-            game.userDeck2 = _gameDeckId;
-        }
-    }
-
-    function _createGame(uint64 _userId, uint16 _gameDeckId) private {
-        require(userIdList[_userId].gameId == 0, 'user already in game');
-        checkDeck(_userId, _gameDeckId);
-        gameLastId = gameLastId + 1;
-        _joinGamePos(gameLastId, _userId, _gameDeckId, true);
-        userIdList[_userId].gameId = gameLastId;
-    }
-
-    function _createGameBot(uint64 _userId, uint16 _gameDeckId, PlayBot playBot) private {
-        require(address(playBot) != address(0), 'Bot not found');
-        _createGame(_userId, _gameDeckId);
-        gameList[gameLastId].playGame = playGameFactory.newGame(
-            this,
-            _userId,
-            _gameDeckId,
-            0,
-            _gameDeckId,
-            gameLastId,
-            playBot
-        );
-        userIdList[_userId].gameId = gameLastId;
-        emit GameCreatedBot(gameLastId, _userId);
-    }
-
-    function createGameSelf(uint16 _gameDeckId) public {
-        uint64 userId = getUserId();
-        _createGame(userId, _gameDeckId);
-        emit GameCreated(gameLastId, userId);
-    }
-
-    function createGameBotSelf(uint16 _gameDeckId, uint256 _playBotHash) public {
-        _createGameBot(getUserId(), _gameDeckId, playBotMap[_playBotHash]);
-    }
-
-    function cancelGame() public {
-        uint64 _userId = getUserId();
-        uint64 _gameId = userIdList[_userId].gameId;
-        require(gameList[_gameId].userId2 == 0, "Player has join");
-        gameList[_gameId].ended = true;
-        userIdList[_userId].gameId = 0;
-        emit GameEnd(_gameId, _userId);
-    }
-
-    function _joinGame(uint64 _gameId, uint64 _userId, uint16 _gameDeckId) private {
-        require(address(gameList[_gameId].playGame) == address(0), "Game is full");
-        require(!gameList[_gameId].ended, "Game is ended");
-        require(userIdList[_userId].gameId == 0, 'user already in game');
-        checkDeck(_userId, _gameDeckId);
-        _joinGamePos(_gameId, _userId, _gameDeckId, false);
-        Game storage game = gameList[_gameId];
-        game.playGame = playGameFactory.newGame(
-            this,
-            game.userId1,
-            game.userDeck1,
-            game.userId2,
-            game.userDeck2,
-            _gameId,
-            PlayBot(address(0))
-        );
-        userIdList[_userId].gameId = _gameId;
-        emit GameFill(_gameId, _userId);
-    }
-
-    function joinGameSelf(uint64 _gameId, uint16 _gameDeckId) public {
-        _joinGame(_gameId, getUserId(), _gameDeckId);
+    function updateGameList(GameList _gameList) public _isOwner {
+        _updateGameList(_gameList);
     }
 
     /////////////////////////////////// End game ///////////////////////////////
 
-    function addCardExp(uint64 _userId, uint16 _userDeckId, PlayGame _playGame) private {
+    function addCardExp(uint64 _userId, uint16 _userDeckId, PlayGame _playGame) public {
+        require(address(msg.sender) == address(gameList));
         uint32[20] memory gameDeckCard = getUserDeckCard(_userId, _userDeckId);
         uint8 pos = _playGame.getUserPos(_userId);
         for (uint8 i = 0; i < 20; i++){
             userIdList[_userId].userCardList[gameDeckCard[i]].exp += _playGame.getUserCardExp(pos, gameDeckCard[i]);
             userIdList[_userId].userCardList[gameDeckCard[i]].expWin += _playGame.getUserCardExp(pos, gameDeckCard[i]);
         }
-    }
-
-    function endGame(uint64 _gameId) public {
-        Game storage game = gameList[_gameId];
-        require(!game.ended);
-        require(game.playGame.ended());
-        uint64 winner = game.playGame.winner();
-        game.winner = winner;
-        addCardExp(game.userId1, game.userDeck1, game.playGame);
-        userIdList[game.userId1].gameId = 0;
-        if (game.userId2 != 0){
-          addCardExp(game.userId2, game.userDeck2, game.playGame);
-          userIdList[game.userId2].gameId = 0;
-        }
-        emit GameEnd(_gameId, winner);
     }
 
     //////////////////////////////////////// User //////////////////////////////////////
@@ -312,8 +120,8 @@ contract GameManager {
     mapping(address => uint64) public userAddressList;
     mapping(string => uint64) public userNameList;
 
-    function getUserId() public view returns (uint64 userId){
-        userId = userAddressList[msg.sender];
+    function getUserId(address sender) public view returns (uint64 userId){
+        userId = userAddressList[sender];
         require(userId != 0, "Not registered");
         return userId;
     }
@@ -336,6 +144,9 @@ contract GameManager {
 
     ///////////////////////////////////// UserCard //////////////////////////////////////
 
+    event AddUserCard(uint64 _userId, uint32 _cardId);
+    event AddUserCardWithExp(uint64 _userId, UserCard _userCard);
+
     function getUserCard(uint64 _userId, uint32 _userCardId) public view returns(UserCard memory userCard){
         userCard = userIdList[_userId].userCardList[_userCardId];
     }
@@ -350,6 +161,7 @@ contract GameManager {
     function _addUserCard(uint64 _userId, uint32 _cardId) private {
         userIdList[_userId].userCardListLastId++;
         userIdList[_userId].userCardList[userIdList[_userId].userCardListLastId].cardId = _cardId;
+        emit AddUserCard(_userId, _cardId);
     }
 
     function _addUserCardWithExp(uint64 _userId, UserCard memory _userCard) private {
@@ -360,26 +172,18 @@ contract GameManager {
         for (uint8 i = 0; i < 3; i++){
             newCard.previousOwner[i] = _userCard.previousOwner[i];
         }
+        emit AddUserCardWithExp(_userId, _userCard);
     }
 
     function addUserStarterCard(uint64 _userId) public {
         require(userIdList[_userId].userCardListLastId == 0, "Already have card");
-        for (uint32 i = 1; i <= cardLastId; i++) {
-            uint8 starter = cardList[i].starter;
+        for (uint32 i = 1; i <= cardList.cardLastId(); i++) {
+            uint8 starter = cardList.getCardStarter(i);
             while(starter > 0) {
                 _addUserCard(_userId, i);
                 starter = starter - 1;
             }
         }
-    }
-
-    function getLevel(uint64 exp) public pure returns(uint8){
-        if (exp < 10) return 0;
-        if (exp < 100) return 1;
-        if (exp < 1000) return 2;
-        if (exp < 10000) return 3;
-        if (exp < 100000) return 4;
-        return 5;
     }
 
     function _checkCardAvaillable(uint64 _userId, uint32 _userCardId)
@@ -392,8 +196,8 @@ contract GameManager {
             userCard.price == 0 &&
             userCard.sold == false
             , 'wrong card');
-        uint8 level = getLevel(userCard.exp);
-        require(level > 0, "Cannot nft level 0");
+        uint8 level = cardList.getLevel(userCard.exp);
+        require(level > 0, "Cannot nft/sell level 1");
     }
 
     function _updateXpWin(uint64 _userId, uint32 _userCardId)
@@ -421,7 +225,7 @@ contract GameManager {
     //////////////////////////////// NFT Contract //////////////////////////////////
     NFT public nft;
 
-    function updateNFT(NFT _nft) public isOwner {
+    function updateNFT(NFT _nft) public _isOwner {
         nft = _nft;
     }
 
@@ -431,8 +235,24 @@ contract GameManager {
     }
 
     /////////////////////////////// NFT ///////////////////////////////////////////
+
+    /**
+     * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
+     */
+    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.
+     */
+    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+
+    /**
+     * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.
+     */
+    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+
     function createNFT(uint32 _userCardId) public isNFT() {
-        uint64 userId = getUserId();
+        uint64 userId = getUserId(msg.sender);
         _checkCardAvaillable(userId, _userCardId);
         _updateXpWin(userId, _userCardId);
         UserCard storage userCard = userIdList[userId].userCardList[_userCardId];
@@ -441,7 +261,7 @@ contract GameManager {
     }
 
     function burnNFT(uint256 _tokenId) public isNFT() {
-        uint64 userId = getUserId();
+        uint64 userId = getUserId(msg.sender);
         require(userIdList[userId].wallet == nft.ownerOf(_tokenId), 'Not token owner');
         _addUserCardWithExp(userId, nft.burnNFT(_tokenId));
     }
@@ -450,7 +270,7 @@ contract GameManager {
 
     Trading public trading;
 
-    function updateTrading(Trading _trading) public isOwner {
+    function updateTrading(Trading _trading) public _isOwner {
         trading = _trading;
     }
 
@@ -458,17 +278,17 @@ contract GameManager {
     //////////////////////////////// Trade /////////////////////////////////
 
     function buyNewCard(uint32 _cardId) public payable {
-        require(0 < _cardId && _cardId <= cardLastId, "Wrong card");
-        if (cardList[_cardId].starter > 0) {
+        require(0 < _cardId && _cardId <= cardList.cardLastId(), "Wrong card");
+        if (cardList.getCardStarter(_cardId) > 0) {
           require(msg.value == 1 ether, "Price is 1 ROSE");
         } else {
           require(msg.value == 10 ether, "Price is 10 ROSE");
         }
-        _addUserCard(getUserId(), _cardId);
+        _addUserCard(getUserId(msg.sender), _cardId);
     }
 
     function buyCard(uint64 _userId, uint32 _userCardId) public payable {
-        uint64 newUserId = getUserId();
+        uint64 newUserId = getUserId(msg.sender);
         require(_userId != newUserId, 'same seller and buyer');
         UserCard storage userCard = userIdList[_userId].userCardList[_userCardId];
         require(userCard.price > 0 && userCard.sold == false, 'wrong card');
@@ -483,29 +303,49 @@ contract GameManager {
             }
         }
         if (address(trading) != address(0)){
-            trading.removeUserCard(_userId, _userCardId);
+            uint8 level = cardList.getLevel(userCard.exp);
+            trading.removeUserCard(
+                userCard.cardId,
+                level,
+                _userId,
+                _userCardId
+            );
         }
         _addUserCardWithExp(newUserId, userCard);
     }
 
     function sellCardSelf(uint32 _userCardId, uint price) public {
         require(price >= 1 ether, 'price less than 1 ROSE');
-        uint64 userId = getUserId();
+        uint64 userId = getUserId(msg.sender);
         _checkCardAvaillable(userId, _userCardId);
         price = price * 120 / 100;
-        userIdList[userId].userCardList[_userCardId].price = price * 120 / 100;
+        UserCard storage userCard = userIdList[userId].userCardList[_userCardId];
+        userCard.price = price;
         if (address(trading) != address(0)){
-            trading.addUserCard(userId, _userCardId, price);
+            uint8 level = cardList.getLevel(userCard.exp);
+            trading.addUserCard(
+                userCard.cardId,
+                level,
+                userId,
+                _userCardId,
+                price
+            );
         }
     }
 
     function cancelSellCardSelf(uint32 _userCardId) public {
-        uint64 userId = getUserId();
+        uint64 userId = getUserId(msg.sender);
         UserCard storage userCard = userIdList[userId].userCardList[_userCardId];
         require(userCard.price > 0 && userCard.sold == false, 'wrong card');
         userCard.price = 0;
         if (address(trading) != address(0)){
-            trading.removeUserCard(userId, _userCardId);
+            uint8 level = cardList.getLevel(userCard.exp);
+            trading.removeUserCard(
+                userCard.cardId,
+                level,
+                userId,
+                _userCardId
+            );
         }
     }
 
@@ -551,20 +391,11 @@ contract GameManager {
     }
 
     function addGameDeckSelf(uint32[20] calldata _userCardIdList) public {
-      _addGameDeck(getUserId(), _userCardIdList);
+      _addGameDeck(getUserId(msg.sender), _userCardIdList);
     }
 
     function updateGameDeckSelf(uint16 _deckId, uint32[20] calldata _userCardIdList) public {
-      _updateGameDeck(getUserId(), _deckId, _userCardIdList);
-    }
-
-    //////////////////////////////////////////// Bot ////////////////////////////////////////////
-
-    mapping(uint256 => PlayBot) public playBotMap;
-
-    function addBot(uint256 contractHash, PlayBot bot) public {
-        require(address(playBotMap[contractHash]) == address(0), 'Bot already exist');
-        playBotMap[contractHash] = bot;
+      _updateGameDeck(getUserId(msg.sender), _deckId, _userCardIdList);
     }
 
 }

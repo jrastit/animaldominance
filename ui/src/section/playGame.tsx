@@ -1,6 +1,4 @@
-import {ContractGameManager} from '../contract/solidity/compiled/contractAutoFactory'
-import {ContractPlayGame} from '../contract/solidity/compiled/contractAutoFactory'
-import { useState } from 'react'
+import { ContractHandlerType } from '../type/contractType'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -30,10 +28,8 @@ import {
 import StepMessageNiceWidget from '../component/stepMessageNiceWidget'
 
 const PlayGame = (props:{
-  contract : ContractGameManager,
+  contractHandler : ContractHandlerType,
 }) => {
-
-  const [gameContract, setGameContract] = useState<ContractPlayGame>()
 
   const stepId = StepId.Game
   const step = useAppSelector((state) => state.contractSlice.step)
@@ -44,21 +40,22 @@ const PlayGame = (props:{
   const dispatch = useAppDispatch()
 
   const _leaveGame = () => {
-    if (gameContract){
+
       dispatch(updateStep({id : stepId, step : Step.Loading}))
-      leaveGame(gameContract).then(() => {
+      leaveGame(props.contractHandler).then(() => {
         dispatch(updateStep({id : stepId, step : Step.Ended}))
       }).catch((err) => {dispatch(setError({id:stepId, catchError:err}))})
-    }
+
 
   }
 
   const render = () => {
     if (isStep(stepId, Step.Waiting, step)){
       return (<GameWaitingWidget
-      contract={props.contract}
+      contractHandler={props.contractHandler}
       />)
     } else if (
+      isStep(stepId, Step.Clean, step) ||
       isStep(stepId, Step.Creating, step) ||
       isStep(stepId, Step.Loading, step) ||
       isStep(stepId, Step.Joining, step) ||
@@ -74,10 +71,10 @@ const PlayGame = (props:{
         </DivNice>
       )
     } else if (isStep(stepId, Step.Running, step) || isStep(stepId, Step.Refresh, step)){
-      if (game && user && oponent && gameContract){
+      if (game && user && oponent){
         return (
           <GameBoard
-            gameContract={gameContract}
+            contractHandler={props.contractHandler}
             game={game}
             user={user}
             oponent={oponent}
@@ -100,7 +97,7 @@ const PlayGame = (props:{
             <DivNice>Error oponent not set</DivNice>
           )
         }
-        if (!gameContract) {
+        if (!props.contractHandler.playGame.versionOk) {
           return (
             <DivNice>Error gameContract not set</DivNice>
           )
@@ -109,7 +106,7 @@ const PlayGame = (props:{
     } else if (isStep(stepId, Step.Ended, step)){
       return (
         <GameEndedWidget
-          contract={props.contract}
+          contractHandler={props.contractHandler}
         />
       )
     } else {
@@ -124,9 +121,7 @@ const PlayGame = (props:{
     <Row>
       <Col>
         <GameLoader
-          contract={props.contract}
-          setGameContract={setGameContract}
-          gameContract={gameContract}
+          contractHandler={props.contractHandler}
         />
       </Col>
     </Row>

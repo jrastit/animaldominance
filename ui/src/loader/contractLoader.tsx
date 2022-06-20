@@ -1,11 +1,9 @@
 import { useEffect } from 'react'
 
 import {
-  Step,
   StepId,
   isInit,
   isOk,
-  updateStep,
   resetAllStep,
 } from '../reducer/contractSlice'
 
@@ -17,6 +15,7 @@ import {
   _loadAllTread,
   loadUser,
   loadGameList,
+  loadGameId,
   loadUserCardList,
   loadUserDeckList,
 } from '../game/reducer/contract'
@@ -43,49 +42,52 @@ const ContractLoader = (props: {
         network,
       )
     }
-    if (isOk(StepId.Contract, step) && props.contractHandler.gameManager.contract) {
+    if (isOk(StepId.Contract, step)) {
       if (isInit(StepId.CardList, step)) {
         loadCardList(
           dispatch,
-          props.contractHandler.gameManager.contract,
+          props.contractHandler,
         )
       }
-      if (isInit(StepId.Trading, step) && props.contractHandler.trading.contract) {
+      if (isInit(StepId.Trading, step)) {
         _loadAllTread(
           dispatch,
-          props.contractHandler.gameManager.contract,
-          props.contractHandler.trading.contract,
+          props.contractHandler,
         )
       }
       if (isInit(StepId.User, step)) {
         loadUser(
           dispatch,
-          props.contractHandler.gameManager.contract,
+          props.contractHandler,
         )
       }
       if (isOk(StepId.User, step) && isInit(StepId.GameList, step)) {
         loadGameList(
           dispatch,
-          props.contractHandler.gameManager.contract,
+          props.contractHandler,
         )
       }
       if (user) {
+        if (isOk(StepId.User, step) && isInit(StepId.Game, step)) {
+          loadGameId(
+            user.id,
+            dispatch,
+            props.contractHandler,
+          )
+        }
         if (isOk(StepId.User, step) && isInit(StepId.UserCardList, step)) {
           loadUserCardList(
             dispatch,
-            props.contractHandler.gameManager.contract,
+            props.contractHandler,
             user
           )
         }
         if (isOk(StepId.User, step) && isInit(StepId.UserDeckList, step)) {
           loadUserDeckList(
             dispatch,
-            props.contractHandler.gameManager.contract,
+            props.contractHandler,
             user
           )
-        }
-        if (isOk(StepId.User, step) && isInit(StepId.Game, step) && user.gameId) {
-          dispatch(updateStep({ id: StepId.Game, step: Step.Clean }))
         }
       }
     } else {

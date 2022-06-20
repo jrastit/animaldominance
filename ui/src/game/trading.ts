@@ -1,5 +1,4 @@
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
-import { ContractTrading } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import {
   getCardLastId
@@ -10,13 +9,12 @@ import {
 } from '../type/tradeType'
 
 export const loadAllTrade = async (
-  contract: ContractGameManager,
-  tradingContract: ContractTrading,
+  contractHandler: ContractHandlerType,
   setMessage?: (message: string | undefined) => void,
 ) => {
   let tradeList = [] as TradeType[][][]
   if (1) {
-    const tradeListChain = (await tradingContract.getAllCardTrade())[0]
+    const tradeListChain = (await contractHandler.trading.getContract().getAllCardTrade())[0]
     tradeList = tradeListChain.map(
       (tradeCardChain: any[][]) => tradeCardChain.map(
         (tradeLevelChain: any[]) => tradeLevelChain.map(
@@ -32,15 +30,15 @@ export const loadAllTrade = async (
       )
     )
   } else {
-    const cardLastId = await getCardLastId(contract)
+    const cardLastId = await getCardLastId(contractHandler)
     for (let i = 1; i <= cardLastId; i++) {
       tradeList[i - 1] = []
       for (let level = 0; level < 6; level++) {
         tradeList[i - 1][level] = []
-        const tradeLengthChain = (await tradingContract.getCardLevelTradeLength(i, level))
+        const tradeLengthChain = (await contractHandler.trading.getContract().getCardLevelTradeLength(i, level))
         if (tradeLengthChain > 0) {
           for (let tradeId = 0; tradeId < tradeLengthChain; tradeId++) {
-            const tradeChain = (await tradingContract.getTrade(i, level, tradeId))[0]
+            const tradeChain = (await contractHandler.trading.getContract().getTrade(i, level, tradeId))[0]
             tradeList[i - 1][level][tradeId] = {
               userId: tradeChain.userId.toNumber(),
               userCardId: tradeChain.userCardId,

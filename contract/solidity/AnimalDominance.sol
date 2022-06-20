@@ -26,17 +26,19 @@ contract AnimalDominance {
         return (msg.sender == owner);
     }
 
-    ////////////////////////// address ////////////////////
-    mapping(uint256 => address) private gameManagerList;
-
-    function getGameManager(uint256 _contractHash) public view returns (address) {
-      address gameManager = gameManagerList[_contractHash];
-      require(address(gameManager) != address(0), "Game manager not found");
-      return gameManager;
+    function checkOwner(address sender) public view {
+        require(sender == owner, "Not owner");
     }
 
-    function addGameManager(uint256 _contractHash, address _gameManager) public _isOwner() {
-      gameManagerList[_contractHash] = _gameManager;
+    ////////////////////////// address ////////////////////
+    mapping(uint256 => address) private contractList;
+
+    function getContract(uint256 _contractHash) public view returns (address) {
+        return contractList[_contractHash];
+    }
+
+    function addContract(uint256 _contractHash, address _contractAddress) public _isOwner() {
+        contractList[_contractHash] = _contractAddress;
     }
 
 

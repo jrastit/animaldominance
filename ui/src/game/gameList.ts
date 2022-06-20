@@ -1,6 +1,6 @@
 import { BigNumber } from 'ethers'
 
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import {
   GameListItemType,
@@ -8,20 +8,20 @@ import {
 
 import {
   getHashContractPlayBot,
-} from '../contract/solidity/compiled/contractAutoFactory'
+} from './contract/contractHash'
 
 export const getGameLastId = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
 ) => {
-  const result = await contract.gameLastId()
+  const result = await contractHandler.gameList.getContract().gameLastId()
   return result[0].toNumber()
 }
 
 export const getGame = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   gameId: number
 ) => {
-  const gameChain = await contract.gameList(gameId)
+  const gameChain = await contractHandler.gameList.getContract().gameList(gameId)
   return {
     id: gameId,
     userId1: gameChain.userId1.toNumber(),
@@ -34,26 +34,33 @@ export const getGame = async (
   } as GameListItemType
 }
 
-export const getGameList = async (
-  contract: ContractGameManager,
+export const getGameId = async (
+  userId: number,
+  contractHandler: ContractHandlerType,
 ) => {
-  const lastId = await getGameLastId(contract)
+  return (await contractHandler.gameList.getContract().gameUserList(userId))[0].toNumber()
+}
+
+export const getGameList = async (
+  contractHandler: ContractHandlerType,
+) => {
+  const lastId = await getGameLastId(contractHandler)
   const gameList = [] as GameListItemType[]
   for (let i = 1; i <= lastId; i++) {
-    gameList.push(await getGame(contract, i))
+    gameList.push(await getGame(contractHandler, i))
   }
   return gameList
 }
 
 export const createGame = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   userDeckId: number,
 ) => {
-  const tx = await contract.createGameSelf(
+  const tx = await contractHandler.gameList.getContract().createGameSelf(
     userDeckId
   )
   for (let i = 0; i < tx.result.logs.length; i++) {
-    const log = contract.interface.parseLog(tx.result.logs[i])
+    const log = contractHandler.gameList.getContract().interface.parseLog(tx.result.logs[i])
     if (log.name === 'GameCreated') {
       return log.args.id.toNumber()
     }
@@ -62,16 +69,16 @@ export const createGame = async (
 }
 
 export const createGameBot = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   userDeckId: number,
 ) => {
-  const tx = await contract.createGameBotSelf(
+  const tx = await contractHandler.gameList.getContract().createGameBotSelf(
     userDeckId,
     BigNumber.from(getHashContractPlayBot()),
   )
   for (let i = 0; i < tx.result.logs.length; i++) {
     try {
-      const log = contract.interface.parseLog(tx.result.logs[i])
+      const log = contractHandler.gameList.getContract().interface.parseLog(tx.result.logs[i])
       if (log.name === 'GameCreatedBot') {
         return log.args.id.toNumber()
       }
@@ -83,18 +90,18 @@ export const createGameBot = async (
 }
 
 export const joinGame = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
   gameId: number,
   userDeckId: number,
 ) => {
-  return contract.joinGameSelf(
+  return contractHandler.gameList.getContract().joinGameSelf(
     gameId,
     userDeckId,
   )
 }
 
 export const cancelGame = async (
-  contract: ContractGameManager,
+  contractHandler: ContractHandlerType,
 ) => {
-  return await await contract.cancelGame()
+  return await await contractHandler.gameList.getContract().cancelGame()
 }

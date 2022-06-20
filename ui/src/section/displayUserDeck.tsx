@@ -1,4 +1,4 @@
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import UserCardListWidget from '../game/component/userCardListWidget'
 
@@ -34,7 +34,7 @@ import Alert from 'react-bootstrap/Alert'
 import DeckSelect from '../game/component/deckSelect'
 
 const DisplayUserDeck = (props : {
-  contract : ContractGameManager,
+  contractHandler : ContractHandlerType,
 }) => {
   const userCardList = useAppSelector((state) => state.userSlice.userCardList)
   const userDeckList = useAppSelector((state) => state.userSlice.userDeckList)
@@ -65,7 +65,7 @@ const DisplayUserDeck = (props : {
     setLoading(true)
     try{
       if (deck){
-        const newDeck = await updateUserDeck(props.contract, deck.id, userCardSubList)
+        const newDeck = await updateUserDeck(props.contractHandler, deck.id, userCardSubList)
         if (userDeckList){
           dispatch(setUserDeckList(userDeckList.map(oldDeck => {
             if (oldDeck.id === newDeck.id) return newDeck
@@ -76,7 +76,7 @@ const DisplayUserDeck = (props : {
         }
         setDeck(newDeck)
       } else {
-        const newDeck = await addUserDeck(props.contract, userCardSubList)
+        const newDeck = await addUserDeck(props.contractHandler, userCardSubList)
         if (userDeckList){
           dispatch(setUserDeckList(userDeckList.concat([newDeck])))
         } else {
@@ -96,7 +96,7 @@ const DisplayUserDeck = (props : {
       if (deck){
         setUserCardSubList(deck.userCardIdList.map((id) => {
           return userCardList.filter((userCard) => userCard.id === id)[0]
-        }).filter(userCard => !userCard.price))
+        }).filter(userCard => (!userCard.price && !userCard.sold && userCard.nftId.eq(0))))
       } else {
         setUserCardSubList([])
       }
@@ -144,7 +144,7 @@ const DisplayUserDeck = (props : {
         <UserCardListWidget
           userCardList={userCardList.concat([]).sort((card1, card2) => {
             return card2.exp - card1.exp
-          }).filter(card => !card.price)}
+          }).filter(card => !card.price && !card.sold && card.nftId.eq(0))}
           selectCard={selectCard}
           userCardSubList={userCardSubList}
         />

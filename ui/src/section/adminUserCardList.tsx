@@ -1,4 +1,4 @@
-import { ContractGameManager } from '../contract/solidity/compiled/contractAutoFactory'
+import { ContractHandlerType } from '../type/contractType'
 
 import Button from 'react-bootstrap/Button'
 
@@ -23,7 +23,7 @@ import {
 } from '../reducer/contractSlice'
 
 const AdminUserCardList = (props : {
-  contract : ContractGameManager,
+  contractHandler : ContractHandlerType,
 }) => {
   const stepId = StepId.UserCardList
   const step = useAppSelector((state) => state.contractSlice.step)
@@ -35,7 +35,7 @@ const AdminUserCardList = (props : {
     if (user){
       dispatch(updateStep({id : stepId, step : Step.Loading}))
       addUserStarterCard(
-        props.contract,
+        props.contractHandler,
         user.id
       ).then(() => {
         dispatch(clearError(stepId))
