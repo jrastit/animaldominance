@@ -1,3 +1,4 @@
+import { BigNumber } from 'ethers'
 import { ContractHandlerType } from '../type/contractType'
 
 import UserCardListWidget from '../game/component/userCardListWidget'
@@ -5,8 +6,12 @@ import UserCardListWidget from '../game/component/userCardListWidget'
 import { useState } from 'react'
 
 import type {
-  UserCardType,
-} from '../type/userType'
+  NftType,
+} from '../type/tradeType'
+
+import {
+  nftBurnCard
+} from '../game/nft'
 
 import { useAppSelector } from '../hooks'
 
@@ -15,49 +20,41 @@ import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
 import Alert from 'react-bootstrap/Alert'
 import DivFullNice from '../component/divFullNice'
+import Container from 'react-bootstrap/Container'
 
 const DisplayNFT = (props: {
   contractHandler : ContractHandlerType,
 }) => {
-  const userCardList = useAppSelector((state) => state.userSlice.userCardList)
+  const nftList = useAppSelector((state) => state.cardListSlice.nftList)
 
   const [loading, _setLoading] = useState<boolean>()
   const [error, setError] = useState<string>()
 
-  const userCardListToSplit = userCardList ? userCardList.concat([]).filter((userCard) => {
-    return !userCard.nftId.eq(0)
-  }).sort((card1, card2) => {
-    return card2.exp - card1.exp
+  const nftListToSplit = nftList ? nftList.concat([]).sort((nft1, nft2) => {
+    return nft2.exp - nft1.exp
   }) : []
 
-  const userCardListBash = [] as UserCardType[][]
-  for (let i = 0; i < userCardListToSplit.length; i = i + 6) {
-    userCardListBash.push(userCardListToSplit.slice(i, i + 6))
+  const nftListBash = [] as NftType[][]
+  for (let i = 0; i < nftListToSplit.length; i = i + 6) {
+    nftListBash.push(nftListToSplit.slice(i, i + 6))
   }
 
-  const renderRow = (userCardListItem: UserCardType[], id: number) => {
+  const renderRow = (nftListItem: NftType[], id: number) => {
     return (
       <Row key={id}>
-        <Col xs={3}>
-          <DivFullNice>
-            {error &&
-              <>
-                <Alert variant='danger'>{error}</Alert>
-                <Button onClick={() => { setError(undefined) }}>Ok</Button>
-              </>
-            }
-            {!loading && !error &&
-              <>
-              </>
-            }
-            {loading &&
-              <p>Loading...</p>
-            }
-          </DivFullNice>
-        </Col>
-        <Col xs={9}>
+        <Col>
           <UserCardListWidget
-            userCardList={userCardListItem}
+            userCardList={nftListItem.map(nft => {
+              return {
+                ...nft,
+                id : 0,
+                expWin : 0,
+                price : 0,
+                sold : false,
+                nftId : nft.id,
+              }
+            })}
+            nftBurnCard={(nftId : BigNumber) => {nftBurnCard(props.contractHandler, nftId)}}
           />
         </Col>
       </Row>
@@ -65,11 +62,29 @@ const DisplayNFT = (props: {
   }
 
   return (
-    <>
-      {userCardListBash.map((userCardListItem, id) => {
+    <Container style={{fontSize : '0.9em'}}>
+    { (error || loading) &&
+      <DivFullNice>
+        {error &&
+          <>
+            <Alert variant='danger'>{error}</Alert>
+            <Button onClick={() => { setError(undefined) }}>Ok</Button>
+          </>
+        }
+        {!loading && !error &&
+          <>
+          </>
+        }
+        {loading &&
+          <p>Loading...</p>
+        }
+      </DivFullNice>
+    }
+
+      {nftListBash.map((userCardListItem, id) => {
         return renderRow(userCardListItem, id)
       })}
-    </>
+    </Container>
   )
 
 }

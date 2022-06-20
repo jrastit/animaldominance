@@ -2,18 +2,20 @@ import { BigNumber } from 'ethers'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../store'
 import type { CardType } from '../type/cardType'
-import type { TradeType } from '../type/tradeType'
+import type { TradeType, NftType } from '../type/tradeType'
 
 // Define a type for the slice state
 interface CardListState {
   cardList: Array<CardType>
   tradeList: TradeType[][][] | undefined
+  nftList: NftType[] | undefined
 }
 
 // Define the initial state using that type
 const initialState: CardListState = {
   cardList: [],
-  tradeList: undefined
+  tradeList: undefined,
+  nftList: undefined,
 }
 
 export const cardListSlice = createSlice({
@@ -21,6 +23,9 @@ export const cardListSlice = createSlice({
   // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: {
+    setNFTList: (state, action: PayloadAction<NftType[]>) => {
+      state.nftList = action.payload
+    },
     setTradeList: (state, action: PayloadAction<TradeType[][][]>) => {
       state.tradeList = action.payload
     },
@@ -87,6 +92,7 @@ export const cardListSlice = createSlice({
 })
 
 export const {
+  setNFTList,
   setTradeList,
   addTrade,
   removeTrade,

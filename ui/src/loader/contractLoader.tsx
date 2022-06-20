@@ -13,6 +13,7 @@ import {
   loadContract,
   loadCardList,
   _loadAllTread,
+  loadNFT,
   loadUser,
   loadGameList,
   loadGameId,
@@ -51,6 +52,12 @@ const ContractLoader = (props: {
       }
       if (isInit(StepId.Trading, step)) {
         _loadAllTread(
+          dispatch,
+          props.contractHandler,
+        )
+      }
+      if (isInit(StepId.Nft, step)) {
+        loadNFT(
           dispatch,
           props.contractHandler,
         )

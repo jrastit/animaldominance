@@ -169,7 +169,7 @@ contract NFT is IERC2981, ERC721 {
 			uint256 token = history[i];
 			TokenCard storage tokenCard = tokenCardList[token];
 			ret[i].nftId = token;
-			ret[i].owner = ownerOf(token);
+			ret[i].owner = _exists(token) ? ownerOf(token) : address(0);
 			ret[i].cardId = tokenCard.cardId;
 			ret[i].exp = tokenCard.exp;
 			for (uint j =  0; j < 3; j++){

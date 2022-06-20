@@ -35,8 +35,8 @@ import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
 import FormControl from 'react-bootstrap/FormControl'
 import Alert from 'react-bootstrap/Alert'
-import ButtonNice from '../component/buttonNice'
 import DivFullNice from '../component/divFullNice'
+import Container from 'react-bootstrap/Container'
 
 const DisplayUserCard = (props: {
   contractHandler : ContractHandlerType,
@@ -136,7 +136,7 @@ const DisplayUserCard = (props: {
         return (
           <>
             <div>
-              Selling {card.name} level {level} ({userCard.exp})
+              Selling {card.name} level {level + 1} ({userCard.exp})
             </div>
             <div>
               Your price in {tokenName}
@@ -185,7 +185,7 @@ const DisplayUserCard = (props: {
         return (
           <>
             <div>
-              Creating NFT for {card.name} level {level} ({userCard.exp})
+              Creating NFT for {card.name} level {level + 1} ({userCard.exp})
             </div>
             <Button onClick={() => { _createNFT(createNFT) }}>Create NFT</Button>
             <div>
@@ -200,72 +200,13 @@ const DisplayUserCard = (props: {
   const renderRow = (userCardListItem: UserCardType[], id: number) => {
     return (
       <Row key={id}>
-        <Col xs={3}>
-          <DivFullNice>
-            {error &&
-              <>
-                <Alert variant='danger'>{error}</Alert>
-                <Button onClick={() => { setError(undefined) }}>Ok</Button>
-              </>
-            }
-            {!loading && !error &&
-              <>
-                {!sellCard && !createNFT && userCardListItem.map((userCard) => {
-                  const card = cardList.filter(card => card.id === userCard.cardId)[0]
-                  const level = getLevel(userCard.exp)
-                  if (level > 0){
-                    if (!userCard.price && !userCard.sold) {
-                      return (
-                        <div key={userCard.id} style={{margin : '.25em'}}>
-                          {card?.name} level {level} ({userCard.exp}) &nbsp;
-                          <ButtonNice onClick={() => { setSellCard({ userCardId: userCard.id }) }}>
-                            Sell
-                          </ButtonNice>&nbsp;
-                          <ButtonNice onClick={() => { setCreateNFT(userCard.id) }}>
-                            NFT
-                          </ButtonNice>
-                        </div>
-                      )
-                    } else if (!userCard.sold) {
-                      return (
-                        <div key={userCard.id}  style={{margin : '.25em'}}>
-                          <div>
-                            Selling {card.name} level {level} ({userCard.exp}) for {userCard.price} {tokenName}
-                        &nbsp;&nbsp;<Button
-                              variant='danger'
-                              onClick={() => { _cancelListCard(userCard.id) }}
-                            >
-                              Cancel
-                        </Button>
-                          </div>
-                        </div>
-                      )
-                    } else if (userCard.nftId){
-                      return (<div  key={userCard.id} style={{margin : '.25em'}}>NFT {userCard.nftId.toString()} {card.name} level {level} ({userCard.exp})</div>)
-                    } else {
-                      return (<div  key={userCard.id} style={{margin : '.25em'}}>Sold {card.name} level {level} ({userCard.exp}) for {userCard.price} {tokenName}</div>)
-                    }
-                  }
 
-                  return (<div  key={userCard.id} ></div>)
-                })
-                }
-                {!!sellCard &&
-                  renderSellCard(userCardListItem)
-                }
-                {!!createNFT &&
-                  renderCreateNFT(userCardListItem)
-                }
-              </>
-            }
-            {loading &&
-              <p>Loading...</p>
-            }
-          </DivFullNice>
-        </Col>
-        <Col xs={9}>
+        <Col style={{fontSize : '.9em'}}>
           <UserCardListWidget
             userCardList={userCardListItem}
+            sellCard={(userCard : UserCardType) => {setSellCard({ userCardId: userCard.id })}}
+            cancelSellCard={(userCard : UserCardType) => {_cancelListCard(userCard.id)}}
+            nftCard={(userCard : UserCardType) => {setCreateNFT(userCard.id)}}
           />
         </Col>
       </Row>
@@ -274,11 +215,36 @@ const DisplayUserCard = (props: {
 
 
   return (
-    <>
+    <Container>
+      <Row>
+      <Col>
+        <DivFullNice>
+          {error &&
+            <>
+              <Alert variant='danger'>{error}</Alert>
+              <Button onClick={() => { setError(undefined) }}>Ok</Button>
+            </>
+          }
+          {!loading && !error && userCardList &&
+            <>
+              {!!sellCard &&
+                renderSellCard(userCardList)
+              }
+              {!!createNFT &&
+                renderCreateNFT(userCardList)
+              }
+            </>
+          }
+          {loading &&
+            <p>Loading...</p>
+          }
+        </DivFullNice>
+      </Col>
+      </Row>
       {userCardListBash.map((userCardListItem, id) => {
         return renderRow(userCardListItem, id)
       })}
-    </>
+    </Container>
   )
 
 }

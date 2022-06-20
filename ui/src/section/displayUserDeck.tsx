@@ -32,6 +32,7 @@ import Col from 'react-bootstrap/Col'
 import Button from 'react-bootstrap/Button'
 import Alert from 'react-bootstrap/Alert'
 import DeckSelect from '../game/component/deckSelect'
+import Container from 'react-bootstrap/Container'
 
 const DisplayUserDeck = (props : {
   contractHandler : ContractHandlerType,
@@ -106,8 +107,9 @@ const DisplayUserDeck = (props : {
 
   if (userCardList) {
     return (
+      <Container>
       <Row>
-        <Col xs={3}>
+        <Col>
         <DivFullNice>
         <SpaceWidget>
         <DeckSelect
@@ -115,15 +117,13 @@ const DisplayUserDeck = (props : {
           setDeck={setDeck}
           deck={deck}
         />
-        </SpaceWidget>
-        <SpaceWidget>
+
         {userCardSubList.length} card selected {userCardSubList.length === 20 ? "" : "(need 20 to update deck)"}
-        </SpaceWidget>
-        <SpaceWidget>
-        <ButtonNice onClick={() => {setResetSelection(true)}}>Reset selection</ButtonNice>
-        </SpaceWidget>
+
+        &nbsp;<ButtonNice onClick={() => {setResetSelection(true)}}>Reset selection</ButtonNice>
+
         {!!userCardSubList.length &&
-          <SpaceWidget>
+          <>
             {error &&
               <div>
               <Alert variant='danger'>{error}</Alert>
@@ -131,16 +131,19 @@ const DisplayUserDeck = (props : {
               </div>
             }
             {!error && !loading && userCardSubList.length === 20 &&
-              <ButtonNice onClick={() => {_updateDeck()}}>Update deck</ButtonNice>
+              <>&nbsp;<ButtonNice onClick={() => {_updateDeck()}}>Update deck</ButtonNice></>
             }
             {loading &&
               <p>Loading...</p>
             }
-          </SpaceWidget>
+          </>
         }
+        </SpaceWidget>
         </DivFullNice>
         </Col>
-        <Col xs={9}>
+      </Row>
+      <Row>
+        <Col style={{fontSize:'.9em'}}>
         <UserCardListWidget
           userCardList={userCardList.concat([]).sort((card1, card2) => {
             return card2.exp - card1.exp
@@ -150,6 +153,7 @@ const DisplayUserDeck = (props : {
         />
         </Col>
       </Row>
+      </Container>
     )
   }
 

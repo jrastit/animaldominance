@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { TransactionManager } from '../util/TransactionManager'
 import AdminCard from './adminCard'
 import AdminTrade from './adminTrade'
+import AdminNFT from './adminNFT'
 import AdminUser from '../section/adminUser'
 import AdminContract from '../section/adminContract'
 import AdminUserCardList from '../section/adminUserCardList'
@@ -58,6 +59,7 @@ const AdminSection = (props: {
               <Col>
               <AdminCard />
               <AdminTrade />
+              <AdminNFT />
               <AdminGameList/>
               </Col>
 

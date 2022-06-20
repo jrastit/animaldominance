@@ -21,6 +21,9 @@ export const createAllCard = async (
 ) => {
   let cardFile = require("../card/card.json")
   const cardLastId = await getCardLastId(contractHandler)
+  if (cardLastId >= cardFile.card.length) {
+    return
+  }
   for (let i = cardLastId; i < cardFile.card.length; i++) {
     const card = cardFile.card[i]
     if (1) {

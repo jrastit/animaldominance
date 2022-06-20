@@ -103,6 +103,11 @@ const FindGame = (props: {
               resetStep={() => { dispatch(clearError(StepId.Trading)) }}
             />
             <StepMessageNiceWidget
+              title='NFT'
+              step={getStep(StepId.Nft, step)}
+              resetStep={() => { dispatch(clearError(StepId.Nft)) }}
+            />
+            <StepMessageNiceWidget
               title='User'
               step={getStep(StepId.User, step)}
               resetStep={() => { dispatch(clearError(StepId.User)) }}

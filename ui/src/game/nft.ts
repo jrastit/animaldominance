@@ -1,5 +1,6 @@
 import { BigNumber } from 'ethers'
 import { ContractHandlerType } from '../type/contractType'
+import { NftType } from '../type/tradeType'
 
 export const nftCreateCard = async (
   contractHandler: ContractHandlerType,
@@ -26,7 +27,6 @@ export const nftBurnCard = async (
   )
   return tx.result.logs.map((log: any) => {
     const log2 = contractHandler.gameManager.getContract().interface.parseLog(log)
-    console.log(log2)
     if (log2.name === 'AddUserCardWithExp') {
       return {
         cardId: log2.args._userCard.cardId,
@@ -41,10 +41,21 @@ export const nftBurnCard = async (
 export const nftLoadHistorySelf = async (
   contractHandler: ContractHandlerType,
 ) => {
-  const historyList = await contractHandler.nft.getContract().nftHistory(
+  const address = await contractHandler.transactionManager.getAddress()
+  const historyList = (await contractHandler.nft.getContract().nftHistory(
     await contractHandler.transactionManager.signer.getAddress(),
-  ).filter((history: any, index: number, self: any[]) => {
+  ))[0]
+  console.log(historyList)
+  return historyList.filter((history: any, index: number, self: any[]) => {
     return self.findIndex(h => h.nftId === history.nftId) === index;
-  });
-  return historyList
+  }).filter((history: any) => {
+    return history.owner === address
+  }).map((history: any) => {
+    return {
+      id: history.nftId,
+      owner: history.owner,
+      cardId: history.cardId,
+      exp: history.exp.toNumber(),
+    } as NftType
+  })
 }

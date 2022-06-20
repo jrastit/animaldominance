@@ -86,7 +86,7 @@ const _checkContract = async <T extends {
 ) => {
   if (getContractAddress) {
     try {
-      _setMessage && _setMessage("Get contract address" + name + "...")
+      _setMessage && _setMessage("Get contract address " + name + "...")
       const contractAddress = (await getContractAddress())[0]
       if (contractAddress === ethersConstants.AddressZero) {
         contract.versionOk = undefined
@@ -99,9 +99,14 @@ const _checkContract = async <T extends {
         contract.contractHash = (await contract.contract.contractHash())[0]
         if (contract.contractHash) {
           contract.versionOk = contractHash.eq(contract.contractHash)
+          _setMessage && _setMessage(
+            "Contract " + name +
+            " " + (contract.versionOk ? 'Ok' : 'Ko')
+          )
         }
       }
-    } catch {
+    } catch (err) {
+      console.error(err)
       contract.versionOk = undefined
     }
   } else {
@@ -288,6 +293,9 @@ export const checkAllContract = async (
   return (
     contractHandler.animalDominance.versionOk &&
     contractHandler.gameManager.versionOk &&
+    contractHandler.gameList.versionOk &&
+    contractHandler.cardList.versionOk &&
+    contractHandler.nft.versionOk &&
     contractHandler.playActionLib.versionOk &&
     contractHandler.playGameFactory.versionOk &&
     contractHandler.trading.versionOk &&

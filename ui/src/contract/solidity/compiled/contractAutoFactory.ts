@@ -690,7 +690,7 @@ export const getWithManagerContractPlayBot = (
 }
 export const getHashContractNFT = (
 ) => {
-	return ethers.BigNumber.from('0x0258d8a9e1b26d02ab3ae7c02311fce195bbfc7fba9c9842b36bab7dc41db958') 
+	return ethers.BigNumber.from('0x9ed04cb6825ca5f0ddcd4e6deb6113a03ba8745f21446c6a7de62806b4ceee14') 
 }
 
 export const getHashContractAnimalDominance = (

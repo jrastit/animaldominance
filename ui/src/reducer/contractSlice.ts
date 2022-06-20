@@ -17,6 +17,7 @@ export enum StepId {
   Game,
   Trading,
   Wallet,
+  Nft,
 }
 
 export enum Step {
@@ -61,6 +62,7 @@ const initialState: ContractState = {
     { id: StepId.Game, step: Step.Init, message: undefined, error: undefined },
     { id: StepId.Trading, step: Step.Init, message: undefined, error: undefined },
     { id: StepId.Wallet, step: Step.Init, message: undefined, error: undefined },
+    { id: StepId.Nft, step: Step.Init, message: undefined, error: undefined },
   ],
   version: 0,
 }
