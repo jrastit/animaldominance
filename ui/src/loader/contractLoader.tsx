@@ -10,10 +10,13 @@ import {
 import { useAppSelector, useAppDispatch } from '../hooks'
 
 import {
+  loadNFT,
+} from '../game/reducer/nft'
+
+import {
   loadContract,
   loadCardList,
   _loadAllTread,
-  loadNFT,
   loadUser,
   loadGameList,
   loadGameId,

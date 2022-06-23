@@ -53,12 +53,12 @@ contract GameManager {
 
     ///////////////////////// contract /////////////////////////////////////
 
-    function checkOwner() public view {
-        animalDominance.checkOwner(msg.sender);
+    function checkOwner(address _sender) public view {
+        animalDominance.checkOwner(_sender);
     }
 
     modifier _isOwner() {
-        checkOwner();
+        checkOwner(msg.sender);
         _;
     }
 
@@ -204,21 +204,23 @@ contract GameManager {
         private
     {
         UserCard storage userCard = userIdList[_userId].userCardList[_userCardId];
-        uint8 minXpPos = 0;
-        uint64 minXp = userCard.expWin;
-        for (uint8 i = 0; i < 3; i++){
-            if (userCard.previousOwner[i].wallet == userIdList[_userId].wallet){
-                minXpPos = i;
-                userCard.previousOwner[minXpPos].expWin += userCard.expWin;
-                break;
-            } else if(userCard.previousOwner[0].expWin < minXp){
-                minXpPos = i;
-                minXp = userCard.previousOwner[0].expWin;
-            }
-        }
-        if (userCard.expWin > userCard.previousOwner[minXpPos].expWin){
-            userCard.previousOwner[minXpPos].expWin = userCard.expWin;
-            userCard.previousOwner[minXpPos].wallet = userIdList[_userId].wallet;
+        if (userCard.price == 0 && !userCard.sold){
+          uint8 minXpPos = 0;
+          uint64 minXp = userCard.expWin;
+          for (uint8 i = 0; i < 3; i++){
+              if (userCard.previousOwner[i].wallet == userIdList[_userId].wallet){
+                  minXpPos = i;
+                  userCard.previousOwner[minXpPos].expWin += userCard.expWin;
+                  break;
+              } else if(userCard.previousOwner[0].expWin < minXp){
+                  minXpPos = i;
+                  minXp = userCard.previousOwner[0].expWin;
+              }
+          }
+          if (userCard.expWin > userCard.previousOwner[minXpPos].expWin){
+              userCard.previousOwner[minXpPos].expWin = userCard.expWin;
+              userCard.previousOwner[minXpPos].wallet = userIdList[_userId].wallet;
+          }
         }
     }
 

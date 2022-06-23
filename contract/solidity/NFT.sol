@@ -25,7 +25,7 @@ contract NFT is IERC2981, ERC721 {
     constructor(
         address _owner,
         uint32 _royaltyFraction,
-        address _receiver,
+        address payable _receiver,
         string memory _baseURI,
         uint256 _contractHash
     )
@@ -60,9 +60,13 @@ contract NFT is IERC2981, ERC721 {
         _;
     }
 
+	function setOwner(address _owner) public isOwner() {
+		owner = _owner;
+	}
+
 	/////////////////////////////////////// Royalties ///////////////////////////////////////////
 	address receiver;
-    uint32 royaltyFraction;
+  uint32 royaltyFraction;
 
 	function updateReceiver(address _receiver) public isOwner() {
 		receiver = _receiver;
@@ -135,7 +139,7 @@ contract NFT is IERC2981, ERC721 {
     	returns (UserCard memory userCard)
 	{
 		_burn(tokenId);
-		TokenCard storage tokenCard = tokenCardList[tokenLastId];
+		TokenCard storage tokenCard = tokenCardList[tokenId];
 		userCard.cardId = tokenCard.cardId;
 		userCard.exp = tokenCard.exp;
 		for (uint i =  0; i < 3; i++){

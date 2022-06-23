@@ -45,7 +45,7 @@ export const nftLoadHistorySelf = async (
   const historyList = (await contractHandler.nft.getContract().nftHistory(
     await contractHandler.transactionManager.signer.getAddress(),
   ))[0]
-  console.log(historyList)
+  //console.log(historyList)
   return historyList.filter((history: any, index: number, self: any[]) => {
     return self.findIndex(h => h.nftId === history.nftId) === index;
   }).filter((history: any) => {

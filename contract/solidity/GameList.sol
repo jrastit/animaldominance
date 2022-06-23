@@ -21,7 +21,7 @@ struct Game {
 contract GameList {
 
     modifier isOwner() {
-        gameManager.checkOwner();
+        gameManager.checkOwner(msg.sender);
         _;
     }
 

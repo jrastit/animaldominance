@@ -143,7 +143,7 @@ const DisplayUserDeck = (props : {
         </Col>
       </Row>
       <Row>
-        <Col style={{fontSize:'.9em'}}>
+        <Col style={{fontSize:'.9em'}} className="AppScroll">
         <UserCardListWidget
           userCardList={userCardList.concat([]).sort((card1, card2) => {
             return card2.exp - card1.exp

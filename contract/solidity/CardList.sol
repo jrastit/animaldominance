@@ -30,6 +30,10 @@ contract CardList {
         _;
     }
 
+    function setOwner(address payable _owner) public isOwner() {
+  		owner = _owner;
+  	}
+
     function withdraw (uint _amount) public isOwner {
       owner.transfer(_amount);
     }

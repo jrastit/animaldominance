@@ -187,6 +187,20 @@ const CardListWidget = (props : {
   }
 
   const displayCard = (card : CardType) => {
+    return (
+      <div key={card.id}>
+      <DivFullNice>
+      <Row key={card.id}>
+            {card.level.map((_cardLevel, level : number) => displayCardLevel(card, level))}
+      </Row>
+      </DivFullNice>
+      </div>
+    )
+  }
+
+  /*
+
+  const displayCard = (card : CardType) => {
     const price = card.starter ? ethersUtils.parseEther('1') : ethersUtils.parseEther('10')
     return (
       <div key={card.id}>
@@ -251,6 +265,8 @@ const CardListWidget = (props : {
     )
   }
 
+  */
+
   const displayCardLevel = (card : CardType, level : number) => {
     let exp = 0
     switch (level) {
@@ -274,7 +290,7 @@ const CardListWidget = (props : {
       break;
     }
 
-    let price = level == 0 ? (card.starter ?
+    let price = level === 0 ? (card.starter ?
       ethersUtils.parseEther('1') :
       ethersUtils.parseEther('10')
     ) : undefined
@@ -295,7 +311,7 @@ const CardListWidget = (props : {
       }
     }
     return (
-      <Col xs={2} key={level}>
+      <Col xs={12} sm={6} md={4} lg={3} xxl={2} key={level}>
       <div>Level {level + 1}</div>
       <div style={{padding:".5em"}}>
         <CardWidget
@@ -309,7 +325,7 @@ const CardListWidget = (props : {
           exp={exp}
         />
       </div>
-      {!!props.buyNewCard && level == 0 && price &&
+      {!!props.buyNewCard && level === 0 && price &&
         <SpaceWidget>
           <ButtonNice
             onClick={() => props.buyNewCard && price &&

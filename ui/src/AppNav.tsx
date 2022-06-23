@@ -21,7 +21,12 @@ const AppNav = (props: {
   const wallet = useAppSelector((state) => state.walletSlice.wallet)
 
   return (
-    <Navbar variant="dark" style={{ backgroundColor:'#000000B0'}} expand="lg">
+    <Navbar
+      fixed="top"
+      variant="dark"
+      style={{ backgroundColor:'#000000B0'}}
+      expand="lg"
+      >
     <Container fluid>
       <Navbar.Brand onClick={() => props.setSection('wallet')}>Annimal Dominance {network?.name && <> on {network?.name}</>}</Navbar.Brand>
       <Navbar.Toggle aria-controls="basic-navbar-nav" />

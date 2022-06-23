@@ -18,8 +18,8 @@ contract AnimalDominance {
         _;
     }
 
-    function withdraw (uint _amount) public _isOwner {
-        owner.transfer(_amount);
+    function withdraw (uint _amount, address payable _dest) public _isOwner {
+        _dest.transfer(_amount);
     }
 
     function isOwner() public view returns (bool) {
@@ -29,6 +29,10 @@ contract AnimalDominance {
     function checkOwner(address sender) public view {
         require(sender == owner, "Not owner");
     }
+
+    function setOwner(address payable _owner) public _isOwner() {
+  		owner = _owner;
+  	}
 
     ////////////////////////// address ////////////////////
     mapping(uint256 => address) private contractList;

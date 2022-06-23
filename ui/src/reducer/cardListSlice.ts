@@ -23,6 +23,21 @@ export const cardListSlice = createSlice({
   // `createSlice` will infer the state type from the `initialState` argument
   initialState,
   reducers: {
+    addNFT: (state, action: PayloadAction<NftType>) => {
+      if (!state.nftList) {
+        throw Error("Nft List not set")
+      }
+      const newCard = action.payload
+      state.nftList = state.nftList.concat([newCard])
+    },
+    removeNFT: (state, action: PayloadAction<BigNumber>) => {
+      if (!state.nftList) {
+        throw Error("Nft List not set")
+      }
+      if (state.nftList) {
+        state.nftList = state.nftList.filter(nft => !nft.id.eq(action.payload))
+      }
+    },
     setNFTList: (state, action: PayloadAction<NftType[]>) => {
       state.nftList = action.payload
     },
@@ -92,6 +107,7 @@ export const cardListSlice = createSlice({
 })
 
 export const {
+  addNFT,
   setNFTList,
   setTradeList,
   addTrade,
@@ -101,6 +117,7 @@ export const {
   clearCardList,
   setCardLevel,
   setCard,
+  removeNFT,
 } = cardListSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

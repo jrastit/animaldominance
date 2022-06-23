@@ -29,16 +29,37 @@ export const userSlice = createSlice({
       state.userDeckList = undefined
     },
     updateNftId: (state, action: PayloadAction<{ id: BigNumber, userCardId: number }>) => {
-      if (!state.userCardList || !state.userCardList[action.payload.userCardId]) {
-        throw Error('User Card not found')
+      if (!state.userCardList) {
+        throw Error('User Card list not set')
       }
-      state.userCardList[action.payload.userCardId].nftId = action.payload.id
+      const newUserCardList = state.userCardList.concat([])
+      const userCard = newUserCardList.filter((_userCard) => _userCard.id === action.payload.userCardId)[0]
+      if (!userCard) {
+        throw Error('User Card not found ' + action.payload.userCardId)
+      }
+      userCard.nftId = action.payload.id
+      userCard.sold = true
+      state.userCardList = newUserCardList
     },
     setUserCardList: (state, action: PayloadAction<UserCardType[]>) => {
       state.userCardList = action.payload
     },
     clearUserCardList: (state) => {
       state.userCardList = undefined
+    },
+    addUserCard: (state, action: PayloadAction<{ cardId: number, exp: number }>) => {
+      if (!state.userCardList) {
+        throw Error('User Card list not set')
+      }
+      state.userCardList = state.userCardList.concat([{
+        id: state.userCardList.length + 1,
+        cardId: action.payload.cardId,
+        exp: action.payload.exp,
+        expWin: 0,
+        price: 0,
+        sold: false,
+        nftId: BigNumber.from(0)
+      }])
     },
     setUser: (state, action: PayloadAction<UserType>) => {
       state.user = action.payload
@@ -56,7 +77,8 @@ export const {
   setUserCardList,
   clearUserCardList,
   setUser,
-  clearUser
+  clearUser,
+  addUserCard,
 } = userSlice.actions
 
 // Other code such as selectors can use the imported `RootState` type

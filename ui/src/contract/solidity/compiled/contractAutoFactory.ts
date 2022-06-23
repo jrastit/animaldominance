@@ -690,27 +690,27 @@ export const getWithManagerContractPlayBot = (
 }
 export const getHashContractNFT = (
 ) => {
-	return ethers.BigNumber.from('0x9ed04cb6825ca5f0ddcd4e6deb6113a03ba8745f21446c6a7de62806b4ceee14') 
+	return ethers.BigNumber.from('0xc044a91f59494944482b23d115565da26d61d92d204e14452ec220fd8f279096') 
 }
 
 export const getHashContractAnimalDominance = (
 ) => {
-	return ethers.BigNumber.from('0x27438e4f1ee9b9457bcc9c5155e1fb6febc69e6badc33b4604514c6cc9a942f8') 
+	return ethers.BigNumber.from('0x046346f81943de75bafc5b0f8407b382c331f72381f763bfc7df38096b363362') 
 }
 
 export const getHashContractGameManager = (
 ) => {
-	return ethers.BigNumber.from('0x63b9d4ecb1b5a74a99d6038ef2edfb66cc42da064d261c19b03b0efe23e0f614') 
+	return ethers.BigNumber.from('0x74be6ec1ddae9e7e7fe3bd5bada5deca79c879e09ec1431a2fe3974179be3b81') 
 }
 
 export const getHashContractGameList = (
 ) => {
-	return ethers.BigNumber.from('0x7fd3e47b56e57b8071d2f57db4dd4f02962955e1f903995b9ec28eac372aa3f2') 
+	return ethers.BigNumber.from('0x8e46f35dc24513bdb173c51aab146a9cb02dfaa126e0ccaa2c63fa5aaf38c5e8') 
 }
 
 export const getHashContractCardList = (
 ) => {
-	return ethers.BigNumber.from('0x66cdedcb52845b985c258abbefa07a503093c31430fd6899ae423f7f2fa2784a') 
+	return ethers.BigNumber.from('0xf26ce7cf381357d9f5339c4de93d7e946077762cd57bba8d49966237db4d01c8') 
 }
 
 export const getHashContractPlayGame = (
@@ -725,7 +725,7 @@ export const getHashContractPlayGameFactory = (
 
 export const getHashContractTrading = (
 ) => {
-	return ethers.BigNumber.from('0xe040479cb80a1634014eb299d2d5b93dae2d16921fe169f767a20aa0814ade8d') 
+	return ethers.BigNumber.from('0xbe894a6c511b2142ebef430b6fa04c2ef2792d06cc716c13ffb47ebdf91af604') 
 }
 
 export const getHashContractPlayActionLib = (

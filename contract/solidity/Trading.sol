@@ -18,7 +18,6 @@ contract Trading {
     uint256 public contractHash;
 
     ///////////////////////////////// contract ///////////////////////////////////////
-    address payable private owner;
     GameManager gameManager;
 
     constructor(
@@ -26,12 +25,15 @@ contract Trading {
         uint256 _contractHash
     ) {
         _updateGameManager(_gameManager);
-        owner = payable( msg.sender);
         contractHash = _contractHash;
     }
 
+    function checkOwner(address _sender) public view {
+        gameManager.checkOwner(_sender);
+    }
+
     modifier isOwner() {
-     require(msg.sender == owner, "Not owner");
+        checkOwner(msg.sender);
         _;
     }
 

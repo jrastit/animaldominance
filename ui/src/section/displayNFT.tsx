@@ -11,9 +11,9 @@ import type {
 
 import {
   nftBurnCard
-} from '../game/nft'
+} from '../game/reducer/nft'
 
-import { useAppSelector } from '../hooks'
+import { useAppSelector, useAppDispatch } from '../hooks'
 
 import Row from 'react-bootstrap/Row'
 import Col from 'react-bootstrap/Col'
@@ -25,6 +25,7 @@ import Container from 'react-bootstrap/Container'
 const DisplayNFT = (props: {
   contractHandler : ContractHandlerType,
 }) => {
+  const dispatch = useAppDispatch()
   const nftList = useAppSelector((state) => state.cardListSlice.nftList)
 
   const [loading, _setLoading] = useState<boolean>()
@@ -54,7 +55,7 @@ const DisplayNFT = (props: {
                 nftId : nft.id,
               }
             })}
-            nftBurnCard={(nftId : BigNumber) => {nftBurnCard(props.contractHandler, nftId)}}
+            nftBurnCard={(nftId : BigNumber) => {nftBurnCard(dispatch, props.contractHandler, nftId)}}
           />
         </Col>
       </Row>

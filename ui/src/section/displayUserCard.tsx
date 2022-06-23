@@ -12,11 +12,7 @@ import {
 
 import {
   nftCreateCard,
-} from '../game/nft'
-
-import {
-  updateNftId,
-} from '../reducer/userSlice'
+} from '../game/reducer/nft'
 
 import type {
   UserCardType,
@@ -90,15 +86,14 @@ const DisplayUserCard = (props: {
 
   }
 
-  const _createNFT = (_userCardId: number) => {
+  const _createNFT = (userCard: UserCardType) => {
     if (createNFT) {
       setLoading(true)
       nftCreateCard(
+        dispatch,
         props.contractHandler,
-        _userCardId,
-      ).then((nftId) => {
-        dispatch(updateStep({ id: StepId.UserCardList, step: Step.Init }))
-        dispatch(updateNftId({ id: nftId, userCardId: _userCardId }))
+        userCard,
+      ).then(() => {
         setCreateNFT(undefined)
         setLoading(false)
       }
@@ -187,7 +182,7 @@ const DisplayUserCard = (props: {
             <div>
               Creating NFT for {card.name} level {level + 1} ({userCard.exp})
             </div>
-            <Button onClick={() => { _createNFT(createNFT) }}>Create NFT</Button>
+            <Button onClick={() => { _createNFT(userCard) }}>Create NFT</Button>
             <div>
               <Button variant='warning' onClick={() => { setSellCard(undefined) }}>Cancel</Button>
             </div>
@@ -197,20 +192,21 @@ const DisplayUserCard = (props: {
     }
   }
 
-  const renderRow = (userCardListItem: UserCardType[], id: number) => {
-    return (
-      <Row key={id}>
-
-        <Col style={{fontSize : '.9em'}}>
-          <UserCardListWidget
-            userCardList={userCardListItem}
-            sellCard={(userCard : UserCardType) => {setSellCard({ userCardId: userCard.id })}}
-            cancelSellCard={(userCard : UserCardType) => {_cancelListCard(userCard.id)}}
-            nftCard={(userCard : UserCardType) => {setCreateNFT(userCard.id)}}
-          />
-        </Col>
-      </Row>
-    )
+  const renderRow = () => {
+    if (userCardList){
+      return (
+        <Row>
+          <Col style={{fontSize : '.9em'}}>
+            <UserCardListWidget
+              userCardList={userCardList.concat([]).sort((card1, card2) => {return card1.exp > card2.exp ? -1 : 1})}
+              sellCard={(userCard : UserCardType) => {setSellCard({ userCardId: userCard.id })}}
+              cancelSellCard={(userCard : UserCardType) => {_cancelListCard(userCard.id)}}
+              nftCard={(userCard : UserCardType) => {setCreateNFT(userCard.id)}}
+            />
+          </Col>
+        </Row>
+      )
+    }
   }
 
 
@@ -241,9 +237,7 @@ const DisplayUserCard = (props: {
         </DivFullNice>
       </Col>
       </Row>
-      {userCardListBash.map((userCardListItem, id) => {
-        return renderRow(userCardListItem, id)
-      })}
+      {renderRow()}
     </Container>
   )
 

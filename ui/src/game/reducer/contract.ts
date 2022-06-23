@@ -44,13 +44,8 @@ import {
 } from '../../game/card'
 
 import {
-  nftLoadHistorySelf,
-} from '../../game/nft'
-
-import {
   setCardList,
   setTradeList,
-  setNFTList,
   addTrade,
   removeTrade,
   clearCardList,
@@ -217,19 +212,7 @@ const addTradingListener = (
   }
 }
 
-export const loadNFT = (
-  dispatch: any,
-  contractHandler: ContractHandlerType,
-) => {
-  const stepId = StepId.Nft
-  dispatch(updateStep({ id: stepId, step: Step.Loading }))
-  nftLoadHistorySelf(contractHandler).then(nftList => {
-    dispatch(setNFTList(nftList))
-    dispatch(updateStep({ id: stepId, step: Step.Ok }))
-  }).catch((err) => {
-    dispatch(setError({ id: stepId, catchError: err }))
-  })
-}
+
 
 export const loadUser = (
   dispatch: any,
