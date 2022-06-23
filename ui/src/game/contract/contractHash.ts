@@ -50,7 +50,7 @@ export const getHashContractTrading = () => {
 }
 
 export const getHashContractAnimalDominance = () => {
-  return _getHash(_getHashContractAnimalDominance())
+  return _getHashContractAnimalDominance()
 }
 
 export const getHashContractGameList = () => {
